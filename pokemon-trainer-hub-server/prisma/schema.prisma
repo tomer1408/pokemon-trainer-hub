@@ -1,0 +1,23 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+}
+
+model DreamTeamMember {
+  id          Int      @id @default(autoincrement())
+  auth0UserId String
+  pokemonId   Int
+  pokemonName String
+  spriteUrl   String
+  addedAt     DateTime @default(now())
+
+  @@unique([auth0UserId, pokemonId])
+}
