@@ -6,6 +6,7 @@ const jwtCheck = require('./middleware/auth');
 const pokemonRouter = require('./routes/pokemon');
 const teamRouter = require('./routes/team');
 const profileRouter = require('./routes/profile');
+const favoritesRouter = require('./routes/favorites');
 
 const app = express();
 const PORT = 3000;
@@ -26,6 +27,7 @@ app.get('/api/private', jwtCheck, (req, res) => {
 app.use('/api/pokemon', pokemonRouter);
 app.use('/api/team', teamRouter);
 app.use('/api/profile', profileRouter);
+app.use('/api/favorites', favoritesRouter);
 
 // Catches every error from the routes above (including auth failures) and
 // always responds with clean JSON instead of Express's default HTML+stack-trace page.

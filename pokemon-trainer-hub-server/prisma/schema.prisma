@@ -22,6 +22,17 @@ model DreamTeamMember {
   @@unique([auth0UserId, pokemonId])
 }
 
+model Favorite {
+  id          Int      @id @default(autoincrement())
+  auth0UserId String
+  pokemonId   Int
+  pokemonName String
+  spriteUrl   String
+  addedAt     DateTime @default(now())
+
+  @@unique([auth0UserId, pokemonId])
+}
+
 model TrainerProfile {
   id              Int      @id @default(autoincrement())
   auth0UserId     String   @unique
