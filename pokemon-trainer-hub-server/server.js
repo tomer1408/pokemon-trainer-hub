@@ -27,6 +27,16 @@ app.use('/api/pokemon', pokemonRouter);
 app.use('/api/team', teamRouter);
 app.use('/api/profile', profileRouter);
 
+// Catches every error from the routes above (including auth failures) and
+// always responds with clean JSON instead of Express's default HTML+stack-trace page.
+app.use((err, req, res, next) => {
+  console.error(err);
+  const status = err.status || err.statusCode || 500;
+  res.status(status).json({
+    message: status === 500 ? 'Something went wrong on our end.' : err.message,
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
