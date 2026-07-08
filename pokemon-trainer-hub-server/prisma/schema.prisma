@@ -44,4 +44,5 @@ model TrainerProfile {
   dateOfBirth     DateTime
   country         String
   createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

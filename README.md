@@ -10,6 +10,22 @@ A web app for registering as a "Pokémon Trainer," browsing Pokémon (via [PokeA
 - **Auth:** Auth0 (Universal Login) — the client obtains an access token via `@auth0/auth0-angular`, the server validates it via `express-oauth2-jwt-bearer`
 - **External data:** PokeAPI, proxied and cached by the server
 
+## Architecture
+
+```
+Angular (localhost:4200)
+   │  Authorization: Bearer <token>
+   ▼
+Express API (localhost:3000)
+   │                          │                    │
+   ▼                          ▼                    ▼
+express-oauth2-jwt-bearer   Prisma              PokeAPI
+(validates token            (SQL Server:         (external, read-only,
+ against Auth0)              user's own data)     proxied + cached)
+```
+
+The client never talks to PokeAPI or the database directly — everything goes through the Express API, which validates the caller's Auth0 token on every request, then either reads/writes the user's own rows via Prisma, or proxies+caches a call to PokeAPI.
+
 ## Project Structure
 
 ```
