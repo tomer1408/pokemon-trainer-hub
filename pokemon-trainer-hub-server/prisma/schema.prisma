@@ -21,3 +21,16 @@ model DreamTeamMember {
 
   @@unique([auth0UserId, pokemonId])
 }
+
+model TrainerProfile {
+  id              Int      @id @default(autoincrement())
+  auth0UserId     String   @unique
+  trainerName     String
+  favoriteType    String
+  experienceLevel String
+  firstName       String
+  lastName        String
+  dateOfBirth     DateTime
+  country         String
+  createdAt       DateTime @default(now())
+}
