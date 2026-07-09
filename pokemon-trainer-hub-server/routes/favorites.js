@@ -1,96 +1,52 @@
 const express = require('express');
-const prisma = require('../services/prisma');
 const jwtCheck = require('../middleware/auth');
-const { fetchPokemonDetail } = require('../services/pokeapi');
+const favoritesService = require('../services/favoritesService');
+const ServiceError = require('../services/serviceError');
 
 const router = express.Router();
 
-// GET /api/favorites — the current user's favorites, enriched with stats/types
+const STATUS_BY_CODE = {
+  DUPLICATE: 409,
+  NOT_FOUND: 404,
+  UPSTREAM_ERROR: 502,
+};
+
+function respondToServiceError(err, res) {
+  const status = STATUS_BY_CODE[err.code] || 500;
+  const body = status === 409 ? { reason: err.code, message: err.message } : { message: err.message };
+  res.status(status).json(body);
+}
+
+// GET /api/favorites
 router.get('/', jwtCheck, async (req, res) => {
-  const favorites = await prisma.favorite.findMany({
-    where: { auth0UserId: req.auth.payload.sub },
-    orderBy: { addedAt: 'asc' },
-  });
-
-  const enriched = await Promise.all(
-    favorites.map(async (favorite) => {
-      let detail = null;
-      try {
-        detail = await fetchPokemonDetail(favorite.pokemonId);
-      } catch (err) {
-        // PokeAPI being briefly down shouldn't break the whole favorites screen —
-        // the entry still shows up, just without stats/types for now.
-      }
-
-      return {
-        pokemonId: favorite.pokemonId,
-        pokemonName: favorite.pokemonName,
-        spriteUrl: favorite.spriteUrl,
-        addedAt: favorite.addedAt,
-        stats: detail?.stats ?? [],
-        types: detail?.types ?? [],
-        baseExperience: detail?.baseExperience ?? 0,
-      };
-    })
-  );
-
-  res.json(enriched);
+  const favorites = await favoritesService.getFavorites(req.auth.payload.sub);
+  res.json(favorites);
 });
 
-// POST /api/favorites/:id — add a Pokémon to favorites (no size limit, unlike the Dream Team)
+// POST /api/favorites/:id
 router.post('/:id', jwtCheck, async (req, res) => {
-  const auth0UserId = req.auth.payload.sub;
   const pokemonId = Number(req.params.id);
-
   if (Number.isNaN(pokemonId)) {
     return res.status(400).json({ message: 'Pokémon id must be a number.' });
   }
 
-  const existing = await prisma.favorite.findUnique({
-    where: { auth0UserId_pokemonId: { auth0UserId, pokemonId } },
-  });
-
-  if (existing) {
-    return res.status(409).json({
-      reason: 'DUPLICATE',
-      message: `${existing.pokemonName} is already in your favorites.`,
-    });
-  }
-
-  let pokemon;
   try {
-    pokemon = await fetchPokemonDetail(pokemonId);
+    const result = await favoritesService.addFavorite(req.auth.payload.sub, pokemonId);
+    res.status(201).json(result);
   } catch (err) {
-    return res.status(502).json({ message: 'PokeAPI is unavailable. Please try again later.' });
+    if (err instanceof ServiceError) return respondToServiceError(err, res);
+    throw err;
   }
-
-  if (!pokemon) {
-    return res.status(404).json({ message: 'Pokémon not found.' });
-  }
-
-  const favorite = await prisma.favorite.create({
-    data: {
-      auth0UserId,
-      pokemonId: pokemon.id,
-      pokemonName: pokemon.name,
-      spriteUrl: pokemon.spriteUrl,
-    },
-  });
-
-  res.status(201).json({ message: `${pokemon.name} added to your favorites!`, favorite });
 });
 
-// DELETE /api/favorites/:id — remove a Pokémon from the current user's favorites
+// DELETE /api/favorites/:id
 router.delete('/:id', jwtCheck, async (req, res) => {
-  const auth0UserId = req.auth.payload.sub;
   const pokemonId = Number(req.params.id);
-
   if (Number.isNaN(pokemonId)) {
     return res.status(400).json({ message: 'Pokémon id must be a number.' });
   }
 
-  await prisma.favorite.deleteMany({ where: { auth0UserId, pokemonId } });
-
+  await favoritesService.removeFavorite(req.auth.payload.sub, pokemonId);
   res.status(204).send();
 });
 
