@@ -1,0 +1,233 @@
+<div class="explorer" [class.light]="theme.isLight()">
+  <!-- Search banner -->
+  <div class="search-banner">
+    <span class="search-glyph"></span>
+    <input
+      type="text"
+      placeholder="Search Pok&eacute;mon by name&hellip;"
+      class="search-input"
+      [ngModel]="searchInput()"
+      (ngModelChange)="searchInput.set($event)"
+    />
+
+    <div class="search-divider"></div>
+
+    <select class="sort-select" [ngModel]="sortBy()" (ngModelChange)="sortBy.set($event)">
+      <option value="name">Sort: Name (A&ndash;Z)</option>
+      <option value="power">Sort: Power (high&ndash;low)</option>
+      <option value="dex">Sort: Dex number</option>
+    </select>
+
+    <button type="button" class="fav-toggle" (click)="toggleFavoritesOnly()">
+      <span class="fav-label">Favorites only</span>
+      <span class="fav-switch-track" [class.on]="favoritesOnly()">
+        <span class="fav-switch-knob"></span>
+      </span>
+    </button>
+
+    <button type="button" class="surprise-btn" (click)="onSurpriseMe()">
+      <span class="surprise-glyph"></span>
+      Surprise Me
+    </button>
+  </div>
+
+  <!-- Type chip row -->
+  <div class="type-chip-row">
+    <button type="button" class="chip all-chip" [class.active]="typeFilter() === 'all'" (click)="typeFilter.set('all')">
+      All
+    </button>
+    @for (t of types; track t) {
+      <button
+        type="button"
+        class="chip type-chip"
+        [class.active]="typeFilter() === t"
+        [style.background]="typeFilter() === t ? typeColor(t) : typeColor(t) + '22'"
+        [style.color]="typeFilter() === t ? '#1C1533' : typeColor(t)"
+        (click)="selectType(t)"
+      >
+        <span class="chip-glyph" [style.background]="typeColor(t)"></span>{{ t }}
+      </button>
+    }
+  </div>
+
+  @if (swapNotice(); as notice) {
+    <div class="swap-notice">
+      <span>{{ notice }}</span>
+      <button type="button" class="swap-notice-close" (click)="swapNotice.set(null)">&times;</button>
+    </div>
+  }
+
+  <div class="shell">
+    <!-- Grid column -->
+    <div class="grid-col">
+      <div class="grid-header">
+        <span class="results-count">
+          {{ isLoading() ? 'Loading Pokédex…' : listResult().total + ' Pokémon found' }}
+        </span>
+      </div>
+
+      @if (isLoading()) {
+        <div class="card-grid">
+          @for (s of [1, 2, 3, 4, 5, 6, 7, 8, 9]; track s) {
+            <div class="skel-card"></div>
+          }
+        </div>
+      } @else if (listResult().results.length === 0) {
+        <div class="empty-state">
+          <div class="empty-glyph"></div>
+          <div class="empty-title">No Pok&eacute;mon match your search</div>
+          <div class="empty-sub">Try a different name, or clear your filters to see the full Pok&eacute;dex.</div>
+          <button type="button" class="empty-clear-btn" (click)="clearFilters()">Clear filters</button>
+        </div>
+      } @else {
+        <div class="card-grid">
+          @for (p of listResult().results; track p.id) {
+            <div class="pokemon-card" [class.surprised]="surpriseId() === p.id" (click)="openDetail(p)">
+              <button
+                type="button"
+                class="fav-btn"
+                [class.active]="isFavorite(p.id)"
+                (click)="$event.stopPropagation(); toggleFavorite(p)"
+              >
+                {{ isFavorite(p.id) ? '♥' : '♡' }}
+              </button>
+              <div class="card-art" [style.background]="typeColor(p.types[0]) + '22'">
+                @if (p.spriteUrl) {
+                  <img [src]="p.spriteUrl" alt="{{ p.name }}" />
+                }
+              </div>
+              <div class="card-dex">#{{ p.id.toString().padStart(4, '0') }}</div>
+              <div class="card-name">{{ p.name }}</div>
+              <div class="card-types">
+                @for (t of p.types; track t) {
+                  <span class="type-pill" [style.background]="typeColor(t) + '33'" [style.color]="typeColor(t)">
+                    <span class="type-glyph" [style.background]="typeColor(t)"></span>{{ t }}
+                  </span>
+                }
+              </div>
+              <div class="card-power">
+                <span class="power-label">PWR</span>
+                <span class="power-value">{{ p.baseExperience }}</span>
+              </div>
+              <button
+                type="button"
+                class="card-action"
+                [class.on-team]="isOnTeam(p.id)"
+                [class.compare]="!isOnTeam(p.id) && teamFull()"
+                [disabled]="isOnTeam(p.id)"
+                (click)="$event.stopPropagation(); onAction(p)"
+              >
+                {{ actionLabel(p) }}
+              </button>
+            </div>
+          }
+        </div>
+
+        @if (!favoritesOnly() && totalPages() > 1) {
+          <div class="pagination-row">
+            <button type="button" class="page-btn" [disabled]="isFirstPage()" (click)="prevPage()">&larr; Prev</button>
+            <span class="page-label">Page {{ page() }} of {{ totalPages() }}</span>
+            <button type="button" class="page-btn" [disabled]="isLastPage()" (click)="nextPage()">Next &rarr;</button>
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Team sidebar (desktop) -->
+    <div class="sidebar">
+      <ng-container [ngTemplateOutlet]="teamPanel"></ng-container>
+    </div>
+  </div>
+
+  <!-- Mobile bottom bar -->
+  <button type="button" class="mobile-bar" (click)="toggleMobileDrawer()">
+    <span class="mobile-bar-text">Team {{ team().length }}/5 &nbsp;|&nbsp; Power {{ teamPower() }}</span>
+    <span class="mobile-bar-action">{{ mobileDrawerOpen() ? 'Close ▲' : 'Open ▲' }}</span>
+  </button>
+
+  @if (mobileDrawerOpen()) {
+    <div class="drawer-overlay" (click)="closeMobileDrawer()">
+      <div class="drawer-sheet" (click)="$event.stopPropagation()">
+        <div class="drawer-handle"></div>
+        <ng-container [ngTemplateOutlet]="teamPanel"></ng-container>
+      </div>
+    </div>
+  }
+
+  <ng-template #teamPanel>
+    <div class="sidebar-title">Your Team</div>
+    <div class="sidebar-slots">
+      @for (member of teamSlots(); track $index) {
+        @if (member) {
+          <div class="slot-row filled">
+            <div class="mini-art" [style.background]="typeColor(member.types[0]) + '33'">
+              @if (member.spriteUrl) {
+                <img [src]="member.spriteUrl" alt="{{ member.pokemonName }}" />
+              }
+            </div>
+            <span class="mini-name">{{ member.pokemonName }}</span>
+            <button type="button" class="remove-btn" (click)="requestRemove(member)">&times;</button>
+          </div>
+        } @else {
+          <div class="slot-row empty">Add Pok&eacute;mon</div>
+        }
+      }
+    </div>
+
+    <div class="sidebar-power-row">
+      <span class="sidebar-power-label">Team Power</span>
+      <span class="sidebar-power-value">{{ teamPower() }}</span>
+    </div>
+
+    <div class="coverage-label">Type Coverage</div>
+    <div class="coverage-strip">
+      @if (teamCoverage().length === 0) {
+        <span class="coverage-none">None yet</span>
+      } @else {
+        @for (t of teamCoverage(); track t) {
+          <span class="type-pill" [style.background]="typeColor(t) + '33'" [style.color]="typeColor(t)">
+            <span class="type-glyph" [style.background]="typeColor(t)"></span>{{ t }}
+          </span>
+        }
+      }
+    </div>
+  </ng-template>
+
+  <!-- Remove confirmation -->
+  @if (pendingRemove(); as target) {
+    <div class="confirm-overlay" (click)="cancelRemove()">
+      <div class="confirm-card" (click)="$event.stopPropagation()">
+        <h2 class="confirm-title">Are you sure you want to remove {{ target.name }}?</h2>
+        <div class="confirm-actions">
+          <button type="button" class="confirm-cancel" (click)="cancelRemove()">Cancel</button>
+          <button type="button" class="confirm-remove" (click)="confirmRemove()">Remove</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Pokémon Detail Modal -->
+  @if (selectedPokemon(); as sp) {
+    <app-pokemon-detail-modal
+      [pokemonId]="sp.id"
+      [isFavorite]="isFavorite(sp.id)"
+      [isOnTeam]="isOnTeam(sp.id)"
+      [teamFull]="teamFull()"
+      [isLight]="theme.isLight()"
+      (closed)="closeDetail()"
+      (toggleFavorite)="toggleFavorite(sp)"
+      (addToTeam)="onAction(sp)"
+    />
+  }
+
+  <!-- Team Swap Modal (opens when the team is full and a 6th add is attempted) -->
+  @if (swapCandidate(); as candidate) {
+    <app-team-swap-modal
+      [candidateId]="candidate.id"
+      [team]="team()"
+      [isLight]="theme.isLight()"
+      (closed)="closeSwap()"
+      (swapped)="onSwapped()"
+    />
+  }
+</div>

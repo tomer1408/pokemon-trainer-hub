@@ -78,4 +78,44 @@ async function removeFromTeam(auth0UserId, pokemonId) {
   await prisma.dreamTeamMember.deleteMany({ where: { auth0UserId, pokemonId } });
 }
 
-module.exports = { getTeam, addToTeam, removeFromTeam };
+// Swaps one real DB write (remove + add as a single transaction) instead of
+// two separate client calls — used by the Team Swap Modal when the team is
+// already full. Throws ServiceError('NOT_FOUND' | 'DUPLICATE' | 'UPSTREAM_ERROR').
+async function swapTeamMember(auth0UserId, removePokemonId, addPokemonId) {
+  const toRemove = await prisma.dreamTeamMember.findUnique({
+    where: { auth0UserId_pokemonId: { auth0UserId, pokemonId: removePokemonId } },
+  });
+  if (!toRemove) {
+    throw new ServiceError('NOT_FOUND', 'The Pokémon to remove is not on your team.');
+  }
+
+  const existingAdd = await prisma.dreamTeamMember.findUnique({
+    where: { auth0UserId_pokemonId: { auth0UserId, pokemonId: addPokemonId } },
+  });
+  if (existingAdd) {
+    throw new ServiceError('DUPLICATE', `${existingAdd.pokemonName} is already on your team.`);
+  }
+
+  let pokemon;
+  try {
+    pokemon = await fetchPokemonDetail(addPokemonId);
+  } catch (err) {
+    throw new ServiceError('UPSTREAM_ERROR', 'PokeAPI is unavailable. Please try again later.');
+  }
+  if (!pokemon) {
+    throw new ServiceError('NOT_FOUND', 'Pokémon not found.');
+  }
+
+  const [, member] = await prisma.$transaction([
+    prisma.dreamTeamMember.delete({
+      where: { auth0UserId_pokemonId: { auth0UserId, pokemonId: removePokemonId } },
+    }),
+    prisma.dreamTeamMember.create({
+      data: { auth0UserId, pokemonId: pokemon.id, pokemonName: pokemon.name, spriteUrl: pokemon.spriteUrl },
+    }),
+  ]);
+
+  return { message: `Swapped ${toRemove.pokemonName} for ${pokemon.name}!`, member };
+}
+
+module.exports = { getTeam, addToTeam, removeFromTeam, swapTeamMember };

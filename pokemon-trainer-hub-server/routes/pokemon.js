@@ -1,6 +1,6 @@
 const express = require('express');
 const jwtCheck = require('../middleware/auth');
-const { fetchPokemonDetail, getMasterList, getListByType } = require('../services/pokeapi');
+const { fetchPokemonDetail, fetchPokemonFullDetail, getMasterList, getListByType } = require('../services/pokeapi');
 
 const PAGE_SIZE = 20;
 const router = express.Router();
@@ -58,11 +58,13 @@ router.get('/', jwtCheck, async (req, res) => {
   res.json({ results: results.filter(Boolean), page: pageNum, pageSize: PAGE_SIZE, total });
 });
 
-// GET /api/pokemon/:id — id or name, both work since PokeAPI accepts either
+// GET /api/pokemon/:id — id or name, both work since PokeAPI accepts either.
+// Returns the fuller shape (flavor text, weaknesses/resistances) since this
+// is what backs the Pokémon Detail Modal, not the list grid.
 router.get('/:id', jwtCheck, async (req, res) => {
   let pokemon;
   try {
-    pokemon = await fetchPokemonDetail(req.params.id);
+    pokemon = await fetchPokemonFullDetail(req.params.id);
   } catch (err) {
     return res.status(502).json({ message: 'PokeAPI is unavailable. Please try again later.' });
   }

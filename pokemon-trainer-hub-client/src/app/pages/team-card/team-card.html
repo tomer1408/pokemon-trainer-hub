@@ -1,0 +1,69 @@
+<div class="team-card-page" [class.light]="theme.isLight()">
+  <div class="glow"></div>
+
+  <a routerLink="/my-team" class="back-link">&larr; Back to My Team</a>
+
+  <div class="content">
+    <div class="card-outer">
+      <div class="card-inner">
+        <div class="card-header-row">
+          <div class="trainer-avatar">{{ trainerInitial() }}</div>
+          <div class="trainer-info">
+            <div class="trainer-name">{{ trainerName() }}</div>
+            <div class="trainer-level-row">
+              <span class="tier-pill">{{ tier() }}</span>
+            </div>
+          </div>
+          <div class="power-block">
+            <div class="power-label">Team Power</div>
+            <div class="power-value">{{ teamPower() }}</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="slots-row">
+          @for (member of slots(); track $index) {
+            @if (member) {
+              <div class="slot-wrap">
+                <div class="hex-badge">#{{ member.pokemonId.toString().padStart(3, '0') }}</div>
+                <div class="slot-art">
+                  @if (member.spriteUrl) {
+                    <img [src]="member.spriteUrl" alt="{{ member.pokemonName }}" />
+                  }
+                </div>
+                <div class="slot-name">{{ member.pokemonName }}</div>
+                @if (member.types[0]; as type) {
+                  <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                    <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
+                  </span>
+                }
+              </div>
+            } @else {
+              <div class="slot-wrap empty">
+                <div class="slot-empty-label">Empty</div>
+              </div>
+            }
+          }
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="coverage-row">
+          <span class="coverage-label">Team Type Coverage</span>
+          <div class="coverage-badges">
+            @if (coverageTypes().length === 0) {
+              <span class="coverage-none">None yet</span>
+            } @else {
+              @for (t of coverageTypes(); track t) {
+                <span class="type-pill" [style.background]="typeColor(t) + '33'" [style.color]="typeColor(t)">
+                  <span class="type-glyph" [style.background]="typeColor(t)"></span>{{ t }}
+                </span>
+              }
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

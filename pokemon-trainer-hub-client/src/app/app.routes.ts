@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuardFn } from '@auth0/auth0-angular';
+import { onboardingGuard } from './shared/onboarding-guard';
 
 // Every route below (except '' and 'callback') is wrapped in authGuardFn — the
 // SDK's official guard, which redirects unauthenticated visitors straight to
@@ -19,7 +20,7 @@ export const routes: Routes = [
   },
   {
     path: 'onboarding',
-    canActivate: [authGuardFn],
+    canActivate: [authGuardFn, onboardingGuard],
     loadComponent: () => import('./pages/onboarding/onboarding').then((m) => m.Onboarding),
   },
   {
@@ -30,26 +31,17 @@ export const routes: Routes = [
   {
     path: 'explorer',
     canActivate: [authGuardFn],
-    loadComponent: () => import('./shared/placeholder/placeholder').then((m) => m.Placeholder),
-    data: { title: 'Explorer' },
-  },
-  {
-    path: 'favorites',
-    canActivate: [authGuardFn],
-    loadComponent: () => import('./shared/placeholder/placeholder').then((m) => m.Placeholder),
-    data: { title: 'Favorites' },
+    loadComponent: () => import('./pages/explorer/explorer').then((m) => m.Explorer),
   },
   {
     path: 'my-team',
     canActivate: [authGuardFn],
-    loadComponent: () => import('./shared/placeholder/placeholder').then((m) => m.Placeholder),
-    data: { title: 'My Team' },
+    loadComponent: () => import('./pages/my-team/my-team').then((m) => m.MyTeam),
   },
   {
     path: 'profile',
     canActivate: [authGuardFn],
-    loadComponent: () => import('./shared/placeholder/placeholder').then((m) => m.Placeholder),
-    data: { title: 'My Profile' },
+    loadComponent: () => import('./pages/profile/profile').then((m) => m.Profile),
   },
   {
     path: 'ai-assistant',
@@ -66,13 +58,12 @@ export const routes: Routes = [
   {
     path: 'team-card',
     canActivate: [authGuardFn],
-    loadComponent: () => import('./shared/placeholder/placeholder').then((m) => m.Placeholder),
-    data: { title: 'Team Card' },
+    loadComponent: () => import('./pages/team-card/team-card').then((m) => m.TeamCard),
   },
   {
+    // Not auth-guarded on purpose — a mistyped URL shouldn't force a
+    // logged-out visitor through Auth0 login just to see "page not found".
     path: '**',
-    canActivate: [authGuardFn],
-    loadComponent: () => import('./shared/placeholder/placeholder').then((m) => m.Placeholder),
-    data: { title: 'Page not found' },
+    loadComponent: () => import('./pages/not-found/not-found').then((m) => m.NotFound),
   },
 ];

@@ -56,4 +56,20 @@ export class TeamService {
   removeFromTeam(pokemonId: number): Observable<void> {
     return this.http.delete<void>(`${API_BASE}/team/${pokemonId}`);
   }
+
+  // Backs the Team Swap Modal — one real backend transaction (POST
+  // /api/team/swap) instead of a separate remove+add from the client.
+  swapTeamMember(removePokemonId: number, addPokemonId: number): Observable<AddToTeamResult> {
+    return this.http.post(`${API_BASE}/team/swap`, { removePokemonId, addPokemonId }).pipe(
+      map((): AddToTeamResult => ({ ok: true })),
+      catchError((err: HttpErrorResponse) => {
+        const reason = err.error?.reason === 'DUPLICATE' ? 'DUPLICATE' : 'OTHER';
+        return of<AddToTeamResult>({
+          ok: false,
+          reason,
+          message: err.error?.message ?? 'Something went wrong swapping your team.',
+        });
+      }),
+    );
+  }
 }

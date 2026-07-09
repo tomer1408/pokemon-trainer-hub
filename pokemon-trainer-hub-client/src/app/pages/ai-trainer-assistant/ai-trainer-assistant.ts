@@ -1,10 +1,8 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { AuthService } from '@auth0/auth0-angular';
+import { RouterLink } from '@angular/router';
 import { of, switchMap, timer } from 'rxjs';
-import { AccountMenu, ColorblindMode } from '../../shared/account-menu/account-menu';
 import { PokemonService, PokemonSummary } from '../../core/pokemon';
-import { ProfileService } from '../../core/profile';
 import { DreamTeamMember, TeamService } from '../../core/team';
 import { getStrongestMember, getTeamPower } from '../../shared/team-power';
 import {
@@ -14,6 +12,7 @@ import {
   TYPE_RECOMMENDATION_REASON,
   matchTypeFromDescription,
 } from '../../shared/pokemon-types';
+import { ThemeService } from '../../shared/theme';
 
 type Tab = 'analyze' | 'find';
 
@@ -26,27 +25,17 @@ interface ChatMessage {
 
 @Component({
   selector: 'app-ai-trainer-assistant',
-  imports: [AccountMenu],
+  imports: [RouterLink],
   templateUrl: './ai-trainer-assistant.html',
   styleUrl: './ai-trainer-assistant.css',
 })
 export class AiTrainerAssistant {
-  private readonly auth = inject(AuthService);
   private readonly teamService = inject(TeamService);
   private readonly pokemonService = inject(PokemonService);
-  private readonly profileService = inject(ProfileService);
+  protected readonly theme = inject(ThemeService);
 
-  protected readonly isLight = signal(false);
-  protected readonly colorblindMode = signal<ColorblindMode>('off');
   protected readonly tab = signal<Tab>('analyze');
   protected readonly suggestionSeed = signal(0);
-
-  private readonly authUser = toSignal(this.auth.user$, { initialValue: null });
-  private readonly profile = toSignal(this.profileService.getProfile(), { initialValue: null });
-  protected readonly trainerName = computed(
-    () => this.profile()?.trainerName ?? this.authUser()?.name ?? 'Trainer',
-  );
-  protected readonly trainerEmail = computed(() => this.authUser()?.email ?? '');
 
   protected readonly team = toSignal(this.teamService.getTeam(), {
     initialValue: [] as DreamTeamMember[],
@@ -105,14 +94,6 @@ export class AiTrainerAssistant {
 
   protected readonly typeColors = TYPE_COLORS;
   protected readonly recommendationReasons = TYPE_RECOMMENDATION_REASON;
-
-  setThemeDark(): void {
-    this.isLight.set(false);
-  }
-
-  setThemeLight(): void {
-    this.isLight.set(true);
-  }
 
   setTabAnalyze(): void {
     this.tab.set('analyze');

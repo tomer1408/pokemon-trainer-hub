@@ -1,0 +1,150 @@
+<div class="my-team" [class.light]="theme.isLight()">
+  <div class="content">
+    <div class="header-row">
+      <div class="header-block">
+        <h1 class="page-title">My Team</h1>
+        <p class="page-subtitle">Manage your Dream Team and see how it stacks up.</p>
+      </div>
+      <div class="header-actions">
+        <a routerLink="/team-card" class="tool-btn"><span class="tool-icon"></span> Team Card</a>
+        <a routerLink="/ai-assistant" class="tool-btn"><span class="tool-icon"></span> AI Trainer Assistant</a>
+        <a routerLink="/battle" class="battle-pill">Start Battle Simulation <span>&rarr;</span></a>
+      </div>
+    </div>
+
+    <!-- 5 Team Slots -->
+    <div class="slots-row">
+      @for (member of slots(); track $index) {
+        @if (member) {
+          <div class="slot-outer" (click)="openDetail(member.pokemonId)">
+            <div class="slot-inner">
+              <button type="button" class="remove-btn" (click)="$event.stopPropagation(); requestRemove(member)">&times;</button>
+              <div class="hex-badge">#{{ member.pokemonId.toString().padStart(3, '0') }}</div>
+              <div class="slot-art">
+                @if (member.spriteUrl) {
+                  <img [src]="member.spriteUrl" alt="{{ member.pokemonName }}" />
+                }
+              </div>
+              <div class="slot-name">{{ member.pokemonName }}</div>
+              @if (member.types[0]; as type) {
+                <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                  <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
+                </span>
+              }
+              <div class="power-row">
+                <span class="power-label">PWR</span>
+                <span class="power-value">{{ member.baseExperience }}</span>
+              </div>
+            </div>
+          </div>
+        } @else {
+          <a routerLink="/explorer" class="slot-empty">
+            <div class="plus">+</div>
+            <div class="empty-label">Add Pok&eacute;mon</div>
+          </a>
+        }
+      }
+    </div>
+
+    @if (hasTeam()) {
+      <!-- Team Statistics -->
+      <div class="stats-card">
+        <div class="stats-header-row">
+          <span class="stats-title">Team Statistics</span>
+          <span class="tier-pill">{{ tier() }}</span>
+        </div>
+
+        <div class="stats-summary-grid">
+          <div class="summary-cell">
+            <div class="summary-label">Total Power</div>
+            <div class="summary-value">{{ totalPower() }}</div>
+          </div>
+          <div class="summary-cell">
+            <div class="summary-label">Average Power</div>
+            <div class="summary-value">{{ averagePower() }}</div>
+          </div>
+          @if (strongest(); as s) {
+            <div class="summary-cell strongest-cell">
+              <div class="summary-label">Strongest Pok&eacute;mon</div>
+              <div class="strongest-row">
+                <span class="strongest-name">{{ s.pokemonName }}</span>
+                @if (s.types[0]; as type) {
+                  <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                    <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
+                  </span>
+                }
+                <span class="strongest-power">{{ s.baseExperience }} PWR</span>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="breakdown">
+          <div class="breakdown-title">Power Breakdown</div>
+          @for (m of breakdownRows(); track m.pokemonId) {
+            <div class="breakdown-row">
+              <span class="breakdown-name">{{ m.pokemonName }}</span>
+              <div class="breakdown-track">
+                <div class="breakdown-fill" [style.width.%]="(m.baseExperience / maxMemberPower()) * 100"></div>
+              </div>
+              <span class="breakdown-value">{{ m.baseExperience }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Type coverage -->
+      <div class="type-card">
+        <div class="type-card-title">Type Coverage</div>
+        <div class="segmented-bar">
+          @for (seg of typeSegments(); track seg.type) {
+            <div class="segment" [style.width.%]="seg.pct" [style.background]="typeColor(seg.type)"></div>
+          }
+        </div>
+        <div class="type-legend">
+          @for (seg of typeSegments(); track seg.type) {
+            <span class="type-pill" [style.background]="typeColor(seg.type) + '33'" [style.color]="typeColor(seg.type)">
+              <span class="type-glyph" [style.background]="typeColor(seg.type)"></span>{{ seg.type }} {{ seg.pct }}%
+            </span>
+          }
+        </div>
+        <p class="insight-text">{{ insightText() }}</p>
+      </div>
+    }
+
+    @if (!isLoading() && !hasTeam()) {
+      <div class="no-team-state">
+        <div class="no-team-glyph"></div>
+        <div class="no-team-title">No Pok&eacute;mon on your team yet</div>
+        <div class="no-team-sub">
+          Head to the Explorer to start catching &mdash; your stats will show up here once your team fills in.
+        </div>
+        <a routerLink="/explorer" class="no-team-cta">Go to Explorer &rarr;</a>
+      </div>
+    }
+  </div>
+
+  @if (pendingRemove(); as target) {
+    <div class="confirm-overlay" (click)="cancelRemove()">
+      <div class="confirm-card" (click)="$event.stopPropagation()">
+        <h2 class="confirm-title">Are you sure you want to remove {{ target.name }}?</h2>
+        <div class="confirm-actions">
+          <button type="button" class="confirm-cancel" (click)="cancelRemove()">Cancel</button>
+          <button type="button" class="confirm-remove" (click)="confirmRemove()">Remove</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (selectedPokemonId(); as id) {
+    <app-pokemon-detail-modal
+      [pokemonId]="id"
+      [isFavorite]="isFavorite(id)"
+      [isOnTeam]="true"
+      [teamFull]="true"
+      [isLight]="theme.isLight()"
+      (closed)="closeDetail()"
+      (toggleFavorite)="toggleFavorite(id)"
+    />
+  }
+</div>

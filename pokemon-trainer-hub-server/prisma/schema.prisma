@@ -43,6 +43,9 @@ model TrainerProfile {
   lastName        String
   dateOfBirth     DateTime
   country         String
+  // Real Pokédex id of the trainer's chosen profile icon — nullable since
+  // existing profiles (and the "no selection yet" state) don't have one.
+  avatarPokemonId Int?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

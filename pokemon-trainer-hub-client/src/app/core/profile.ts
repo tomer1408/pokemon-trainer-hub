@@ -11,6 +11,9 @@ export interface TrainerProfile {
   lastName: string;
   dateOfBirth: string;
   country: string;
+  // Real Pokédex id of the trainer's chosen profile icon, or null if they
+  // haven't picked one.
+  avatarPokemonId: number | null;
 }
 
 @Injectable({ providedIn: 'root' })

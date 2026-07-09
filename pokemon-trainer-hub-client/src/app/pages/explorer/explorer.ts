@@ -1,0 +1,279 @@
+import { Component, computed, effect, inject, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
+import { debounceTime, map, switchMap } from 'rxjs';
+import { PokemonService, PokemonListResponse, PokemonSummary } from '../../core/pokemon';
+import { TeamService, DreamTeamMember } from '../../core/team';
+import { FavoritesService, FavoritePokemon } from '../../core/favorites';
+import { getTeamPower } from '../../shared/team-power';
+import { POKEMON_TYPES, TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
+import { ThemeService } from '../../shared/theme';
+import { PokemonDetailModal } from '../../shared/pokemon-detail-modal/pokemon-detail-modal';
+import { TeamSwapModal } from '../../shared/team-swap-modal/team-swap-modal';
+
+type SortBy = 'name' | 'power' | 'dex';
+
+const PAGE_SIZE = 20;
+const MAX_TEAM_SIZE = 5;
+const EMPTY_LIST: PokemonListResponse = { results: [], page: 1, pageSize: PAGE_SIZE, total: 0 };
+
+function matchesFavorite(fav: FavoritePokemon, search: string, type: string): boolean {
+  if (search && !fav.pokemonName.toLowerCase().includes(search.toLowerCase())) return false;
+  if (type !== 'all' && !fav.types.includes(type)) return false;
+  return true;
+}
+
+function sortSummaries(list: PokemonSummary[], sort: SortBy): PokemonSummary[] {
+  const copy = [...list];
+  if (sort === 'name') return copy.sort((a, b) => a.name.localeCompare(b.name));
+  if (sort === 'power') return copy.sort((a, b) => b.baseExperience - a.baseExperience);
+  return copy.sort((a, b) => a.id - b.id);
+}
+
+@Component({
+  selector: 'app-explorer',
+  imports: [FormsModule, NgTemplateOutlet, PokemonDetailModal, TeamSwapModal],
+  templateUrl: './explorer.html',
+  styleUrl: './explorer.css',
+})
+export class Explorer {
+  private readonly pokemonService = inject(PokemonService);
+  private readonly teamService = inject(TeamService);
+  private readonly favoritesService = inject(FavoritesService);
+  protected readonly theme = inject(ThemeService);
+
+  protected readonly types = POKEMON_TYPES;
+
+  protected readonly searchInput = signal('');
+  private readonly debouncedSearch = toSignal(
+    toObservable(this.searchInput).pipe(debounceTime(300)),
+    { initialValue: '' },
+  );
+
+  protected readonly typeFilter = signal<PokemonTypeName | 'all'>('all');
+  protected readonly sortBy = signal<SortBy>('name');
+  protected readonly favoritesOnly = signal(false);
+  protected readonly page = signal(1);
+  protected readonly surpriseId = signal<number | null>(null);
+  protected readonly mobileDrawerOpen = signal(false);
+  protected readonly pendingRemove = signal<{ id: number; name: string } | null>(null);
+  protected readonly swapNotice = signal<string | null>(null);
+  protected readonly selectedPokemon = signal<PokemonSummary | null>(null);
+  protected readonly swapCandidate = signal<PokemonSummary | null>(null);
+
+  private readonly teamRefresh = signal(0);
+  private readonly favoritesRefresh = signal(0);
+
+  protected readonly team = toSignal(
+    toObservable(this.teamRefresh).pipe(switchMap(() => this.teamService.getTeam())),
+    { initialValue: [] as DreamTeamMember[] },
+  );
+
+  protected readonly favorites = toSignal(
+    toObservable(this.favoritesRefresh).pipe(switchMap(() => this.favoritesService.getFavorites())),
+    { initialValue: [] as FavoritePokemon[] },
+  );
+
+  private readonly query = computed(() => ({
+    search: this.debouncedSearch(),
+    type: this.typeFilter(),
+    sort: this.sortBy(),
+    page: this.page(),
+    favoritesOnly: this.favoritesOnly(),
+  }));
+
+  // Resets to page 1 whenever a filter (not the page itself) changes.
+  private readonly resetPageOnFilterChange = effect(() => {
+    this.debouncedSearch();
+    this.typeFilter();
+    this.sortBy();
+    this.favoritesOnly();
+    this.page.set(1);
+  });
+
+  protected readonly isLoading = signal(false);
+
+  protected readonly listResult = toSignal(
+    toObservable(this.query).pipe(
+      switchMap((q) => {
+        this.isLoading.set(true);
+        if (q.favoritesOnly) {
+          return this.favoritesService.getFavorites().pipe(
+            map((favs): PokemonListResponse => {
+              const filtered = favs.filter((f) => matchesFavorite(f, q.search, q.type));
+              const results: PokemonSummary[] = sortSummaries(
+                filtered.map((f) => ({
+                  id: f.pokemonId,
+                  name: f.pokemonName,
+                  baseExperience: f.baseExperience,
+                  types: f.types,
+                  spriteUrl: f.spriteUrl,
+                })),
+                q.sort,
+              );
+              return { results, page: 1, pageSize: results.length || 1, total: results.length };
+            }),
+          );
+        }
+        return this.pokemonService.search({
+          search: q.search || undefined,
+          type: q.type === 'all' ? undefined : q.type,
+          sort: q.sort === 'dex' ? 'id' : q.sort === 'power' ? 'strongest' : 'name',
+          page: q.page,
+        });
+      }),
+    ),
+    { initialValue: EMPTY_LIST },
+  );
+
+  constructor() {
+    effect(() => {
+      this.listResult();
+      this.isLoading.set(false);
+    });
+  }
+
+  protected readonly totalPages = computed(() =>
+    this.favoritesOnly() ? 1 : Math.max(1, Math.ceil(this.listResult().total / PAGE_SIZE)),
+  );
+  protected readonly isFirstPage = computed(() => this.page() <= 1);
+  protected readonly isLastPage = computed(() => this.page() >= this.totalPages());
+
+  protected readonly teamPower = computed(() => getTeamPower(this.team()));
+  protected readonly teamFull = computed(() => this.team().length >= MAX_TEAM_SIZE);
+  protected readonly teamCoverage = computed(() => {
+    const types = new Set<string>();
+    this.team().forEach((m) => m.types.forEach((t) => types.add(t)));
+    return Array.from(types);
+  });
+  protected readonly teamSlots = computed(() => {
+    const team = this.team();
+    return Array.from({ length: MAX_TEAM_SIZE }, (_, i) => team[i] ?? null);
+  });
+
+  typeColor(type: string): string {
+    return TYPE_COLORS[type as PokemonTypeName] ?? TYPE_COLORS['normal'];
+  }
+
+  isOnTeam(pokemonId: number): boolean {
+    return this.team().some((m) => m.pokemonId === pokemonId);
+  }
+
+  isFavorite(pokemonId: number): boolean {
+    return this.favorites().some((f) => f.pokemonId === pokemonId);
+  }
+
+  selectType(type: PokemonTypeName | 'all'): void {
+    this.typeFilter.set(this.typeFilter() === type ? 'all' : type);
+  }
+
+  toggleFavoritesOnly(): void {
+    this.favoritesOnly.update((v) => !v);
+  }
+
+  toggleFavorite(p: PokemonSummary): void {
+    const obs = this.isFavorite(p.id)
+      ? this.favoritesService.removeFavorite(p.id)
+      : this.favoritesService.addFavorite(p.id);
+    obs.subscribe(() => this.favoritesRefresh.update((n) => n + 1));
+  }
+
+  actionLabel(p: PokemonSummary): string {
+    if (this.isOnTeam(p.id)) return 'On Team';
+    if (this.teamFull()) return 'Compare';
+    return 'Add to Team';
+  }
+
+  onAction(p: PokemonSummary): void {
+    if (this.isOnTeam(p.id)) return;
+
+    if (this.teamFull()) {
+      this.swapCandidate.set(p);
+      return;
+    }
+
+    this.teamService.addToTeam(p.id).subscribe((result) => {
+      if (result.ok) {
+        this.teamRefresh.update((n) => n + 1);
+        this.swapNotice.set(null);
+      } else if (result.reason === 'TEAM_FULL') {
+        this.swapCandidate.set(p);
+      } else {
+        this.swapNotice.set(result.message);
+      }
+    });
+  }
+
+  closeSwap(): void {
+    this.swapCandidate.set(null);
+  }
+
+  onSwapped(): void {
+    this.teamRefresh.update((n) => n + 1);
+    this.swapCandidate.set(null);
+  }
+
+  requestRemove(member: DreamTeamMember): void {
+    this.pendingRemove.set({ id: member.pokemonId, name: member.pokemonName });
+  }
+
+  confirmRemove(): void {
+    const target = this.pendingRemove();
+    if (!target) return;
+    this.teamService.removeFromTeam(target.id).subscribe(() => {
+      this.teamRefresh.update((n) => n + 1);
+      this.pendingRemove.set(null);
+    });
+  }
+
+  cancelRemove(): void {
+    this.pendingRemove.set(null);
+  }
+
+  clearFilters(): void {
+    this.searchInput.set('');
+    this.typeFilter.set('all');
+    this.favoritesOnly.set(false);
+    this.page.set(1);
+  }
+
+  prevPage(): void {
+    this.page.update((p) => Math.max(1, p - 1));
+  }
+
+  nextPage(): void {
+    this.page.update((p) => Math.min(this.totalPages(), p + 1));
+  }
+
+  // Picks a real random Pokémon (original 151, so the id is always valid) and
+  // puts its name straight into search — guarantees it's actually visible in
+  // the results (unlike highlighting a card that may be off-page).
+  onSurpriseMe(): void {
+    const randomId = Math.floor(Math.random() * 151) + 1;
+    this.pokemonService.getById(randomId).subscribe((p) => {
+      if (!p) return;
+      this.favoritesOnly.set(false);
+      this.typeFilter.set('all');
+      this.searchInput.set(p.name);
+      this.surpriseId.set(p.id);
+      setTimeout(() => this.surpriseId.set(null), 2800);
+    });
+  }
+
+  openDetail(p: PokemonSummary): void {
+    this.selectedPokemon.set(p);
+  }
+
+  closeDetail(): void {
+    this.selectedPokemon.set(null);
+  }
+
+  toggleMobileDrawer(): void {
+    this.mobileDrawerOpen.update((v) => !v);
+  }
+
+  closeMobileDrawer(): void {
+    this.mobileDrawerOpen.set(false);
+  }
+}

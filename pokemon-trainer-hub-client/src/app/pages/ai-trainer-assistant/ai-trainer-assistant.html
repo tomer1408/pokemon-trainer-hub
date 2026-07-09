@@ -1,26 +1,8 @@
-<div class="page" [class.light]="isLight()">
-
-  <div class="top-bar">
-    <div class="top-bar-left">
-      <div class="top-bar-row">
-        <app-account-menu
-          [trainerName]="trainerName()"
-          [email]="trainerEmail()"
-          [isLight]="isLight()"
-          [(colorblindMode)]="colorblindMode"
-        />
-        <span class="logo">TRAINER HUB</span>
-        <div class="assistant-badge"><span class="assistant-dot"></span>AI Trainer Assistant</div>
-      </div>
-      <a href="#my-team" class="back-link">← Back to My Team</a>
-    </div>
-    <div class="theme-switch">
-      <button type="button" class="theme-btn" [class.active]="!isLight()" (click)="setThemeDark()">☾ Dark</button>
-      <button type="button" class="theme-btn" [class.active]="isLight()" (click)="setThemeLight()">☀ Light</button>
-    </div>
-  </div>
+<div class="page" [class.light]="theme.isLight()">
 
   <div class="content">
+
+    <a routerLink="/my-team" class="back-link">← Back to My Team</a>
 
     <div class="header-block">
       <h1 class="page-title">Let's figure out your next move.</h1>

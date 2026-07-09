@@ -11,10 +11,29 @@ export interface PokemonSummary {
   spriteUrl: string | null;
 }
 
+export interface PokemonAbility {
+  name: string;
+  description: string | null;
+}
+
+export interface PokemonMove {
+  name: string;
+  type: string;
+  power: number;
+}
+
 export interface PokemonDetail extends PokemonSummary {
   stats: { name: string; value: number }[];
-  abilities: string[];
+  abilities: PokemonAbility[];
   cry: string | null;
+  // Only populated by getById (GET /api/pokemon/:id) — the list endpoint
+  // doesn't pay for the extra PokeAPI calls these need.
+  height: number;
+  weight: number;
+  flavorText: string | null;
+  weaknesses: string[];
+  resistances: string[];
+  topMoves: PokemonMove[];
 }
 
 export interface PokemonListResponse {

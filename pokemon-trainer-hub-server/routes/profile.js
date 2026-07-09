@@ -19,7 +19,7 @@ router.get('/', jwtCheck, async (req, res) => {
 
 // Creates or updates the current user's Trainer Profile
 router.post('/', jwtCheck, async (req, res) => {
-  const { trainerName, favoriteType, experienceLevel, firstName, lastName, dateOfBirth, country } =
+  const { trainerName, favoriteType, experienceLevel, firstName, lastName, dateOfBirth, country, avatarPokemonId } =
     req.body;
 
   if (
@@ -45,6 +45,8 @@ router.post('/', jwtCheck, async (req, res) => {
     lastName,
     dateOfBirth: new Date(dateOfBirth),
     country,
+    // Optional — the profile icon picker isn't required to complete onboarding.
+    avatarPokemonId: Number.isInteger(avatarPokemonId) ? avatarPokemonId : null,
   };
 
   const profile = await prisma.trainerProfile.upsert({

@@ -1,109 +1,138 @@
-<div class="onboarding" [class.light]="theme.isLight()">
-  <div class="card">
-    <p class="kicker">Welcome, Trainer</p>
-    <h1 class="title">Let's set up your profile</h1>
-    <p class="subtitle">
-      Tell us a bit about yourself before you start building your Dream Team.
-    </p>
+<div class="onboarding">
+  <div class="glow"></div>
 
-    <form class="form" (ngSubmit)="submitProfile()">
-      <label class="field">
-        <span class="field-label">Trainer Name</span>
-        <input
-          type="text"
-          name="trainerName"
-          [ngModel]="form().trainerName"
-          (ngModelChange)="updateForm('trainerName', $event)"
-          required
-        />
-      </label>
+  <div class="shell">
+    <div class="header-block">
+      <span class="kicker"><span class="kicker-dot"></span>Welcome, Trainer</span>
+      <h1 class="title">Just a few details before your journey begins.</h1>
+      <p class="subtitle">This helps us personalize your Trainer Hub &mdash; it only takes a minute.</p>
+    </div>
 
-      <div class="field-row">
-        <label class="field">
-          <span class="field-label">First Name</span>
-          <input
-            type="text"
-            name="firstName"
-            [ngModel]="form().firstName"
-            (ngModelChange)="updateForm('firstName', $event)"
-            required
-          />
-        </label>
-        <label class="field">
-          <span class="field-label">Last Name</span>
-          <input
-            type="text"
-            name="lastName"
-            [ngModel]="form().lastName"
-            (ngModelChange)="updateForm('lastName', $event)"
-            required
-          />
-        </label>
-      </div>
+    <div class="form-grid">
+      <!-- Left column: personal info -->
+      <div class="col-card">
+        <div class="col-title">About You</div>
 
-      <div class="field-row">
-        <label class="field">
-          <span class="field-label">Date of Birth</span>
+        <div class="field-row">
+          <label class="field-group">
+            <span class="field-label">First Name <span class="required-mark">*</span></span>
+            <input
+              type="text"
+              placeholder="Ash"
+              name="firstName"
+              [ngModel]="form().firstName"
+              (ngModelChange)="updateField('firstName', $event)"
+            />
+          </label>
+          <label class="field-group">
+            <span class="field-label">Last Name <span class="required-mark">*</span></span>
+            <input
+              type="text"
+              placeholder="Ketchum"
+              name="lastName"
+              [ngModel]="form().lastName"
+              (ngModelChange)="updateField('lastName', $event)"
+            />
+          </label>
+        </div>
+
+        <label class="field-group">
+          <span class="field-label">Date of Birth <span class="required-mark">*</span></span>
           <input
             type="date"
             name="dateOfBirth"
-            [ngModel]="dateOfBirthInputValue"
-            (ngModelChange)="updateDateOfBirth($event)"
+            [ngModel]="form().dateOfBirth"
+            (ngModelChange)="updateField('dateOfBirth', $event)"
           />
         </label>
-        <label class="field">
-          <span class="field-label">Country</span>
-          <select
-            name="country"
-            [ngModel]="form().country"
-            (ngModelChange)="updateForm('country', $event)"
-          >
+
+        <label class="field-group">
+          <span class="field-label">Country <span class="required-mark">*</span></span>
+          <select name="country" [ngModel]="form().country" (ngModelChange)="updateField('country', $event)">
+            <option value="">Select your country&hellip;</option>
             @for (c of countries; track c) {
               <option [value]="c">{{ c }}</option>
             }
           </select>
         </label>
-      </div>
 
-      <div class="field">
-        <span class="field-label">Favorite Type</span>
-        <div class="chip-row">
-          @for (t of pokemonTypes; track t) {
-            <button
-              type="button"
-              class="chip"
-              [class.active]="form().favoriteType === t"
-              (click)="updateFavoriteType(t)"
-            >
-              {{ t }}
-            </button>
-          }
+        <div class="field-group">
+          <span class="field-label">Experience Level</span>
+          <div class="segment-row">
+            @for (level of experienceLevels; track level) {
+              <button
+                type="button"
+                class="segment-btn"
+                [class.active]="form().experienceLevel === level"
+                (click)="updateExperienceLevel(level)"
+              >
+                {{ level }}
+              </button>
+            }
+          </div>
         </div>
       </div>
 
-      <div class="field">
-        <span class="field-label">Experience Level</span>
-        <div class="segmented">
-          @for (level of experienceLevels; track level) {
-            <button
-              type="button"
-              class="segment"
-              [class.active]="form().experienceLevel === level"
-              (click)="updateExperienceLevel(level)"
-            >
-              {{ level }}
-            </button>
-          }
+      <!-- Right column: trainer identity -->
+      <div class="col-card">
+        <div class="col-title">Your Trainer Identity</div>
+
+        <label class="field-group">
+          <span class="field-label">Trainer Name <span class="required-mark">*</span></span>
+          <input
+            type="text"
+            placeholder="How should we call you?"
+            name="trainerName"
+            [ngModel]="form().trainerName"
+            (ngModelChange)="updateField('trainerName', $event)"
+          />
+        </label>
+
+        <div class="field-group">
+          <span class="field-label">Favorite Type</span>
+          <div class="type-chip-row">
+            @for (t of pokemonTypes; track t) {
+              <button
+                type="button"
+                class="type-chip"
+                [class.active]="form().favoriteType === t"
+                (click)="updateFavoriteType(t)"
+              >
+                {{ t }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="field-group">
+          <span class="field-label">Profile Icon</span>
+          <div class="icon-grid">
+            @for (icon of iconOptions(); track icon.id) {
+              <button
+                type="button"
+                class="icon-wrap"
+                [class.active]="form().avatarPokemonId === icon.id"
+                (click)="selectIcon(icon.id)"
+              >
+                @if (icon.spriteUrl) {
+                  <img [src]="icon.spriteUrl" alt="{{ icon.name }}" />
+                }
+              </button>
+            }
+          </div>
         </div>
       </div>
+    </div>
 
-      @if (submitError()) {
-        <p class="error-message">{{ submitError() }}</p>
-      }
+    @if (submitError()) {
+      <p class="error-message">{{ submitError() }}</p>
+    }
 
-      <button type="submit" class="submit-btn" [disabled]="!canSubmit() || submitting()">
-        {{ submitting() ? 'Saving…' : 'Start My Journey' }}
+    <div class="submit-block">
+      <button type="button" class="submit-btn" [disabled]="!canSubmit() || submitting()" (click)="submitProfile()">
+        {{ submitting() ? 'Saving…' : "Let's go!" }}
       </button>
-    </form>
+      <p class="required-note">* All fields are required</p>
+    </div>
   </div>
 </div>

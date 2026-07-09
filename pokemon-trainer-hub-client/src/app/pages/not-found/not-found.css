@@ -1,0 +1,187 @@
+/* Exact tokens from 404.dc.html — no light/dark toggle in the mockup, kept dark-only. */
+:host {
+  --bg: #0D0A1E;
+  --surface: #1A1533;
+  --border-soft: rgba(196, 181, 253, 0.16);
+  --text-body: #F1EEFB;
+  --text-muted: rgba(230, 225, 250, 0.6);
+  --violet: #A78BFA;
+  --violet-deep: #7C3AED;
+  --cyan: #5EEAD4;
+  --yellow: #FDE68A;
+
+  display: block;
+}
+
+.not-found-page {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: radial-gradient(ellipse 900px 600px at 50% 20%, rgba(124, 58, 237, 0.20), transparent 60%), var(--bg);
+  font-family: 'Manrope', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  box-sizing: border-box;
+}
+
+.glow {
+  position: absolute;
+  top: -10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.3), transparent 70%);
+  filter: blur(40px);
+  animation: glowPulse 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+  max-width: 520px;
+}
+
+.kicker {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: var(--yellow);
+  letter-spacing: 1px;
+}
+
+.title {
+  font-family: 'Bungee', sans-serif;
+  font-size: clamp(30px, 5vw, 44px);
+  color: var(--text-body);
+  margin: 4px 0 0;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.scene {
+  position: relative;
+  width: 260px;
+  height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.dust {
+  position: absolute;
+  bottom: 38px;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(230, 225, 250, 0.5), transparent 70%);
+  animation: dustPuff 1.8s ease-out infinite;
+}
+
+.creature {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--violet), var(--violet-deep));
+  background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.10) 0px, rgba(255, 255, 255, 0.10) 7px, transparent 7px, transparent 14px);
+  box-shadow: 0 14px 30px rgba(124, 58, 237, 0.4);
+  animation: fleeAway 2.2s ease-in 0.4s infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.creature-face {
+  display: flex;
+  gap: 16px;
+}
+
+.eye {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--bg);
+}
+
+.log-line {
+  font-family: 'Space Mono', monospace;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  padding: 9px 16px;
+  animation: bounceIn 2.2s ease-in-out infinite;
+}
+
+.actions-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.primary-btn {
+  border: none;
+  border-radius: 100px;
+  padding: 15px 30px;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--cyan), var(--violet));
+  color: #0D0A1E;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 14.5px;
+  box-shadow: 0 14px 34px rgba(124, 58, 237, 0.4);
+}
+
+.secondary-btn {
+  border: 1.5px solid var(--border-soft);
+  border-radius: 100px;
+  padding: 15px 30px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-body);
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 14.5px;
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.85; }
+}
+
+@keyframes fleeAway {
+  0% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
+  60% { opacity: 1; }
+  100% { transform: translate(140px, -40px) rotate(25deg) scale(0.4); opacity: 0; }
+}
+
+@keyframes dustPuff {
+  0% { transform: scale(0.3); opacity: 0; }
+  40% { opacity: 0.7; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+@keyframes bounceIn {
+  0%, 60% { transform: translateY(0); }
+  80% { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}

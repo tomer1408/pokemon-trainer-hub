@@ -24,6 +24,24 @@ router.get('/', jwtCheck, async (req, res) => {
   res.json(team);
 });
 
+// POST /api/team/swap  { removePokemonId, addPokemonId }
+// Must be declared before POST /:id — otherwise Express would match "swap"
+// as the :id param and this route would never be reached.
+router.post('/swap', jwtCheck, async (req, res) => {
+  const { removePokemonId, addPokemonId } = req.body;
+  if (!Number.isInteger(removePokemonId) || !Number.isInteger(addPokemonId)) {
+    return res.status(400).json({ message: 'removePokemonId and addPokemonId must both be numbers.' });
+  }
+
+  try {
+    const result = await teamService.swapTeamMember(req.auth.payload.sub, removePokemonId, addPokemonId);
+    res.status(200).json(result);
+  } catch (err) {
+    if (err instanceof ServiceError) return respondToServiceError(err, res);
+    throw err;
+  }
+});
+
 // POST /api/team/:id
 router.post('/:id', jwtCheck, async (req, res) => {
   const pokemonId = Number(req.params.id);

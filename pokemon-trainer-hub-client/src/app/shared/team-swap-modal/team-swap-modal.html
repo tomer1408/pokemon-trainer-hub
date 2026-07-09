@@ -1,0 +1,164 @@
+<div class="dim-overlay" [class.light]="isLight" (click)="onCancel()">
+  <div class="modal-outer" (click)="$event.stopPropagation()">
+    <div class="modal-inner">
+      <button type="button" class="close-btn" (click)="onCancel()">&times;</button>
+
+      <div class="header">
+        <div class="kicker">Team's full &mdash; 5/5</div>
+        <h1 class="title">Which Pok&eacute;mon should make the cut?</h1>
+        <p class="subtitle">
+          Pick a teammate to compare against your new find. Swap them out if the new one hits harder.
+        </p>
+      </div>
+
+      @if (candidate(); as c) {
+        <div class="vs-row">
+          <div class="candidate-card">
+            <div class="card-kicker">Candidate</div>
+            <div class="card-art" [style.background]="typeColor(c.types[0]) + '22'">
+              @if (c.spriteUrl) {
+                <img [src]="c.spriteUrl" alt="{{ c.name }}" />
+              }
+            </div>
+            <div class="card-name">{{ c.name }}</div>
+            @if (c.types[0]; as type) {
+              <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
+              </span>
+            }
+            <div class="card-power-row">
+              <span class="card-power-label">PWR</span>
+              <span class="card-power-value">{{ c.baseExperience }}</span>
+            </div>
+          </div>
+
+          <div class="vs-badge">VS</div>
+
+          @if (selectedMember(); as sel) {
+            <div class="candidate-card">
+              <div class="card-kicker">Your Teammate</div>
+              <div class="card-art" [style.background]="typeColor(sel.types[0]) + '22'">
+                @if (sel.spriteUrl) {
+                  <img [src]="sel.spriteUrl" alt="{{ sel.pokemonName }}" />
+                }
+              </div>
+              <div class="card-name">{{ sel.pokemonName }}</div>
+              @if (sel.types[0]; as type) {
+                <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                  <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
+                </span>
+              }
+              <div class="card-power-row">
+                <span class="card-power-label">PWR</span>
+                <span class="card-power-value">{{ sel.baseExperience }}</span>
+              </div>
+            </div>
+          } @else {
+            <div class="pick-prompt">
+              <div class="pick-prompt-glyph">?</div>
+              <div class="pick-prompt-text">Pick a teammate below</div>
+            </div>
+          }
+        </div>
+
+        @if (suggestedMember(); as sm) {
+          <div class="suggestion-banner">
+            <div class="suggestion-glyph">&#128161;</div>
+            <div class="suggestion-text-wrap">
+              <div class="suggestion-title">Suggested swap: {{ sm.pokemonName }}</div>
+              <div class="suggestion-reason">
+                Lowest Team Power ({{ sm.baseExperience }}) &mdash; swapping {{ sm.pokemonName }} keeps your roster
+                hitting the hardest.
+              </div>
+            </div>
+            <button type="button" class="suggestion-btn" (click)="useSuggestion()">Use this pick</button>
+          </div>
+        }
+
+        <div class="picker-row">
+          @for (m of team; track m.pokemonId) {
+            <button
+              type="button"
+              class="picker-chip"
+              [class.active]="selectedMember()?.pokemonId === m.pokemonId"
+              [class.suggested]="suggestedMember()?.pokemonId === m.pokemonId"
+              (click)="selectMember(m.pokemonId)"
+            >
+              <span class="picker-dot" [style.background]="typeColor(m.types[0]) + '80'"></span>
+              {{ m.pokemonName }}
+              @if (suggestedMember()?.pokemonId === m.pokemonId) {
+                <span class="suggested-tag">Suggested</span>
+              }
+            </button>
+          }
+        </div>
+
+        @if (selectedMember(); as sel) {
+          <div class="stat-section">
+            <div class="stat-section-header">
+              <span class="stat-section-title">Stat Comparison</span>
+            </div>
+            <div class="stat-column-labels">
+              <span class="candidate-col-label">{{ c.name }}</span>
+              <span class="vs-col-label">vs</span>
+              <span class="selected-col-label">{{ sel.pokemonName }}</span>
+            </div>
+            @for (st of statRows(); track st.label) {
+              <div class="stat-row">
+                <span class="stat-value-left" [class.wins]="st.candidateWins">
+                  {{ st.candidateValue }}
+                  @if (st.candidateWins) {
+                    <span class="win-mark"> &#9652;</span>
+                  }
+                </span>
+                <div class="stat-bars-wrap">
+                  <div class="stat-track">
+                    <div
+                      class="stat-fill left"
+                      [class.wins]="st.candidateWins"
+                      [style.width.%]="statFillPct(st.candidateValue)"
+                    ></div>
+                  </div>
+                  <span class="stat-label-chip">{{ st.label }}</span>
+                  <div class="stat-track">
+                    <div
+                      class="stat-fill right"
+                      [class.wins]="st.selectedWins"
+                      [style.width.%]="statFillPct(st.selectedValue)"
+                    ></div>
+                  </div>
+                </div>
+                <span class="stat-value-right" [class.wins]="st.selectedWins">
+                  @if (st.selectedWins) {
+                    <span class="win-mark">&#9652; </span>
+                  }
+                  {{ st.selectedValue }}
+                </span>
+              </div>
+            }
+          </div>
+
+          <div class="diff-row">
+            <span class="diff-label">Total Power Difference</span>
+            <span class="diff-badge" [class.better]="powerDiff() > 0">
+              {{ powerDiff() > 0 ? '+' : '' }}{{ powerDiff() }} PWR
+            </span>
+          </div>
+        }
+
+        @if (swapError()) {
+          <p class="error-message">{{ swapError() }}</p>
+        }
+
+        <div class="actions-row">
+          <button type="button" class="cancel-btn" (click)="onCancel()">Cancel</button>
+          <button type="button" class="swap-btn" [disabled]="!hasSelection() || isSwapping()" (click)="onSwap()">
+            {{ isSwapping() ? 'Swapping…' : hasSelection() ? 'Swap in ' + c.name : 'Pick a teammate first' }}
+          </button>
+        </div>
+      } @else {
+        <div class="loading-state">Loading&hellip;</div>
+      }
+    </div>
+  </div>
+</div>

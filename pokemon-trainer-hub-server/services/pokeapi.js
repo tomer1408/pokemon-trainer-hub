@@ -6,11 +6,12 @@ const POKEAPI_BASE = 'https://pokeapi.co/api/v2';
 // Pokémon (or list) don't hit the external API every time.
 const pokeCache = new NodeCache({ stdTTL: 3600 });
 
-// Fetches one Pokémon's details (cached). Returns null if PokeAPI says 404,
-// throws if PokeAPI itself is unreachable/erroring.
-async function fetchPokemonDetail(idOrName) {
+// Raw PokeAPI pokemon payload, cached separately from the cleaned-up shape
+// below — fetchTopMoves also needs fields (the full `moves` list) that the
+// cleaned object doesn't keep, so both reuse this instead of double-fetching.
+async function fetchRawPokemon(idOrName) {
   const key = String(idOrName).toLowerCase();
-  const cached = pokeCache.get(`pokemon:${key}`);
+  const cached = pokeCache.get(`pokemonraw:${key}`);
   if (cached) return cached;
 
   const response = await fetch(`${POKEAPI_BASE}/pokemon/${key}`);
@@ -18,6 +19,20 @@ async function fetchPokemonDetail(idOrName) {
   if (!response.ok) throw new Error(`PokeAPI responded with ${response.status}`);
 
   const data = await response.json();
+  pokeCache.set(`pokemonraw:${key}`, data);
+  return data;
+}
+
+// Fetches one Pokémon's details (cached). Returns null if PokeAPI says 404,
+// throws if PokeAPI itself is unreachable/erroring.
+async function fetchPokemonDetail(idOrName) {
+  const key = String(idOrName).toLowerCase();
+  const cached = pokeCache.get(`pokemon:${key}`);
+  if (cached) return cached;
+
+  const data = await fetchRawPokemon(idOrName);
+  if (!data) return null;
+
   const pokemon = {
     id: data.id,
     name: data.name,
@@ -25,12 +40,181 @@ async function fetchPokemonDetail(idOrName) {
     stats: data.stats.map((s) => ({ name: s.stat.name, value: s.base_stat })),
     types: data.types.map((t) => t.type.name),
     abilities: data.abilities.map((a) => a.ability.name),
-    spriteUrl: data.sprites.front_default,
+    // Official artwork is a large, clean render — much sharper than the tiny
+    // 96x96 pixel-art front sprite. Falls back to the sprite if missing.
+    spriteUrl: data.sprites.other?.['official-artwork']?.front_default ?? data.sprites.front_default,
     cry: data.cries?.latest ?? data.cries?.legacy ?? null,
+    // PokeAPI reports these in decimetres/hectograms — converted to metres/kg,
+    // free fields already present on this same payload (no extra request).
+    height: data.height / 10,
+    weight: data.weight / 10,
   };
 
   pokeCache.set(`pokemon:${key}`, pokemon);
   return pokemon;
+}
+
+// English flavor text for the Detail Modal — a separate PokeAPI endpoint, so
+// this is only called for a single Pokémon's full detail, not for list views.
+async function fetchSpeciesFlavorText(idOrName) {
+  const key = String(idOrName).toLowerCase();
+  const cached = pokeCache.get(`species:${key}`);
+  if (cached !== undefined) return cached;
+
+  const response = await fetch(`${POKEAPI_BASE}/pokemon-species/${key}`);
+  if (response.status === 404) {
+    pokeCache.set(`species:${key}`, null);
+    return null;
+  }
+  if (!response.ok) throw new Error(`PokeAPI responded with ${response.status}`);
+
+  const data = await response.json();
+  const entry = data.flavor_text_entries.find((e) => e.language.name === 'en');
+  // Flavor text entries use \n / \f as line-break control characters.
+  const flavorText = entry ? entry.flavor_text.replace(/[\n\f\r]+/g, ' ') : null;
+
+  pokeCache.set(`species:${key}`, flavorText);
+  return flavorText;
+}
+
+// One type's raw weak-against / resistant-against lists — cached per type
+// (not per Pokémon), since every Pokémon sharing a type reuses the same data.
+async function fetchSingleTypeMatchup(typeName) {
+  const key = typeName.toLowerCase();
+  const cached = pokeCache.get(`typematchup:${key}`);
+  if (cached) return cached;
+
+  const response = await fetch(`${POKEAPI_BASE}/type/${key}`);
+  if (!response.ok) throw new Error(`PokeAPI responded with ${response.status}`);
+
+  const data = await response.json();
+  const result = {
+    weak: data.damage_relations.double_damage_from.map((t) => t.name),
+    resist: [
+      ...data.damage_relations.half_damage_from.map((t) => t.name),
+      ...data.damage_relations.no_damage_from.map((t) => t.name),
+    ],
+  };
+
+  pokeCache.set(`typematchup:${key}`, result, 86400);
+  return result;
+}
+
+// Merges weak/resist lists across a Pokémon's 1-2 types. Simplification: a
+// type that ends up both weak-against and resistant-against (possible for
+// dual-types, since real effectiveness multiplies per-type) is dropped from
+// both rather than computing the exact 4x/2x/0.5x/0.25x multiplier — good
+// enough for a badge display, not a battle-accuracy engine.
+async function fetchTypeMatchups(typeNames) {
+  const perType = await Promise.all(typeNames.map(fetchSingleTypeMatchup));
+  const weak = new Set();
+  const resist = new Set();
+  for (const t of perType) {
+    t.weak.forEach((w) => weak.add(w));
+    t.resist.forEach((r) => resist.add(r));
+  }
+  return {
+    weaknesses: [...weak].filter((t) => !resist.has(t)),
+    resistances: [...resist].filter((t) => !weak.has(t)),
+  };
+}
+
+// A single ability's English short effect text — cached per ability name,
+// since many Pokémon share the same ability.
+async function fetchAbilityDescription(abilityName) {
+  const key = abilityName.toLowerCase();
+  const cached = pokeCache.get(`ability:${key}`);
+  if (cached !== undefined) return cached;
+
+  const response = await fetch(`${POKEAPI_BASE}/ability/${key}`);
+  if (!response.ok) {
+    pokeCache.set(`ability:${key}`, null);
+    return null;
+  }
+
+  const data = await response.json();
+  const entry = data.effect_entries.find((e) => e.language.name === 'en');
+  const description = entry ? entry.short_effect || entry.effect : null;
+
+  pokeCache.set(`ability:${key}`, description, 86400);
+  return description;
+}
+
+async function fetchAbilitiesWithDescriptions(abilityNames) {
+  const descriptions = await Promise.all(abilityNames.map(fetchAbilityDescription));
+  return abilityNames.map((name, i) => ({ name, description: descriptions[i] }));
+}
+
+// A single move's type + power — cached per move name, since many Pokémon
+// share moves (e.g. Tackle, Quick Attack).
+async function fetchMoveDetail(moveName) {
+  const key = moveName.toLowerCase();
+  const cached = pokeCache.get(`move:${key}`);
+  if (cached !== undefined) return cached;
+
+  const response = await fetch(`${POKEAPI_BASE}/move/${key}`);
+  if (!response.ok) {
+    pokeCache.set(`move:${key}`, null);
+    return null;
+  }
+
+  const data = await response.json();
+  const move = { name: data.name, type: data.type.name, power: data.power };
+  pokeCache.set(`move:${key}`, move, 86400);
+  return move;
+}
+
+// Picks the Pokémon's real level-up moves, favoring higher-level ones as a
+// proxy for "strongest" (PokeAPI has no single "best move" field), fetches
+// each move's real type/power, drops status moves (power: null since they
+// don't deal damage), and returns up to 5 sorted by power. A ~1300-species
+// full "actual highest-power move" ranking would mean fetching every move a
+// Pokémon can learn (some know 100+) — this checks a bounded top-8 slice by
+// level instead, so opening the modal doesn't send that many requests.
+async function fetchTopMoves(idOrName) {
+  const data = await fetchRawPokemon(idOrName);
+  if (!data) return [];
+
+  const levelUpCandidates = data.moves
+    .map((m) => {
+      const detail = m.version_group_details.find((d) => d.move_learn_method.name === 'level-up');
+      return detail ? { name: m.move.name, level: detail.level_learned_at } : null;
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.level - a.level)
+    .slice(0, 8);
+
+  const detailed = await Promise.all(levelUpCandidates.map((m) => fetchMoveDetail(m.name)));
+  return detailed
+    .filter((m) => m && typeof m.power === 'number')
+    .sort((a, b) => b.power - a.power)
+    .slice(0, 5);
+}
+
+// The enriched shape the Pokémon Detail Modal needs — flavor text, type
+// matchups, ability descriptions, and top moves on top of fetchPokemonDetail's
+// fields. Kept as a separate function (used only by the single-item
+// GET /api/pokemon/:id route) so the list view (GET /api/pokemon) doesn't pay
+// for the extra PokeAPI calls these need.
+async function fetchPokemonFullDetail(idOrName) {
+  const base = await fetchPokemonDetail(idOrName);
+  if (!base) return null;
+
+  const [flavorText, matchups, abilities, topMoves] = await Promise.all([
+    fetchSpeciesFlavorText(base.id),
+    fetchTypeMatchups(base.types),
+    fetchAbilitiesWithDescriptions(base.abilities),
+    fetchTopMoves(base.id),
+  ]);
+
+  return {
+    ...base,
+    flavorText,
+    weaknesses: matchups.weaknesses,
+    resistances: matchups.resistances,
+    abilities,
+    topMoves,
+  };
 }
 
 // Full list of { id, name } for every Pokémon — cached for 24h, it basically never changes.
@@ -71,4 +255,4 @@ async function getListByType(type) {
   return list;
 }
 
-module.exports = { fetchPokemonDetail, getMasterList, getListByType };
+module.exports = { fetchPokemonDetail, fetchPokemonFullDetail, getMasterList, getListByType };

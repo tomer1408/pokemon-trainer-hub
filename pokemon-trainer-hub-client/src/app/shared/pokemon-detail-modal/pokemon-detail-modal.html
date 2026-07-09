@@ -1,0 +1,165 @@
+<div class="dim-overlay" [class.light]="isLight" (click)="onClose()">
+  <div class="modal-outer" (click)="$event.stopPropagation()">
+    <div class="modal-inner">
+      <button type="button" class="close-btn" (click)="onClose()">&times;</button>
+
+      @if (isLoading()) {
+        <div class="loading-state">Loading&hellip;</div>
+      } @else if (pokemon(); as p) {
+        <div class="header-row">
+          <div class="sprite-wrap">
+            <div class="sprite-art" [style.background]="typeColor(p.types[0]) + '22'">
+              @if (p.spriteUrl) {
+                <img [src]="p.spriteUrl" alt="{{ p.name }}" />
+              }
+            </div>
+          </div>
+
+          <div class="header-info">
+            <div class="dex-row">
+              <span class="dex-label">#{{ p.id.toString().padStart(4, '0') }}</span>
+            </div>
+            <h1 class="name">{{ p.name }}</h1>
+            <div class="types-row">
+              @for (t of p.types; track t) {
+                <span class="type-pill big" [style.background]="typeColor(t) + '33'" [style.color]="typeColor(t)">
+                  <span class="type-glyph" [style.background]="typeColor(t)"></span>{{ t }}
+                </span>
+              }
+            </div>
+            <div class="meta-chip-row">
+              <span class="meta-chip">Height <strong>{{ p.height }}m</strong></span>
+              <span class="meta-chip">Weight <strong>{{ p.weight }}kg</strong></span>
+            </div>
+            @if (p.cry) {
+              <div class="sound-row">
+                <button type="button" class="cry-btn" (click)="playCry()">&#128264; Sound</button>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="tab-row">
+          <button type="button" class="tab-btn" [class.active]="tab() === 'overview'" (click)="setTab('overview')">
+            Overview
+          </button>
+          <button type="button" class="tab-btn" [class.active]="tab() === 'abilities'" (click)="setTab('abilities')">
+            Abilities &amp; Weaknesses
+          </button>
+          <button type="button" class="tab-btn" [class.active]="tab() === 'moves'" (click)="setTab('moves')">
+            Top Moves
+          </button>
+        </div>
+
+        <div class="body-scroll">
+          @if (tab() === 'overview') {
+            @if (p.flavorText) {
+              <p class="flavor-text">{{ p.flavorText }}</p>
+            }
+
+            <div class="section-block">
+              <div class="section-title">Base Stats</div>
+              <div class="stat-list">
+                @for (s of p.stats; track s.name) {
+                  <div class="stat-row">
+                    <span class="stat-name">{{ s.name }}</span>
+                    <div class="stat-track">
+                      <div class="stat-fill" [style.width.%]="statFillPct(s.value)"></div>
+                    </div>
+                    <span class="stat-value">{{ s.value }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          @if (tab() === 'abilities') {
+            <div class="section-block">
+              <div class="section-title">Abilities</div>
+              @for (ab of p.abilities; track ab.name; let i = $index) {
+                <div class="ability-row">
+                  <button type="button" class="ability-header-btn" (click)="toggleAbility(i)">
+                    <span>{{ ab.name }}</span>
+                    <span class="ability-caret">{{ isAbilityExpanded(i) ? '−' : '+' }}</span>
+                  </button>
+                  @if (isAbilityExpanded(i)) {
+                    <p class="ability-desc">{{ ab.description ?? 'No description available.' }}</p>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="matchup-grid">
+              <div class="section-block">
+                <div class="section-title">Weak Against</div>
+                <div class="badge-group">
+                  @if (p.weaknesses.length === 0) {
+                    <span class="badge-none">None</span>
+                  } @else {
+                    @for (t of p.weaknesses; track t) {
+                      <span class="type-pill" [style.background]="typeColor(t) + '33'" [style.color]="typeColor(t)">
+                        <span class="type-glyph" [style.background]="typeColor(t)"></span>{{ t }}
+                      </span>
+                    }
+                  }
+                </div>
+              </div>
+              <div class="section-block">
+                <div class="section-title">Resistant Against</div>
+                <div class="badge-group">
+                  @if (p.resistances.length === 0) {
+                    <span class="badge-none">None</span>
+                  } @else {
+                    @for (t of p.resistances; track t) {
+                      <span class="type-pill" [style.background]="typeColor(t) + '33'" [style.color]="typeColor(t)">
+                        <span class="type-glyph" [style.background]="typeColor(t)"></span>{{ t }}
+                      </span>
+                    }
+                  }
+                </div>
+              </div>
+            </div>
+          }
+
+          @if (tab() === 'moves') {
+            <div class="section-block">
+              <div class="section-title">Top Moves</div>
+              @if (p.topMoves.length === 0) {
+                <p class="coming-soon">No damaging level-up moves found for this Pok&eacute;mon.</p>
+              } @else {
+                <div class="move-list">
+                  @for (mv of p.topMoves; track mv.name) {
+                    <div class="move-row">
+                      <span class="type-pill" [style.background]="typeColor(mv.type) + '33'" [style.color]="typeColor(mv.type)">
+                        <span class="type-glyph" [style.background]="typeColor(mv.type)"></span>{{ mv.type }}
+                      </span>
+                      <span class="move-name">{{ mv.name.replaceAll('-', ' ') }}</span>
+                      <span class="move-power">PWR {{ mv.power }}</span>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="actions-row">
+          <button type="button" class="fav-action-btn" [class.active]="isFavorite" (click)="toggleFavorite.emit()">
+            {{ isFavorite ? '♥ Favorited' : '♡ Add to Favorites' }}
+          </button>
+          <button
+            type="button"
+            class="add-team-btn"
+            [class.on-team]="isOnTeam"
+            [disabled]="isOnTeam"
+            (click)="addToTeam.emit()"
+          >
+            {{ isOnTeam ? 'On Team ✓' : (teamFull ? 'Compare' : 'Add to Team') }}
+          </button>
+        </div>
+      } @else {
+        <div class="error-state">Couldn't load this Pok&eacute;mon. Please try again.</div>
+      }
+    </div>
+  </div>
+</div>

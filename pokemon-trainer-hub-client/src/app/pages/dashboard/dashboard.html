@@ -19,7 +19,13 @@
       <div class="trainer-card-outer">
         <div class="trainer-card-inner">
           <div class="avatar-wrap">
-            <div class="avatar-hex">{{ trainerInitial() }}</div>
+            <div class="avatar-hex">
+              @if (avatarSprite(); as sprite) {
+                <img class="avatar-sprite" [src]="sprite" alt="Trainer avatar" />
+              } @else {
+                {{ trainerInitial() }}
+              }
+            </div>
           </div>
 
           <div class="trainer-info">
@@ -97,16 +103,18 @@
 
       <!-- Quick link: Explorer + Pokémon of the Day -->
       <div class="quick-grid">
-        <a routerLink="/explorer" class="explorer-card">
-          <span class="explorer-glyph">&#128269;</span>
-          <div class="explorer-text">
-            <div class="quick-title">Go to Explorer</div>
-            <div class="quick-sub">Search &amp; discover Pok&eacute;mon</div>
-          </div>
+        <div class="explorer-card">
+          <a routerLink="/explorer" class="explorer-link-area">
+            <span class="explorer-glyph">&#128269;</span>
+            <div class="explorer-text">
+              <div class="quick-title">Go to Explorer</div>
+              <div class="quick-sub">Search &amp; discover Pok&eacute;mon</div>
+            </div>
+          </a>
 
           @if (potd(); as p) {
             <div class="potd-divider"></div>
-            <div class="potd-wrap">
+            <button type="button" class="potd-wrap" (click)="openDetail(p.id)">
               <div class="potd-art">
                 @if (p.spriteUrl) {
                   <img [src]="p.spriteUrl" alt="{{ p.name }}" />
@@ -116,11 +124,13 @@
                 <div class="potd-label">Pok&eacute;mon of the Day</div>
                 <div class="potd-name">{{ p.name }}</div>
               </div>
-            </div>
+            </button>
           }
 
-          <span class="quick-arrow">&rarr;</span>
-        </a>
+          <a routerLink="/explorer" class="quick-arrow-link">
+            <span class="quick-arrow">&rarr;</span>
+          </a>
+        </div>
       </div>
 
       <!-- Live sprite marquee -->
@@ -193,4 +203,26 @@
       </div>
     }
   </footer>
+
+  @if (selectedPokemonId(); as id) {
+    <app-pokemon-detail-modal
+      [pokemonId]="id"
+      [isFavorite]="isFavorite(id)"
+      [isOnTeam]="isOnTeam(id)"
+      [teamFull]="teamFull()"
+      [isLight]="theme.isLight()"
+      (closed)="closeDetail()"
+      (toggleFavorite)="toggleFavorite(id)"
+      (addToTeam)="addToTeam(id)"
+    />
+  }
+
+  @if (swapCandidateId(); as candidateId) {
+    <app-team-swap-modal
+      [candidateId]="candidateId"
+      [team]="team() ?? []"
+      (closed)="closeSwap()"
+      (swapped)="onSwapped()"
+    />
+  }
 </div>
