@@ -1,0 +1,6 @@
+/* app.ts is now just a thin shell (Navbar + router-outlet) — every page owns
+   its own styles (design tokens copied per-page, same pattern as
+   ai-trainer-assistant.css). Nothing page-specific belongs here. */
+:host {
+  display: block;
+}

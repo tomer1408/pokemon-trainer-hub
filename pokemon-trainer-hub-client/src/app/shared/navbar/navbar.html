@@ -1,0 +1,30 @@
+<div class="navbar" [class.light]="theme.isLight()">
+  <div class="navbar-inner">
+    <div class="navbar-left">
+      <app-account-menu
+        [trainerName]="trainerName()"
+        [email]="trainerEmail()"
+        [isLight]="theme.isLight()"
+        [(colorblindMode)]="colorblindMode"
+      />
+
+      <a routerLink="/dashboard" class="logo">TRAINER HUB</a>
+
+      <nav class="nav-row">
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">Dashboard</a>
+        <a routerLink="/explorer" routerLinkActive="active" class="nav-link">Explorer</a>
+        <a routerLink="/my-team" routerLinkActive="active" class="nav-link">My Team</a>
+        <a routerLink="/favorites" routerLinkActive="active" class="nav-link">Favorites</a>
+        <a routerLink="/profile" routerLinkActive="active" class="nav-link">My Profile</a>
+        <button type="button" class="nav-link nav-link-btn" (click)="logout()">Logout</button>
+      </nav>
+    </div>
+
+    <div class="navbar-right">
+      <div class="theme-switch">
+        <button type="button" class="theme-btn" [class.active]="!theme.isLight()" (click)="setDark()">☾ Dark</button>
+        <button type="button" class="theme-btn" [class.active]="theme.isLight()" (click)="setLight()">☀ Light</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,24 @@
+<div class="callback" [class.light]="theme.isLight()">
+  @switch (state()) {
+    @case ('checking') {
+      <div class="card">
+        <div class="spinner"></div>
+        <p class="message">Signing you in…</p>
+      </div>
+    }
+    @case ('error-auth') {
+      <div class="card">
+        <p class="message error">We couldn't complete sign-in.</p>
+        <p class="submessage">Something went wrong talking to Auth0. Please try again.</p>
+        <button type="button" class="retry-btn" (click)="retry()">Try again</button>
+      </div>
+    }
+    @case ('error-profile') {
+      <div class="card">
+        <p class="message error">We couldn't load your trainer profile.</p>
+        <p class="submessage">The server didn't respond as expected. Please try again.</p>
+        <button type="button" class="retry-btn" (click)="retry()">Try again</button>
+      </div>
+    }
+  }
+</div>

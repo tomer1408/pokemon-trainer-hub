@@ -1,0 +1,196 @@
+<div class="dashboard" [class.light]="theme.isLight()">
+  <div class="content">
+    @if (isLoading()) {
+      <div class="trainer-card-outer">
+        <div class="trainer-card-inner">
+          <div class="skel-hex"></div>
+          <div class="skel-lines">
+            <div class="skel-line skel-line-1"></div>
+            <div class="skel-line skel-line-2"></div>
+            <div class="skel-line skel-line-3"></div>
+          </div>
+        </div>
+      </div>
+      <div class="quick-grid">
+        <div class="skel-card"></div>
+      </div>
+    } @else {
+      <!-- Trainer Card -->
+      <div class="trainer-card-outer">
+        <div class="trainer-card-inner">
+          <div class="avatar-wrap">
+            <div class="avatar-hex">{{ trainerInitial() }}</div>
+          </div>
+
+          <div class="trainer-info">
+            <div class="welcome-row">
+              <h1 class="welcome">Welcome, {{ trainerName() }}</h1>
+              <span class="tier-pill">{{ tier() }}</span>
+            </div>
+
+            <a routerLink="/profile" class="profile-link">
+              <span class="profile-avatar"></span>
+              My Profile
+              <span class="profile-arrow">&rarr;</span>
+            </a>
+
+            @if (hasTeam()) {
+              <p class="sub-copy">Your Dream Team is taking shape.</p>
+            } @else {
+              <p class="sub-copy">Your team is waiting &mdash; go find your first Pok&eacute;mon.</p>
+            }
+
+            <div class="progress-row">
+              <div class="progress-pips">
+                @for (filled of pips(); track $index) {
+                  <div class="pip" [class.filled]="filled"></div>
+                }
+              </div>
+              <span class="progress-label">{{ teamCount() }}/5 caught</span>
+            </div>
+          </div>
+
+          <div class="power-card">
+            <div>
+              <div class="power-label">Team Power</div>
+              <div class="power-number">{{ teamPower() }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Team preview strip -->
+      <div class="team-preview-card">
+        <div class="team-preview-header">
+          <span class="team-preview-title">Your Dream Team</span>
+          <a routerLink="/my-team" class="team-preview-link">Go to My Team <span>&rarr;</span></a>
+        </div>
+        <div class="team-preview-row">
+          @for (member of slots(); track $index) {
+            @if (member) {
+              <div class="slot filled">
+                <div class="slot-art">
+                  @if (member.spriteUrl) {
+                    <img [src]="member.spriteUrl" alt="{{ member.pokemonName }}" />
+                  }
+                </div>
+                <div class="slot-name">{{ member.pokemonName }}</div>
+                @if (member.types[0]; as type) {
+                  <span
+                    class="type-pill"
+                    [style.background]="typeColor(type) + '33'"
+                    [style.color]="typeColor(type)"
+                  >
+                    <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
+                  </span>
+                }
+              </div>
+            } @else {
+              <a routerLink="/explorer" class="slot empty">
+                <div class="slot-plus">+</div>
+                <div class="slot-empty-label">Add Pok&eacute;mon</div>
+              </a>
+            }
+          }
+        </div>
+      </div>
+
+      <!-- Quick link: Explorer + Pokémon of the Day -->
+      <div class="quick-grid">
+        <a routerLink="/explorer" class="explorer-card">
+          <span class="explorer-glyph">&#128269;</span>
+          <div class="explorer-text">
+            <div class="quick-title">Go to Explorer</div>
+            <div class="quick-sub">Search &amp; discover Pok&eacute;mon</div>
+          </div>
+
+          @if (potd(); as p) {
+            <div class="potd-divider"></div>
+            <div class="potd-wrap">
+              <div class="potd-art">
+                @if (p.spriteUrl) {
+                  <img [src]="p.spriteUrl" alt="{{ p.name }}" />
+                }
+              </div>
+              <div>
+                <div class="potd-label">Pok&eacute;mon of the Day</div>
+                <div class="potd-name">{{ p.name }}</div>
+              </div>
+            </div>
+          }
+
+          <span class="quick-arrow">&rarr;</span>
+        </a>
+      </div>
+
+      <!-- Live sprite marquee -->
+      <div class="marquee-card">
+        <div class="marquee-header">
+          <span class="marquee-title">Fresh catches roll in daily</span>
+        </div>
+        <div class="marquee-mask">
+          <div class="marquee-track">
+            @for (tile of marqueeTiles().results; track 'a-' + tile.id) {
+              <div class="marquee-tile">
+                @if (tile.spriteUrl) {
+                  <img [src]="tile.spriteUrl" alt="{{ tile.name }}" />
+                }
+              </div>
+            }
+            @for (tile of marqueeTiles().results; track 'b-' + tile.id) {
+              <div class="marquee-tile">
+                @if (tile.spriteUrl) {
+                  <img [src]="tile.spriteUrl" alt="{{ tile.name }}" />
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-top-band"></div>
+
+    <div class="footer-body">
+      <div class="footer-col">
+        <a routerLink="/explorer" class="footer-link">EXPLORER</a>
+        <span class="footer-link disabled">LEADERBOARD</span>
+        <span class="footer-link disabled">TYPE GUIDE</span>
+      </div>
+      <div class="footer-col">
+        <a routerLink="/my-team" class="footer-link">MY TEAM</a>
+        <a routerLink="/profile" class="footer-link">PROFILE</a>
+        <span class="footer-link disabled">SUPPORT</span>
+      </div>
+      <div class="footer-brand-col">
+        <span class="footer-wordmark">TRAINER HUB</span>
+      </div>
+    </div>
+
+    <div class="legal-bar">
+      <span class="legal-link">Terms of Service <span class="legal-arrow">&rarr;</span></span>
+      <span class="legal-link">Privacy Policy <span class="legal-arrow">&rarr;</span></span>
+      <span class="legal-link">Copyright Policy <span class="legal-arrow">&rarr;</span></span>
+    </div>
+
+    <div class="fine-print">
+      Trainer Hub is an independent fan project and is not affiliated with any Pok&eacute;mon trademark holder.
+    </div>
+
+    @if (cookieChoice() === null) {
+      <div class="cookie-bar">
+        <div class="cookie-text">
+          We use cookies to give you the best possible experience. Read our
+          <span class="cookie-link">cookie policy</span> to learn more.
+        </div>
+        <div class="cookie-btn-row">
+          <button type="button" class="cookie-decline" (click)="declineCookies()">Decline</button>
+          <button type="button" class="cookie-accept" (click)="acceptCookies()">Accept</button>
+        </div>
+      </div>
+    }
+  </footer>
+</div>

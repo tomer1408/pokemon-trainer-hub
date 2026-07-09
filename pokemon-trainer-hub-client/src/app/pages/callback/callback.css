@@ -1,0 +1,87 @@
+:host {
+  --bg: #0b0a14;
+  --surface-raised: #1e1b30;
+  --border-soft: #ffffff1a;
+  --text-body: #f4f2ff;
+  --text-muted: #a8a2c4;
+  --violet: #8b5cf6;
+  --violet-deep: #6d28d9;
+  --danger: #f87171;
+
+  display: block;
+  min-height: 100vh;
+}
+
+.callback.light {
+  --bg: #f5f4fb;
+  --surface-raised: #ffffff;
+  --border-soft: #00000014;
+  --text-body: #201c33;
+  --text-muted: #605a7d;
+}
+
+.callback {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  font-family: 'Manrope', sans-serif;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2.5rem 3rem;
+  border-radius: 18px;
+  border: 1px solid var(--border-soft);
+  background: var(--surface-raised);
+  text-align: center;
+  max-width: 360px;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid var(--border-soft);
+  border-top-color: var(--violet);
+  animation: spin 0.8s linear infinite;
+}
+
+.message {
+  font-family: 'Bungee', sans-serif;
+  margin: 0;
+  color: var(--text-body);
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.message.error {
+  color: var(--danger);
+}
+
+.submessage {
+  font-family: 'Manrope', sans-serif;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.retry-btn {
+  font-family: 'Manrope', sans-serif;
+  margin-top: 0.5rem;
+  padding: 0.6rem 1.5rem;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--violet), var(--violet-deep));
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

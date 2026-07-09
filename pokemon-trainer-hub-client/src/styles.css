@@ -1,1 +1,9 @@
 /* You can add global styles to this file, and also import other style files */
+
+/* Matches the dark-theme --bg used across pages/navbar, so there's no white
+   flash before Angular finishes rendering a page's own themed background. */
+body {
+  margin: 0;
+  background: #0D0A1E;
+}
+

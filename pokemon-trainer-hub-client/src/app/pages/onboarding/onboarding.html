@@ -1,0 +1,109 @@
+<div class="onboarding" [class.light]="theme.isLight()">
+  <div class="card">
+    <p class="kicker">Welcome, Trainer</p>
+    <h1 class="title">Let's set up your profile</h1>
+    <p class="subtitle">
+      Tell us a bit about yourself before you start building your Dream Team.
+    </p>
+
+    <form class="form" (ngSubmit)="submitProfile()">
+      <label class="field">
+        <span class="field-label">Trainer Name</span>
+        <input
+          type="text"
+          name="trainerName"
+          [ngModel]="form().trainerName"
+          (ngModelChange)="updateForm('trainerName', $event)"
+          required
+        />
+      </label>
+
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">First Name</span>
+          <input
+            type="text"
+            name="firstName"
+            [ngModel]="form().firstName"
+            (ngModelChange)="updateForm('firstName', $event)"
+            required
+          />
+        </label>
+        <label class="field">
+          <span class="field-label">Last Name</span>
+          <input
+            type="text"
+            name="lastName"
+            [ngModel]="form().lastName"
+            (ngModelChange)="updateForm('lastName', $event)"
+            required
+          />
+        </label>
+      </div>
+
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">Date of Birth</span>
+          <input
+            type="date"
+            name="dateOfBirth"
+            [ngModel]="dateOfBirthInputValue"
+            (ngModelChange)="updateDateOfBirth($event)"
+          />
+        </label>
+        <label class="field">
+          <span class="field-label">Country</span>
+          <select
+            name="country"
+            [ngModel]="form().country"
+            (ngModelChange)="updateForm('country', $event)"
+          >
+            @for (c of countries; track c) {
+              <option [value]="c">{{ c }}</option>
+            }
+          </select>
+        </label>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Favorite Type</span>
+        <div class="chip-row">
+          @for (t of pokemonTypes; track t) {
+            <button
+              type="button"
+              class="chip"
+              [class.active]="form().favoriteType === t"
+              (click)="updateFavoriteType(t)"
+            >
+              {{ t }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Experience Level</span>
+        <div class="segmented">
+          @for (level of experienceLevels; track level) {
+            <button
+              type="button"
+              class="segment"
+              [class.active]="form().experienceLevel === level"
+              (click)="updateExperienceLevel(level)"
+            >
+              {{ level }}
+            </button>
+          }
+        </div>
+      </div>
+
+      @if (submitError()) {
+        <p class="error-message">{{ submitError() }}</p>
+      }
+
+      <button type="submit" class="submit-btn" [disabled]="!canSubmit() || submitting()">
+        {{ submitting() ? 'Saving…' : 'Start My Journey' }}
+      </button>
+    </form>
+  </div>
+</div>

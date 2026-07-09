@@ -1,0 +1,112 @@
+.navbar {
+  --bg: #0D0A1E;
+  --surface: #1A1533;
+  --border-soft: rgba(196, 181, 253, 0.16);
+  --text-body: #F1EEFB;
+  --text-muted: rgba(230, 225, 250, 0.6);
+  --violet: #A78BFA;
+  --violet-deep: #7C3AED;
+  --cyan: #5EEAD4;
+  --overlay-05: rgba(255, 255, 255, 0.05);
+
+  display: block;
+  background: var(--bg);
+  font-family: 'Manrope', sans-serif;
+}
+
+.navbar-inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 24px 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.navbar.light {
+  --bg: #F5F3FF;
+  --surface: #FFFFFF;
+  --border-soft: rgba(76, 29, 149, 0.12);
+  --text-body: #1C1533;
+  --text-muted: rgba(28, 21, 51, 0.55);
+  --violet-deep: #6D28D9;
+  --cyan: #0E9488;
+  --overlay-05: rgba(28, 21, 51, 0.05);
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.logo {
+  font-family: 'Bungee', sans-serif;
+  font-size: 17px;
+  color: var(--violet);
+  letter-spacing: 0.5px;
+  text-decoration: none;
+}
+
+.nav-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-left: 10px;
+  flex-wrap: wrap;
+}
+
+.nav-link {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.nav-link.active {
+  color: var(--text-body);
+  font-weight: 800;
+}
+
+.nav-link-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.theme-switch {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--overlay-05);
+  border-radius: 100px;
+}
+
+.theme-btn {
+  border: none;
+  border-radius: 100px;
+  padding: 6px 12px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.theme-btn.active {
+  background: var(--violet-deep);
+  color: #fff;
+}

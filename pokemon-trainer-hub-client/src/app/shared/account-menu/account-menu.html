@@ -1,0 +1,43 @@
+<div class="wrap" [class.light]="isLight()">
+  <button type="button" class="avatar-btn" (click)="toggleOpen()" [attr.aria-expanded]="open()">
+    {{ initial() }}
+  </button>
+
+  @if (open()) {
+    <div class="scrim" (click)="close()"></div>
+    <div class="panel" (click)="$event.stopPropagation()">
+      <div class="email-row">{{ email() }}</div>
+
+      <a href="#settings" class="item"><span class="dot dot-violet"></span>Settings</a>
+      <a href="#language" class="item"><span class="dot dot-cyan"></span>Language</a>
+      <a href="#help" class="item"><span class="dot dot-yellow"></span>Get Help</a>
+
+      <div class="divider"></div>
+
+      <div class="cvd-label">Colorblind Mode</div>
+      <div class="cvd-row">
+        @for (mode of colorblindModes; track mode.value) {
+          <button
+            type="button"
+            class="cvd-btn"
+            [class.active]="colorblindMode() === mode.value"
+            (click)="setColorblindMode(mode.value)"
+          >{{ mode.label }}</button>
+        }
+      </div>
+
+      <div class="divider"></div>
+
+      <a href="#upgrade" class="item"><span class="dot dot-violet"></span>Upgrade to Trainer Pro</a>
+      <a href="#redeem" class="item"><span class="dot dot-cyan"></span>Redeem a Code</a>
+      <a href="#gift" class="item"><span class="dot dot-yellow"></span>Gift Trainer Hub</a>
+      <a href="#learn" class="item"><span class="dot dot-violet"></span>Learn More</a>
+
+      <div class="divider"></div>
+
+      <button type="button" class="item logout" (click)="logout()">
+        <span class="dot dot-bad"></span>Log Out
+      </button>
+    </div>
+  }
+</div>
