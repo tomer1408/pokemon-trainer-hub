@@ -24,9 +24,9 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/onboarding/onboarding').then((m) => m.Onboarding),
   },
   {
-    path: 'dashboard',
+    path: 'home',
     canActivate: [authGuardFn],
-    loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
+    loadComponent: () => import('./pages/home/home').then((m) => m.Home),
   },
   {
     path: 'explorer',
@@ -37,6 +37,11 @@ export const routes: Routes = [
     path: 'my-team',
     canActivate: [authGuardFn],
     loadComponent: () => import('./pages/my-team/my-team').then((m) => m.MyTeam),
+  },
+  {
+    path: 'manage-team',
+    canActivate: [authGuardFn],
+    loadComponent: () => import('./pages/manage-team/manage-team').then((m) => m.ManageTeam),
   },
   {
     path: 'profile',
@@ -52,13 +57,7 @@ export const routes: Routes = [
   {
     path: 'battle',
     canActivate: [authGuardFn],
-    loadComponent: () => import('./shared/placeholder/placeholder').then((m) => m.Placeholder),
-    data: { title: 'Battle Simulation' },
-  },
-  {
-    path: 'team-card',
-    canActivate: [authGuardFn],
-    loadComponent: () => import('./pages/team-card/team-card').then((m) => m.TeamCard),
+    loadComponent: () => import('./pages/battle/battle').then((m) => m.Battle),
   },
   {
     // Not auth-guarded on purpose — a mistyped URL shouldn't force a

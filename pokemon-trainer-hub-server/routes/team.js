@@ -10,6 +10,7 @@ const STATUS_BY_CODE = {
   TEAM_FULL: 409,
   NOT_FOUND: 404,
   UPSTREAM_ERROR: 502,
+  INVALID_ORDER: 400,
 };
 
 function respondToServiceError(err, res) {
@@ -36,6 +37,25 @@ router.post('/swap', jwtCheck, async (req, res) => {
   try {
     const result = await teamService.swapTeamMember(req.auth.payload.sub, removePokemonId, addPokemonId);
     res.status(200).json(result);
+  } catch (err) {
+    if (err instanceof ServiceError) return respondToServiceError(err, res);
+    throw err;
+  }
+});
+
+// PATCH /api/team/reorder  { pokemonIds: number[] }
+// Must be declared before POST /:id — same reason as /swap above. The user
+// is always identified from the JWT (req.auth.payload.sub) — the client
+// never sends and the server never trusts an auth0UserId from the body.
+router.patch('/reorder', jwtCheck, async (req, res) => {
+  const { pokemonIds } = req.body;
+  if (!Array.isArray(pokemonIds) || pokemonIds.length === 0 || !pokemonIds.every((id) => Number.isInteger(id))) {
+    return res.status(400).json({ message: 'pokemonIds must be a non-empty array of Pokémon ids.' });
+  }
+
+  try {
+    await teamService.reorderTeam(req.auth.payload.sub, pokemonIds);
+    res.status(200).json({ message: 'Team order saved.' });
   } catch (err) {
     if (err instanceof ServiceError) return respondToServiceError(err, res);
     throw err;

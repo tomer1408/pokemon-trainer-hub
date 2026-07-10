@@ -9,7 +9,7 @@ const MAX_TEAM_SIZE = 5;
 async function getTeam(auth0UserId) {
   const members = await prisma.dreamTeamMember.findMany({
     where: { auth0UserId },
-    orderBy: { addedAt: 'asc' },
+    orderBy: [{ position: 'asc' }, { addedAt: 'asc' }],
   });
 
   return Promise.all(
@@ -27,12 +27,24 @@ async function getTeam(auth0UserId) {
         pokemonName: member.pokemonName,
         spriteUrl: member.spriteUrl,
         addedAt: member.addedAt,
+        position: member.position,
         stats: detail?.stats ?? [],
         types: detail?.types ?? [],
         baseExperience: detail?.baseExperience ?? 0,
       };
     })
   );
+}
+
+// Next free slot position for a user — based on the current max, not the row
+// count, so it never collides with a surviving member after a removal left a
+// gap (e.g. positions 0,2,3,4 after removing 1 — count would wrongly be 4).
+async function nextPosition(auth0UserId) {
+  const result = await prisma.dreamTeamMember.aggregate({
+    where: { auth0UserId },
+    _max: { position: true },
+  });
+  return (result._max.position ?? -1) + 1;
 }
 
 // Adds a Pokémon to the team. Throws ServiceError('DUPLICATE' | 'TEAM_FULL' | 'NOT_FOUND' | 'UPSTREAM_ERROR').
@@ -67,6 +79,7 @@ async function addToTeam(auth0UserId, pokemonId) {
       pokemonId: pokemon.id,
       pokemonName: pokemon.name,
       spriteUrl: pokemon.spriteUrl,
+      position: await nextPosition(auth0UserId),
     },
   });
 
@@ -110,12 +123,53 @@ async function swapTeamMember(auth0UserId, removePokemonId, addPokemonId) {
     prisma.dreamTeamMember.delete({
       where: { auth0UserId_pokemonId: { auth0UserId, pokemonId: removePokemonId } },
     }),
+    // Takes over the removed member's slot position, so the newcomer lands
+    // in the same visual spot instead of jumping to the end of the row.
     prisma.dreamTeamMember.create({
-      data: { auth0UserId, pokemonId: pokemon.id, pokemonName: pokemon.name, spriteUrl: pokemon.spriteUrl },
+      data: {
+        auth0UserId,
+        pokemonId: pokemon.id,
+        pokemonName: pokemon.name,
+        spriteUrl: pokemon.spriteUrl,
+        position: toRemove.position,
+      },
     }),
   ]);
 
   return { message: `Swapped ${toRemove.pokemonName} for ${pokemon.name}!`, member };
 }
 
-module.exports = { getTeam, addToTeam, removeFromTeam, swapTeamMember };
+// Persists a full drag-and-drop reorder of the team. `orderedPokemonIds` must
+// be exactly the set of pokemonIds currently on the user's team (same
+// members, just resequenced) — this is what guarantees a reorder can never
+// sneak in an add/remove: anything else is rejected outright.
+async function reorderTeam(auth0UserId, orderedPokemonIds) {
+  if (orderedPokemonIds.length > MAX_TEAM_SIZE) {
+    throw new ServiceError('INVALID_ORDER', `A Dream Team can have at most ${MAX_TEAM_SIZE} members.`);
+  }
+
+  const current = await prisma.dreamTeamMember.findMany({ where: { auth0UserId } });
+
+  if (orderedPokemonIds.length !== current.length) {
+    throw new ServiceError('INVALID_ORDER', 'The new order must contain exactly your current team members.');
+  }
+
+  const currentIds = new Set(current.map((m) => m.pokemonId));
+  const orderedIdsSet = new Set(orderedPokemonIds);
+  const isSameSet =
+    orderedIdsSet.size === currentIds.size && orderedPokemonIds.every((id) => currentIds.has(id));
+  if (!isSameSet) {
+    throw new ServiceError('INVALID_ORDER', 'The new order must contain exactly your current team members.');
+  }
+
+  await prisma.$transaction(
+    orderedPokemonIds.map((pokemonId, index) =>
+      prisma.dreamTeamMember.update({
+        where: { auth0UserId_pokemonId: { auth0UserId, pokemonId } },
+        data: { position: index },
+      })
+    )
+  );
+}
+
+module.exports = { getTeam, addToTeam, removeFromTeam, swapTeamMember, reorderTeam };

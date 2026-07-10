@@ -1,4 +1,3 @@
-/* Exact tokens from My Profile.dc.html's DARK_COLORS / LIGHT_COLORS. */
 :host {
   --bg: #0D0A1E;
   --surface: #1A1533;
@@ -44,103 +43,139 @@
 }
 
 .content {
-  max-width: 1200px;
+  max-width: 1120px;
   margin: 0 auto;
   padding: 24px 40px 0;
   display: flex;
   flex-direction: column;
-  gap: 26px;
+  gap: 22px;
   box-sizing: border-box;
 }
 
-.loading {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  padding: 40px;
-}
-
-/* ---- Header ---- */
-.header-row {
+/* ---- Error / no-profile states ---- */
+.error-state {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-}
-
-.header-title-row {
-  display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
+  text-align: center;
+  padding: 90px 24px;
 }
 
-.badge-outer {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: linear-gradient(135deg, var(--violet), var(--violet-deep));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: floatBadge 3.2s ease-in-out infinite;
-  box-shadow: 0 8px 18px rgba(124, 58, 237, 0.35);
-}
-
-.badge-inner {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--surface);
-  box-shadow: 0 0 0 2px var(--violet-deep);
-}
-
-.page-title {
+.error-message {
   font-family: 'Bungee', sans-serif;
-  font-size: 28px;
+  font-size: 16px;
+  font-weight: 400;
   color: var(--text-body);
   margin: 0;
 }
 
-.page-subtitle {
-  font-size: 14px;
+.error-sub {
+  font-size: 13px;
   color: var(--text-muted);
   margin: 0;
 }
 
-/* ---- Main trainer card ---- */
-.trainer-card-outer {
+.error-retry-btn {
+  margin-top: 8px;
+  border: none;
+  border-radius: 100px;
+  padding: 12px 24px;
+  background: linear-gradient(120deg, var(--violet-deep), var(--cyan));
+  color: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.error-message-inline {
+  color: var(--danger);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* ---- Trainer ID card ---- */
+.id-card-outer {
   position: relative;
-  border-radius: 24px;
+  border-radius: 26px;
   padding: 3px;
   background: linear-gradient(120deg, var(--violet-deep), var(--cyan), var(--yellow), var(--violet-deep));
   background-size: 300% 300%;
   animation: holoShift 9s ease infinite;
-  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.42);
 }
 
-.trainer-card-inner {
+.id-card-inner {
+  position: relative;
   background: var(--surface);
-  border-radius: 21px;
-  padding: 30px 34px;
+  border-radius: 23px;
+  overflow: hidden;
+}
+
+.banner {
+  position: relative;
+  height: 56px;
+  background: linear-gradient(115deg, var(--violet-deep), #5B21B6 45%, var(--cyan));
+  overflow: hidden;
+}
+
+.banner-pattern {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0px, rgba(255, 255, 255, 0.08) 2px, transparent 2px, transparent 16px);
+}
+
+.member-tag {
+  position: absolute;
+  top: 16px;
+  left: 24px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 1px;
+}
+
+.tier-chip {
+  position: absolute;
+  top: 14px;
+  right: 20px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: #1C1533;
+  background: var(--yellow);
+  padding: 8px 12px;
+  border-radius: 100px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  text-transform: uppercase;
+}
+
+.card-body {
+  padding: 0 32px 28px;
+}
+
+.view-top-row {
   display: flex;
-  align-items: center;
-  gap: 28px;
+  align-items: flex-end;
+  gap: 22px;
   flex-wrap: wrap;
 }
 
-.avatar-wrap {
-  position: relative;
-  flex-shrink: 0;
-}
-
 .avatar-hex {
-  width: 84px;
-  height: 76px;
+  width: 96px;
+  height: 86px;
+  margin-top: -44px;
+  flex-shrink: 0;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  background: linear-gradient(135deg, var(--violet), var(--violet-deep));
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 0 0 4px var(--surface);
   animation: floatBadge 3.2s ease-in-out infinite;
-  flex-shrink: 0;
+  overflow: hidden;
 }
 
 .avatar-glyph {
@@ -155,24 +190,24 @@
   object-fit: contain;
 }
 
-.name-block {
+.view-info {
   flex: 1;
-  min-width: 0;
+  min-width: 200px;
+  padding-bottom: 4px;
 }
 
 .trainer-name {
   font-family: 'Bungee', sans-serif;
-  font-size: 26px;
+  font-size: 28px;
   color: var(--text-body);
-  margin: 0;
-  letter-spacing: 0.3px;
+  margin: 0 0 12px;
 }
 
 .badge-row {
   display: flex;
   gap: 10px;
-  margin: 12px 0 10px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .type-pill {
@@ -213,19 +248,23 @@
   letter-spacing: 0.5px;
 }
 
-.country-row {
-  display: flex;
+.country-chip {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13.5px;
+  gap: 7px;
+  font-size: 12.5px;
   color: var(--text-muted);
+  background: var(--overlay-05);
+  border: 1px solid var(--border-soft);
+  padding: 6px 12px;
+  border-radius: 100px;
 }
 
 .country-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--text-muted);
+  background: var(--cyan);
   display: inline-block;
 }
 
@@ -240,12 +279,119 @@
   font-weight: 800;
   font-size: 13.5px;
   margin-left: auto;
+  margin-bottom: 4px;
   flex-shrink: 0;
 }
 
-.name-edit-block {
+.progress-block {
+  margin-top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.progress-top-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.progress-title {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--text-body);
+}
+
+.progress-value {
+  font-family: 'Space Mono', monospace;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.progress-track {
+  height: 12px;
+  border-radius: 7px;
+  background: var(--overlay-08);
+  overflow: hidden;
+  border: 1px solid var(--border-soft);
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 7px;
+  background: linear-gradient(90deg, var(--violet-deep), var(--cyan));
+  box-shadow: 0 0 12px var(--cyan);
+}
+
+/* ---- ID card edit mode ---- */
+.edit-row {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  padding-top: 20px;
+}
+
+.edit-avatar-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.avatar-picker-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.avatar-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  max-width: 220px;
+}
+
+.avatar-none-btn,
+.avatar-opt-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--border-soft);
+  background: var(--overlay-05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.avatar-none-btn {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+.avatar-opt-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.avatar-none-btn.active,
+.avatar-opt-btn.active {
+  border: 2px solid var(--violet-deep);
+}
+
+.edit-name-block {
   flex: 1;
-  min-width: 0;
+  min-width: 220px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -301,6 +447,32 @@ select:focus {
   gap: 8px;
 }
 
+.stat-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+}
+
+.stat-icon-wrap.icon-violet { background: rgba(167, 139, 250, 0.16); }
+.stat-icon-wrap.icon-cyan { background: var(--overlay-06); }
+.stat-icon-wrap.icon-yellow { background: rgba(253, 230, 138, 0.16); }
+
+.stat-icon {
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+  display: inline-block;
+  background: currentColor;
+}
+
+.icon-violet .stat-icon { background: var(--violet); }
+.icon-cyan .stat-icon { background: var(--cyan); }
+.icon-yellow .stat-icon { background: var(--yellow); }
+
 .stat-label {
   font-family: 'Space Mono', monospace;
   font-size: 10.5px;
@@ -329,12 +501,121 @@ select:focus {
   margin-top: 2px;
 }
 
-.stat-cta {
-  font-family: 'Manrope', sans-serif;
+.stat-link.accent {
   font-weight: 800;
-  font-size: 12.5px;
   color: var(--yellow);
+}
+
+/* ---- Achievements ---- */
+.achievements-card {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-sizing: border-box;
+}
+
+.ach-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.section-title {
+  font-family: 'Bungee', sans-serif;
+  font-size: 17px;
+  color: var(--text-body);
+}
+
+.ach-count {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: var(--cyan);
+}
+
+.badges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.badge-card {
+  position: relative;
+  background: var(--overlay-05);
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  padding: 18px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  text-align: center;
+  opacity: 0.6;
+}
+
+.badge-card.earned {
+  background: linear-gradient(160deg, rgba(94, 234, 212, 0.1), var(--surface));
+  border-color: rgba(94, 234, 212, 0.4);
+  opacity: 1;
+}
+
+.medal {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--overlay-08);
+}
+
+.badge-card.earned .medal {
+  background: radial-gradient(circle at 50% 40%, var(--cyan), rgba(94, 234, 212, 0.25));
+  box-shadow: 0 0 18px rgba(94, 234, 212, 0.35);
+}
+
+.medal-glyph {
+  width: 22px;
+  height: 22px;
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  background: var(--text-muted);
+  opacity: 0.5;
+}
+
+.badge-card.earned .medal-glyph {
+  background: #fff;
+  opacity: 1;
+}
+
+.badge-name {
+  font-family: 'Bungee', sans-serif;
+  font-size: 12px;
+  color: var(--text-body);
   margin-top: 2px;
+}
+
+.badge-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.badge-status {
+  font-family: 'Space Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.badge-card.earned .badge-status {
+  color: var(--cyan);
 }
 
 /* ---- Personal details ---- */
@@ -438,43 +719,6 @@ select:focus {
   color: #fff;
 }
 
-.icon-grid {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 8px;
-}
-
-.icon-wrap {
-  border: 2px solid transparent;
-  background: var(--overlay-05);
-  padding: 4px;
-  cursor: pointer;
-  border-radius: 50%;
-  aspect-ratio: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-}
-
-.icon-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.icon-wrap.active {
-  border-color: var(--cyan);
-  box-shadow: 0 0 16px rgba(94, 234, 212, 0.35);
-  transform: scale(1.08);
-}
-
-.error-message {
-  color: var(--danger);
-  font-size: 0.85rem;
-  margin: 0;
-}
-
 .edit-actions-row {
   display: flex;
   justify-content: flex-end;
@@ -509,6 +753,34 @@ select:focus {
 .save-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* ---- Success toast ---- */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  color: var(--text-body);
+  border-radius: 100px;
+  padding: 12px 22px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 13.5px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+}
+
+.toast-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--cyan);
 }
 
 @keyframes holoShift {

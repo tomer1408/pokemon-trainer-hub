@@ -1,0 +1,24 @@
+<div class="potd-outer" [class.light]="isLight()" [class.compact]="compact()">
+  <button type="button" class="potd-inner" (click)="opened.emit()">
+    <div class="potd-main">
+      <div class="potd-art-wrap">
+        <div class="potd-glow" [style.background]="typeColor(pokemon().types[0]) + '55'"></div>
+        @if (pokemon().spriteUrl) {
+          <img class="potd-sprite" [src]="pokemon().spriteUrl" alt="{{ pokemon().name }}" />
+        }
+      </div>
+
+      <div class="potd-info">
+        <div class="potd-dex">#{{ pokemon().id.toString().padStart(4, '0') }}</div>
+        <div class="potd-name">{{ pokemon().name }}</div>
+        @if (pokemon().types[0]; as type) {
+          <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+            <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
+          </span>
+        }
+      </div>
+    </div>
+
+    <span class="potd-arrow">&rarr;</span>
+  </button>
+</div>

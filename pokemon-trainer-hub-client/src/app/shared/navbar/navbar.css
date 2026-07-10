@@ -7,9 +7,13 @@
   --violet: #A78BFA;
   --violet-deep: #7C3AED;
   --cyan: #5EEAD4;
+  --bad: #F4562B;
   --overlay-05: rgba(255, 255, 255, 0.05);
 
   display: block;
+  position: sticky;
+  top: 0;
+  z-index: 100;
   background: var(--bg);
   font-family: 'Manrope', sans-serif;
 }
@@ -34,6 +38,7 @@
   --text-muted: rgba(28, 21, 51, 0.55);
   --violet-deep: #6D28D9;
   --cyan: #0E9488;
+  --bad: #DC2626;
   --overlay-05: rgba(28, 21, 51, 0.05);
 }
 
@@ -71,14 +76,6 @@
 .nav-link.active {
   color: var(--text-body);
   font-weight: 800;
-}
-
-.nav-link-btn {
-  border: none;
-  background: transparent;
-  padding: 0;
-  cursor: pointer;
-  font-family: inherit;
 }
 
 .navbar-right {

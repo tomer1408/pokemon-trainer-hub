@@ -1,0 +1,32 @@
+<div class="loading-screen" [class.light]="isLight()" [class.full-screen]="fullScreen()">
+  <div class="glow"></div>
+
+  <div class="center-col" [style.gap.px]="sizeConfig().gap">
+    @if (showWordmark()) {
+      <div class="wordmark" [style.font-size.px]="wordmarkFontSize()">TRAINER HUB</div>
+    }
+
+    @if (showProgress()) {
+      <div class="ball-bounce-wrap" [style.height.px]="ballWrapHeight()">
+        <div class="ball" [style.width.px]="ballSize()" [style.height.px]="ballSize()">
+          <div class="ball-top"></div>
+          <div class="ball-bottom"></div>
+          <div class="ball-band" [style.height.px]="ballBandHeight()"></div>
+          <div class="ball-button-outer" [style.width.px]="ballButtonSize()" [style.height.px]="ballButtonSize()">
+            <div class="ball-button-inner"></div>
+          </div>
+        </div>
+        <div class="ball-shadow" [style.width.px]="ballShadowWidth()" [style.height.px]="ballShadowHeight()"></div>
+      </div>
+    }
+
+    <div class="message-row">
+      <span class="message-text" [style.font-size.px]="messageFontSize()">{{ currentMessage() }}</span>
+      <span class="dots-wrap">
+        <span class="dot" [style.width.px]="dotSize()" [style.height.px]="dotSize()" [style.animation-delay.ms]="0"></span>
+        <span class="dot" [style.width.px]="dotSize()" [style.height.px]="dotSize()" [style.animation-delay.ms]="150"></span>
+        <span class="dot" [style.width.px]="dotSize()" [style.height.px]="dotSize()" [style.animation-delay.ms]="300"></span>
+      </span>
+    </div>
+  </div>
+</div>

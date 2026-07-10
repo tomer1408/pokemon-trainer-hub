@@ -1,0 +1,287 @@
+<div class="manage-team" [class.light]="theme.isLight()" [style.height.px]="pageHeightPx()">
+  @if (isLoading()) {
+    <app-loading-screen [isLight]="theme.isLight()" [fullScreen]="true" />
+  } @else {
+    <div class="content">
+      <div class="header-row">
+        <div class="header-block">
+          <h1 class="page-title">{{ pageTitle() }}</h1>
+          <p class="page-subtitle">
+            Drag Pok&eacute;mon to build your line-up &mdash; reorder your team or pull favorites in and out.
+          </p>
+        </div>
+      </div>
+
+      <!-- Team row -->
+      <div class="team-section">
+        <div class="team-row" (dragover)="$event.preventDefault()" (drop)="$event.preventDefault(); moveToTeam(teamDraft().length)">
+          @for (member of teamSlots(); track $index) {
+            @if (member) {
+              <div
+                class="slot-outer"
+                [class.drag-over]="overTeamIndex() === $index"
+                [class.dragging]="drag()?.item?.pokemonId === member.pokemonId"
+                draggable="true"
+                (dragstart)="startDrag(member, 'team')"
+                (dragend)="endDrag()"
+                (dragover)="$event.preventDefault(); onTeamSlotDragOver($index)"
+                (drop)="$event.preventDefault(); $event.stopPropagation(); moveToTeam($index)"
+                (click)="openDetail(member.pokemonId)"
+              >
+                @if (isFavorite(member.pokemonId)) {
+                  <div class="heart-badge">&hearts;</div>
+                }
+                <div class="order-badge">{{ $index + 1 }}</div>
+                <div class="slot-inner">
+                  <div class="grip">&#8942;&#8942;</div>
+                  <div class="art" [style.background]="typeColor(member.types[0]) + '22'">
+                    @if (member.spriteUrl) {
+                      <img [src]="member.spriteUrl" alt="{{ member.pokemonName }}" />
+                    }
+                  </div>
+                  <div class="slot-name">{{ member.pokemonName }}</div>
+                  @if (member.types[0]; as type) {
+                    <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                      <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
+                    </span>
+                  }
+                  <div class="power-row">
+                    <span class="power-label">PWR</span>
+                    <span class="power-value">{{ member.baseExperience }}</span>
+                  </div>
+                  <button
+                    type="button"
+                    class="compare-btn"
+                    (click)="$event.stopPropagation(); compareTeamAgainstFavorites(member.pokemonId)"
+                  >
+                    &#8644; Compare
+                  </button>
+                </div>
+              </div>
+            } @else {
+              <div
+                class="slot-empty"
+                [class.drag-over]="overTeamIndex() === $index"
+                (dragover)="$event.preventDefault(); onTeamSlotDragOver($index)"
+                (drop)="$event.preventDefault(); $event.stopPropagation(); moveToTeam($index)"
+              >
+                <div class="plus">+</div>
+                <div class="empty-label">Drop here</div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+
+      <!-- Favorites + Bench side by side -->
+      <div class="bottom-row">
+        <div class="pool-section">
+          <div class="section-head-row">
+            <span class="section-title">Favorites</span>
+          </div>
+          <div
+            class="pool-grid"
+            [class.drag-over]="overFav()"
+            (dragover)="$event.preventDefault(); onFavDragOver()"
+            (drop)="$event.preventDefault(); moveToFav()"
+          >
+            @for (card of favPool(); track card.pokemonId) {
+              <div
+                class="pool-card"
+                [class.dragging]="drag()?.item?.pokemonId === card.pokemonId"
+                draggable="true"
+                (dragstart)="startDrag(card, 'fav')"
+                (dragend)="endDrag()"
+                (click)="openDetail(card.pokemonId)"
+              >
+                <div class="heart-badge pool-heart-badge">&hearts;</div>
+                <div class="grip">&#8942;&#8942;</div>
+                <div class="pool-art" [style.background]="typeColor(card.types[0]) + '22'">
+                  @if (card.spriteUrl) {
+                    <img [src]="card.spriteUrl" alt="{{ card.pokemonName }}" />
+                  }
+                </div>
+                <div class="pool-info">
+                  <div class="pool-name">{{ card.pokemonName }}</div>
+                  @if (card.types[0]; as type) {
+                    <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                      <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
+                    </span>
+                  }
+                </div>
+                <div class="pool-power-col">
+                  <span class="pool-power-value">{{ card.baseExperience }}</span>
+                  <span class="pool-power-label">PWR</span>
+                </div>
+                <button
+                  type="button"
+                  class="compare-btn pool-compare-btn"
+                  (click)="$event.stopPropagation(); compareFavoriteAgainstTeam(card.pokemonId)"
+                >
+                  &#8644; Compare
+                </button>
+              </div>
+            }
+            @if (favPool().length === 0) {
+              <div class="pool-empty">All your favorites are on the team. Drag one back here to bench it.</div>
+            }
+          </div>
+        </div>
+
+        <div class="pool-section">
+          <div class="section-head-row">
+            <span class="section-title">Bench</span>
+          </div>
+          <div
+            class="pool-grid bench-grid"
+            [class.drag-over]="overBench()"
+            (dragover)="$event.preventDefault(); onBenchDragOver()"
+            (drop)="$event.preventDefault(); moveToBench()"
+          >
+            @for (card of benchDraft(); track card.pokemonId) {
+              <div
+                class="pool-card"
+                [class.dragging]="drag()?.item?.pokemonId === card.pokemonId"
+                draggable="true"
+                (dragstart)="startDrag(card, 'bench')"
+                (dragend)="endDrag()"
+                (click)="openDetail(card.pokemonId)"
+              >
+                @if (isFavorite(card.pokemonId)) {
+                  <div class="heart-badge pool-heart-badge">&hearts;</div>
+                }
+                <div class="grip">&#8942;&#8942;</div>
+                <div class="pool-art" [style.background]="typeColor(card.types[0]) + '22'">
+                  @if (card.spriteUrl) {
+                    <img [src]="card.spriteUrl" alt="{{ card.pokemonName }}" />
+                  }
+                </div>
+                <div class="pool-info">
+                  <div class="pool-name">{{ card.pokemonName }}</div>
+                  @if (card.types[0]; as type) {
+                    <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                      <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
+                    </span>
+                  }
+                </div>
+                <div class="pool-power-col">
+                  <span class="pool-power-value">{{ card.baseExperience }}</span>
+                  <span class="pool-power-label">PWR</span>
+                </div>
+                @if (isFavorite(card.pokemonId)) {
+                  <button
+                    type="button"
+                    class="compare-btn pool-compare-btn"
+                    (click)="$event.stopPropagation(); compareFavoriteAgainstTeam(card.pokemonId)"
+                  >
+                    &#8644; Compare
+                  </button>
+                }
+              </div>
+            }
+            @if (benchDraft().length === 0) {
+              <div class="pool-empty">
+                <div class="pool-empty-icon">&#9711;</div>
+                <div>Drag a Pok&eacute;mon here to set it aside while you swap your line-up.</div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="unsaved-bar">
+      @if (hasUnsavedChanges()) {
+        <span class="unsaved-text">You have unsaved changes</span>
+      } @else {
+        <span class="unsaved-text unsaved-text-muted">No changes to save</span>
+      }
+      <div class="unsaved-actions">
+        <button type="button" class="bar-back-btn" (click)="goBackToMyTeam()">Back to My Team</button>
+        <button type="button" class="revert-btn" [disabled]="!hasUnsavedChanges()" (click)="requestRevert()">
+          Revert
+        </button>
+        <button type="button" class="save-btn" [disabled]="!hasUnsavedChanges()" (click)="requestSave()">
+          Save Changes
+        </button>
+      </div>
+    </div>
+
+    @if (showSaveConfirm()) {
+      <div class="confirm-overlay" (click)="cancelSave()">
+        <div class="confirm-card" (click)="$event.stopPropagation()">
+          <h2 class="confirm-title">Save team changes?</h2>
+          <p class="confirm-body">
+            Are you sure you want to save your new team order? Your changes will stay after refresh and login.
+          </p>
+          @if (saveError()) {
+            <p class="confirm-error">{{ saveError() }}</p>
+          }
+          <div class="confirm-actions">
+            <button type="button" class="confirm-cancel" [disabled]="isSaving()" (click)="cancelSave()">Cancel</button>
+            <button type="button" class="confirm-save" [disabled]="isSaving()" (click)="confirmSave()">
+              {{ isSaving() ? 'Saving…' : 'Save Changes' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (showRevertConfirm()) {
+      <div class="confirm-overlay" (click)="cancelRevert()">
+        <div class="confirm-card" (click)="$event.stopPropagation()">
+          <h2 class="confirm-title">Revert changes?</h2>
+          <p class="confirm-body">This will discard your unsaved changes and restore the last saved team order.</p>
+          <div class="confirm-actions">
+            <button type="button" class="confirm-cancel" (click)="cancelRevert()">Keep Editing</button>
+            <button type="button" class="confirm-revert" (click)="confirmRevert()">Revert Changes</button>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (showLeaveConfirm()) {
+      <div class="confirm-overlay" (click)="stayHere()">
+        <div class="confirm-card" (click)="$event.stopPropagation()">
+          <h2 class="confirm-title">Leave without saving?</h2>
+          <p class="confirm-body">
+            You have unsaved changes. Are you sure you want to go back to My Team without saving them?
+          </p>
+          <div class="confirm-actions">
+            <button type="button" class="confirm-cancel" (click)="stayHere()">Stay Here</button>
+            <button type="button" class="confirm-revert" (click)="leaveWithoutSaving()">Leave Without Saving</button>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (showSavedToast()) {
+      <div class="toast"><span class="toast-dot"></span>Team changes saved successfully.</div>
+    }
+
+    @if (selectedPokemonId(); as id) {
+      <app-pokemon-detail-modal
+        [pokemonId]="id"
+        [isFavorite]="isFavorite(id)"
+        [isOnTeam]="isOnTeam(id)"
+        [teamFull]="teamDraft().length >= 5"
+        [isLight]="theme.isLight()"
+        (closed)="closeDetail()"
+        (toggleFavorite)="toggleFavoriteFromModal(id)"
+        (addToTeam)="addToTeamFromModal(id)"
+      />
+    }
+
+    @if (compareAnchorId(); as id) {
+      <app-team-swap-modal
+        [selectedPokemonId]="id"
+        [comparisonCandidates]="compareCandidates()"
+        [mode]="compareMode()"
+        [persistImmediately]="comparePersistImmediately()"
+        [isLight]="theme.isLight()"
+        (closed)="closeCompare()"
+        (swapped)="onCompareSwapped($event)"
+      />
+    }
+  }
+</div>

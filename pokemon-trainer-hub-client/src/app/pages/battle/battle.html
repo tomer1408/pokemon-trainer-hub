@@ -1,0 +1,256 @@
+<div class="battle-page" [class.light]="theme.isLight()">
+  <div class="content">
+    <a routerLink="/my-team" class="back-link">&larr; Back to My Team</a>
+
+    @if (isLoading()) {
+      <app-loading-screen [isLight]="theme.isLight()" size="lg" />
+    } @else if (hasError()) {
+      <div class="error-state">
+        <p class="error-message">We couldn't load your team for battle.</p>
+        <p class="error-sub">Please check your connection and try again.</p>
+        <button type="button" class="error-retry-btn" (click)="retry()">Try again</button>
+      </div>
+    } @else if (!hasTeam()) {
+      <div class="error-state">
+        <p class="error-message">Your Dream Team is empty.</p>
+        <p class="error-sub">Add at least one Pok&eacute;mon to your team before you can battle.</p>
+        <a routerLink="/explorer" class="error-retry-btn">Go to Explorer</a>
+      </div>
+    } @else {
+
+      @if (showScoreBar()) {
+        <div class="score-row">
+          <div class="score-side" [class.leading]="youLeading()">
+            @if (youLeading()) { <span class="crown">&#128081;</span> }
+            <span class="score-name">You</span>
+            <span class="score-num" [class.gold]="youLeading()" [class.bad]="oppLeading()">{{ yourWins() }}</span>
+            <div class="round-pips">
+              @for (pip of yourRoundPips(); track $index) {
+                <div class="pip" [class.win]="pip === 'win'" [class.loss]="pip === 'loss'"></div>
+              }
+            </div>
+          </div>
+          <div class="score-side opp" [class.leading]="oppLeading()">
+            <div class="round-pips reverse">
+              @for (pip of oppRoundPips(); track $index) {
+                <div class="pip" [class.win]="pip === 'win'" [class.loss]="pip === 'loss'"></div>
+              }
+            </div>
+            <span class="score-num" [class.gold]="oppLeading()" [class.bad]="youLeading()">{{ oppWins() }}</span>
+            <span class="score-name">{{ opponentName() }}</span>
+            @if (oppLeading()) { <span class="crown">&#128081;</span> }
+          </div>
+        </div>
+      }
+
+      <!-- ===== 1. PREVIEW ===== -->
+      @if (phase() === 'preview') {
+        <div class="header-block">
+          <h1 class="page-title">Battle Simulation</h1>
+          <p class="page-subtitle">
+            Your Dream Team faces a randomly generated opponent. Each round is decided by real type
+            advantage and Power &mdash; ties are broken with a coin flip.
+          </p>
+        </div>
+
+        <div class="preview-layout">
+          <div class="preview-col">
+            <div class="preview-label">Your Team</div>
+            @for (p of yourTeam(); track p.pokemonId) {
+              <div class="preview-row">
+                <div class="preview-sprite" [style.background]="typeColor(p.types[0]) + '33'">
+                  @if (p.spriteUrl) { <img [src]="p.spriteUrl" alt="{{ p.name }}" /> }
+                </div>
+                <span class="type-pill" [style.background]="typeColor(p.types[0]) + '33'" [style.color]="typeColor(p.types[0])">
+                  <span class="type-glyph" [style.background]="typeColor(p.types[0])"></span>{{ p.types[0] }}
+                </span>
+                <span class="preview-name">{{ p.name }}</span>
+                <span class="preview-power">{{ p.power }}</span>
+              </div>
+            }
+          </div>
+
+          <div class="preview-vs-badge">VS</div>
+
+          <div class="preview-col">
+            <div class="preview-label">{{ opponentName() }}</div>
+            @for (p of opponentTeam(); track p.pokemonId) {
+              <div class="preview-row">
+                <div class="preview-sprite" [style.background]="typeColor(p.types[0]) + '33'">
+                  @if (p.spriteUrl) { <img [src]="p.spriteUrl" alt="{{ p.name }}" /> }
+                </div>
+                <span class="type-pill" [style.background]="typeColor(p.types[0]) + '33'" [style.color]="typeColor(p.types[0])">
+                  <span class="type-glyph" [style.background]="typeColor(p.types[0])"></span>{{ p.types[0] }}
+                </span>
+                <span class="preview-name">{{ p.name }}</span>
+                <span class="preview-power">{{ p.power }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <button type="button" class="primary-btn" (click)="beginRound1()">Start Battle</button>
+      }
+
+      <!-- ===== 2. ROUND PICK ===== -->
+      @if (phase() === 'picking') {
+        <div class="header-block">
+          <h1 class="page-title">Round {{ currentRound() }}</h1>
+          <p class="page-subtitle">
+            Choose your Pok&eacute;mon for Round {{ currentRound() }} &mdash; {{ opponentName() }} is choosing too.
+          </p>
+        </div>
+
+        <div class="detail-panel">
+          @if (activeMon(); as m) {
+            <span class="type-pill" [style.background]="typeColor(m.types[0]) + '33'" [style.color]="typeColor(m.types[0])">
+              <span class="type-glyph" [style.background]="typeColor(m.types[0])"></span>{{ m.types[0] }}
+            </span>
+            <span class="detail-name">{{ m.name }}</span>
+            <span class="detail-field">Power: <strong>{{ m.power }}</strong></span>
+            @if (m.resistances.length) {
+              <span class="detail-adv">Advantage vs: <strong>{{ m.resistances.join(', ') }}</strong></span>
+            }
+            @if (m.weaknesses.length) {
+              <span class="detail-weak">Disadvantage vs: <strong>{{ m.weaknesses.join(', ') }}</strong></span>
+            }
+            @if (m.bestMove) {
+              <span class="detail-field">Best Move: <strong>{{ m.bestMove }}</strong></span>
+            }
+          } @else {
+            <span class="detail-prompt">Hover or pick a Pok&eacute;mon to see its battle details</span>
+          }
+        </div>
+
+        <div class="pick-grid">
+          @for (p of pickableTeam(); track p.pokemonId) {
+            <button
+              type="button"
+              class="pick-card"
+              [class.selected]="selectedYourId() === p.pokemonId"
+              [class.used]="p.isUsed"
+              [disabled]="p.isUsed"
+              (click)="selectYourMon(p.pokemonId)"
+              (mouseenter)="hoverYourMon(p.pokemonId)"
+              (mouseleave)="unhoverYourMon()"
+            >
+              <div class="pick-sprite" [style.background]="typeColor(p.types[0]) + '33'">
+                @if (p.spriteUrl) { <img [src]="p.spriteUrl" alt="{{ p.name }}" /> }
+              </div>
+              <span class="type-pill" [style.background]="typeColor(p.types[0]) + '33'" [style.color]="typeColor(p.types[0])">
+                <span class="type-glyph" [style.background]="typeColor(p.types[0])"></span>{{ p.types[0] }}
+              </span>
+              <div class="pick-name">{{ p.name }}</div>
+              <div class="pick-power">PWR {{ p.power }}</div>
+              @if (p.isUsed) { <span class="used-tag">Used</span> }
+            </button>
+          }
+        </div>
+
+        <button type="button" class="primary-btn" [disabled]="noSelection()" (click)="confirmPick()">Confirm Pick</button>
+      }
+
+      <!-- ===== 3. SUSPENSE ===== -->
+      @if (phase() === 'suspense') {
+        <div class="suspense-box">
+          <div class="suspense-vs">VS</div>
+          <div class="suspense-dots">
+            <span class="dot dot-0"></span>
+            <span class="dot dot-1"></span>
+            <span class="dot dot-2"></span>
+          </div>
+          <div class="suspense-text">{{ opponentName() }} is revealing their pick&hellip;</div>
+        </div>
+      }
+
+      <!-- ===== 3b. REVEAL ===== -->
+      @if (phase() === 'revealed' && roundHistory().length > 0) {
+        @let last = roundHistory()[roundHistory().length - 1];
+        <div class="faceoff">
+          <div class="faceoff-card" [class.winner-card]="last.winner === 'you'">
+            @if (last.winner === 'you') {
+              <span class="winner-badge"><span class="winner-badge-star"></span></span>
+              <div class="confetti">
+                @for (i of [0,1,2,3,4,5,6,7]; track i) {
+                  <span class="confetti-bit bit-{{ i }}"></span>
+                }
+              </div>
+            }
+            <div class="faceoff-sprite" [style.background]="typeColor(last.yourMon.types[0]) + '33'">
+              @if (last.yourMon.spriteUrl) { <img [src]="last.yourMon.spriteUrl" alt="{{ last.yourMon.name }}" /> }
+            </div>
+            <span class="type-pill" [style.background]="typeColor(last.yourMon.types[0]) + '33'" [style.color]="typeColor(last.yourMon.types[0])">
+              <span class="type-glyph" [style.background]="typeColor(last.yourMon.types[0])"></span>{{ last.yourMon.types[0] }}
+            </span>
+            <div class="faceoff-name">{{ last.yourMon.name }}</div>
+            <div class="faceoff-power">{{ last.yourMon.power }}</div>
+          </div>
+
+          <div class="faceoff-vs-col">
+            <div class="faceoff-vs-badge">VS</div>
+            <div class="result-text" [class.good]="last.winner === 'you'" [class.bad]="last.winner === 'opp'">
+              {{ last.winner === 'you' ? 'You win this round!' : opponentName() + ' wins this round.' }}
+            </div>
+            <span class="reason-chip">{{ last.reason }}</span>
+          </div>
+
+          <div class="faceoff-card" [class.winner-card]="last.winner === 'opp'">
+            @if (last.winner === 'opp') {
+              <span class="winner-badge"><span class="winner-badge-star"></span></span>
+              <div class="confetti">
+                @for (i of [0,1,2,3,4,5,6,7]; track i) {
+                  <span class="confetti-bit bit-{{ i }}"></span>
+                }
+              </div>
+            }
+            <div class="faceoff-sprite" [style.background]="typeColor(last.oppMon.types[0]) + '33'">
+              @if (last.oppMon.spriteUrl) { <img [src]="last.oppMon.spriteUrl" alt="{{ last.oppMon.name }}" /> }
+            </div>
+            <span class="type-pill" [style.background]="typeColor(last.oppMon.types[0]) + '33'" [style.color]="typeColor(last.oppMon.types[0])">
+              <span class="type-glyph" [style.background]="typeColor(last.oppMon.types[0])"></span>{{ last.oppMon.types[0] }}
+            </span>
+            <div class="faceoff-name">{{ last.oppMon.name }}</div>
+            <div class="faceoff-power">{{ last.oppMon.power }}</div>
+          </div>
+        </div>
+
+        <button type="button" class="primary-btn" (click)="continueAfterReveal()">
+          {{ roundHistory().length >= totalRounds() ? 'See Result' : 'Next Round' }}
+        </button>
+      }
+
+      <!-- ===== 4. FINAL RESULT ===== -->
+      @if (phase() === 'matchOver') {
+        <div class="match-result-card">
+          <div
+            class="result-badge"
+            [class.good]="matchResult() === 'win'"
+            [class.bad]="matchResult() === 'loss'"
+            [class.draw]="matchResult() === 'draw'"
+          >
+            {{ matchResult() === 'win' ? 'VICTORY!' : matchResult() === 'loss' ? 'DEFEAT' : 'DRAW' }}
+          </div>
+          <div class="final-score">Final score: {{ yourWins() }} &ndash; {{ oppWins() }}</div>
+
+          <div class="history-list">
+            @for (h of roundHistory(); track h.round) {
+              <div class="history-row">
+                <span class="history-round">R{{ h.round }}</span>
+                <span class="history-matchup">{{ h.yourMon.name }} ({{ h.yourMon.power }}) vs {{ h.oppMon.name }} ({{ h.oppMon.power }})</span>
+                <span class="history-reason">{{ h.reason }}</span>
+                <span class="history-outcome" [class.good]="h.winner === 'you'" [class.bad]="h.winner === 'opp'">
+                  {{ h.winner === 'you' ? 'Win' : 'Loss' }}
+                </span>
+              </div>
+            }
+          </div>
+
+          <div class="match-actions-row">
+            <a routerLink="/my-team" class="secondary-btn">Back to My Team</a>
+            <button type="button" class="primary-btn" (click)="battleAgain()">Battle Again</button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>

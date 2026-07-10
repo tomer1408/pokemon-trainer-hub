@@ -25,9 +25,9 @@ interface HeroCard {
 // Fixed layout/color slots for the 3 showcase cards — the Pokémon data itself
 // (name, sprite, stats) is fetched live below, this part is purely visual.
 const HERO_SLOTS = [
-  { pokemonName: 'pikachu', hue: 95, top: '2%', left: '8%', driftAnimation: 'driftA', driftDelay: '0s', zIndex: 3 },
-  { pokemonName: 'charmander', hue: 25, top: '30%', left: '46%', driftAnimation: 'driftB', driftDelay: '0.6s', zIndex: 2 },
-  { pokemonName: 'bulbasaur', hue: 150, top: '58%', left: '4%', driftAnimation: 'driftC', driftDelay: '1.1s', zIndex: 1 },
+  { pokemonName: 'pikachu', hue: 95, top: '2%', left: '27%', driftAnimation: 'driftA', driftDelay: '0s', zIndex: 3 },
+  { pokemonName: 'charmander', hue: 25, top: '30%', left: '66%', driftAnimation: 'driftB', driftDelay: '0.6s', zIndex: 2 },
+  { pokemonName: 'bulbasaur', hue: 150, top: '63%', left: '20%', driftAnimation: 'driftC', driftDelay: '1.1s', zIndex: 1 },
 ];
 
 interface RawPokeApiPokemon {

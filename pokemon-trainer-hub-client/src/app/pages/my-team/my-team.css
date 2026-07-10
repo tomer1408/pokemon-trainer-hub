@@ -14,8 +14,11 @@
   --overlay-06: rgba(255, 255, 255, 0.06);
   --overlay-08: rgba(255, 255, 255, 0.08);
 
+  /* No fixed height here — .my-team below gets its exact height set from
+     JS (measured against the real, live navbar height instead of a guessed
+     constant), so the host just wraps it at whatever that turns out to be. */
   display: block;
-  min-height: 100vh;
+  overflow: hidden;
 }
 
 .my-team.light {
@@ -35,21 +38,27 @@
 }
 
 .my-team {
-  min-height: 100vh;
-  padding-bottom: 60px;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   box-sizing: border-box;
   background: radial-gradient(ellipse 900px 500px at 15% 0%, rgba(124, 58, 237, 0.14), transparent 60%), var(--bg);
   font-family: 'Manrope', sans-serif;
 }
 
 .content {
+  flex: 1;
+  min-height: 0;
   max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
-  padding: 24px 40px 0;
+  padding: 18px 40px 24px;
   display: flex;
   flex-direction: column;
-  gap: 26px;
+  gap: 14px;
   box-sizing: border-box;
+  overflow-y: auto;
 }
 
 /* ---- Header ---- */
@@ -63,13 +72,15 @@
 
 .header-block {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 14px;
 }
 
 .page-title {
   font-family: 'Bungee', sans-serif;
-  font-size: 28px;
+  font-size: 44px;
+  line-height: 1.1;
   color: var(--text-body);
   margin: 0;
 }
@@ -78,6 +89,15 @@
   font-size: 14px;
   color: var(--text-muted);
   margin: 0;
+}
+
+.manage-team-link {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--cyan);
+  text-decoration: none;
+  white-space: nowrap;
 }
 
 .header-actions {
@@ -99,6 +119,7 @@
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 12.5px;
+  text-decoration: none;
 }
 
 .tool-icon {
@@ -109,24 +130,62 @@
   display: inline-block;
 }
 
+/* ---- Error state ---- */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  padding: 90px 24px;
+}
+
+.error-message {
+  font-family: 'Bungee', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-body);
+  margin: 0;
+}
+
+.error-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.error-retry-btn {
+  margin-top: 8px;
+  border: none;
+  border-radius: 100px;
+  padding: 10px 22px;
+  background: linear-gradient(120deg, var(--violet-deep), var(--cyan));
+  color: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
 .battle-pill {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   border-radius: 100px;
-  padding: 13px 20px;
+  padding: 8px 14px;
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
-  font-size: 13.5px;
+  font-size: 12px;
   background: linear-gradient(120deg, var(--violet-deep), var(--cyan));
   color: #fff;
+  text-decoration: none;
 }
 
 /* ---- 5 Team slots ---- */
 .slots-row {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 16px;
+  gap: 14px;
 }
 
 .slot-outer {
@@ -144,26 +203,12 @@
   position: relative;
   background: var(--surface);
   border-radius: 17px;
-  padding: 16px 14px;
+  padding: 14px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   text-align: center;
-}
-
-.remove-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  border: none;
-  background: var(--overlay-08);
-  color: var(--text-muted);
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 13px;
 }
 
 .hex-badge {
@@ -185,10 +230,10 @@
 }
 
 .slot-art {
-  width: 76px;
-  height: 76px;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
-  margin-top: 10px;
+  margin-top: 6px;
   background: var(--overlay-05);
   display: flex;
   align-items: center;
@@ -197,8 +242,8 @@
 }
 
 .slot-art img {
-  width: 64px;
-  height: 64px;
+  width: 44px;
+  height: 44px;
   object-fit: contain;
 }
 
@@ -250,7 +295,7 @@
 .slot-empty {
   border: 2px dashed var(--border-soft);
   border-radius: 20px;
-  min-height: 190px;
+  min-height: 140px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -274,10 +319,10 @@
   background: linear-gradient(160deg, var(--surface-raised), var(--surface));
   border: 1px solid var(--border-soft);
   border-radius: 24px;
-  padding: 28px 30px;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 16px;
   box-sizing: border-box;
 }
 
@@ -410,10 +455,10 @@
   background: var(--surface);
   border: 1px solid var(--border-soft);
   border-radius: 20px;
-  padding: 24px 26px;
+  padding: 18px 22px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   box-sizing: border-box;
 }
 
@@ -441,12 +486,6 @@
   gap: 8px;
 }
 
-.insight-text {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin: 0;
-  line-height: 1.5;
-}
 
 /* ---- No team state ---- */
 .no-team-state {
@@ -490,74 +529,6 @@
   font-weight: 700;
   font-size: 13.5px;
   font-family: 'Manrope', sans-serif;
-}
-
-/* ---- Remove confirmation ---- */
-.confirm-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  background: rgba(5, 3, 15, 0.6);
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-
-.confirm-card {
-  width: 100%;
-  max-width: 360px;
-  background: var(--surface);
-  border: 1px solid var(--border-soft);
-  border-radius: 20px;
-  padding: 26px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
-  box-sizing: border-box;
-}
-
-.confirm-title {
-  font-family: 'Bungee', sans-serif;
-  font-size: 16px;
-  color: var(--text-body);
-  margin: 0;
-  text-align: center;
-}
-
-.confirm-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 4px;
-}
-
-.confirm-cancel {
-  flex: 1;
-  border: 1px solid var(--border-soft);
-  background: transparent;
-  color: var(--text-body);
-  border-radius: 100px;
-  padding: 11px 14px;
-  font-family: 'Manrope', sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.confirm-remove {
-  flex: 1;
-  border: none;
-  background: #F4562B;
-  color: #fff;
-  border-radius: 100px;
-  padding: 11px 14px;
-  font-family: 'Manrope', sans-serif;
-  font-weight: 800;
-  font-size: 13px;
-  cursor: pointer;
 }
 
 @keyframes holoShift {

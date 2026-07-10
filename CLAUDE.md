@@ -97,7 +97,7 @@ that isn't in this file.
   trying to add a 6th.
 - Type-distribution bar on My Team: dual-type Pokémon count toward BOTH
   types, normalized so the bar sums to 100%.
-- Team Power is shown on both Dashboard (glance-level: number + tier label)
+- Team Power is shown on both Home (glance-level: number + tier label)
   and My Team (detailed: number + per-Pokémon breakdown) — same shared
   calculation, not duplicated logic.
 - Pokémon Detail page includes a cry-sound play button, sourced from

@@ -14,6 +14,10 @@ export interface TrainerProfile {
   // Real Pokédex id of the trainer's chosen profile icon, or null if they
   // haven't picked one.
   avatarPokemonId: number | null;
+  // The trainer's custom name for their Dream Team, or null if not set.
+  teamName: string | null;
+  // Only present on responses (GET/POST) — never sent by the client on save.
+  createdAt?: string;
 }
 
 @Injectable({ providedIn: 'root' })

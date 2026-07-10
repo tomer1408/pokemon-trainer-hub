@@ -7,3 +7,12 @@ body {
   background: #0D0A1E;
 }
 
+/* Hidden host for the Colorblind Mode SVG filter defs in index.html — no
+   visual footprint, just needs to exist in the document for `filter:
+   url(#cvd-...)` on body to resolve. */
+.cvd-filter-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+

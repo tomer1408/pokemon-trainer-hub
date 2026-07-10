@@ -68,7 +68,7 @@
 
       @if (isLoading()) {
         <div class="card-grid">
-          @for (s of [1, 2, 3, 4, 5, 6, 7, 8, 9]; track s) {
+          @for (s of [1, 2, 3, 4]; track s) {
             <div class="skel-card"></div>
           }
         </div>
@@ -134,8 +134,11 @@
     </div>
 
     <!-- Team sidebar (desktop) -->
-    <div class="sidebar">
-      <ng-container [ngTemplateOutlet]="teamPanel"></ng-container>
+    <div class="sidebar-col">
+      <div class="sidebar">
+        <ng-container [ngTemplateOutlet]="teamPanel"></ng-container>
+      </div>
+      <ng-container [ngTemplateOutlet]="potdPanel"></ng-container>
     </div>
   </div>
 
@@ -150,12 +153,16 @@
       <div class="drawer-sheet" (click)="$event.stopPropagation()">
         <div class="drawer-handle"></div>
         <ng-container [ngTemplateOutlet]="teamPanel"></ng-container>
+        <ng-container [ngTemplateOutlet]="potdPanel"></ng-container>
       </div>
     </div>
   }
 
   <ng-template #teamPanel>
-    <div class="sidebar-title">Your Team</div>
+    <div class="sidebar-title-row">
+      <span class="sidebar-title">{{ teamName() }}</span>
+      <a routerLink="/my-team" class="sidebar-title-link">My Team <span>&rarr;</span></a>
+    </div>
     <div class="sidebar-slots">
       @for (member of teamSlots(); track $index) {
         @if (member) {
@@ -193,6 +200,15 @@
     </div>
   </ng-template>
 
+  <ng-template #potdPanel>
+    @if (potd(); as p) {
+      <div class="potd-panel">
+        <div class="potd-panel-heading">Pok&eacute;mon of the Day</div>
+        <app-potd-card [pokemon]="p" [isLight]="theme.isLight()" [compact]="true" (opened)="openDetail(p)" />
+      </div>
+    }
+  </ng-template>
+
   <!-- Remove confirmation -->
   @if (pendingRemove(); as target) {
     <div class="confirm-overlay" (click)="cancelRemove()">
@@ -223,8 +239,9 @@
   <!-- Team Swap Modal (opens when the team is full and a 6th add is attempted) -->
   @if (swapCandidate(); as candidate) {
     <app-team-swap-modal
-      [candidateId]="candidate.id"
-      [team]="team()"
+      [selectedPokemonId]="candidate.id"
+      [comparisonCandidates]="team()"
+      mode="overflow"
       [isLight]="theme.isLight()"
       (closed)="closeSwap()"
       (swapped)="onSwapped()"

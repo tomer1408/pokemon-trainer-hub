@@ -1,7 +1,7 @@
 /* Tokens from Pokemon Detail Modal.dc.html, extended with the same light-mode
-   palette used site-wide (Dashboard/Explorer/My Team/Profile/Team Card) —
-   the mockup itself was dark-only, but the modal must follow whichever theme
-   the host page is in rather than always forcing dark. */
+   palette used site-wide (Home/Explorer/My Team/Profile) — the mockup itself
+   was dark-only, but the modal must follow whichever theme the host page is
+   in rather than always forcing dark. */
 :host {
   --bg: #0D0A1E;
   --surface: #1A1533;
@@ -54,7 +54,8 @@
   position: relative;
   width: 100%;
   max-width: 620px;
-  max-height: 86vh;
+  height: 86vh;
+  max-height: 720px;
   border-radius: 28px;
   padding: 3px;
   background: linear-gradient(120deg, var(--violet-deep), var(--cyan), var(--yellow), var(--violet-deep));
@@ -70,7 +71,7 @@
   border-radius: 25px;
   display: flex;
   flex-direction: column;
-  max-height: calc(86vh - 6px);
+  height: calc(100% - 6px);
   overflow: hidden;
   font-family: 'Manrope', sans-serif;
   color: var(--text-body);
@@ -91,8 +92,18 @@
   cursor: pointer;
 }
 
-.loading-state,
+.loading-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .error-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 60px 30px;
   text-align: center;
   color: var(--text-muted);
@@ -224,14 +235,16 @@
 }
 
 .tab-btn {
+  flex: 1;
   border: none;
   border-radius: 10px 10px 0 0;
-  padding: 10px 16px;
+  padding: 10px 12px;
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 12.5px;
   cursor: pointer;
   background: transparent;
+  white-space: nowrap;
   color: var(--text-muted);
   border-bottom: 2px solid transparent;
 }
@@ -260,6 +273,181 @@
   font-style: italic;
 }
 
+.note-add-row {
+  display: flex;
+  gap: 8px;
+}
+
+.note-input {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  border-radius: 10px;
+  border: 1px solid var(--border-soft);
+  background: var(--surface-raised);
+  color: var(--text-body);
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  padding: 10px 12px;
+}
+
+.note-input:focus {
+  outline: none;
+  border-color: var(--violet);
+}
+
+.note-add-btn {
+  flex-shrink: 0;
+  border: none;
+  border-radius: 100px;
+  padding: 8px 18px;
+  background: linear-gradient(120deg, var(--violet-deep), var(--cyan));
+  color: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.note-add-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.note-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.note-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.note-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-soft);
+}
+
+.note-item-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.note-item-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-body);
+  word-break: break-word;
+}
+
+.note-item-date {
+  font-family: 'Space Mono', monospace;
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.note-delete-btn {
+  flex-shrink: 0;
+  border: none;
+  background: var(--overlay-08);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.note-delete-btn:hover {
+  color: #f87171;
+}
+
+/* ---- Delete note confirmation (same look as every other confirm dialog
+   site-wide — My Team / Explorer's remove-from-team confirm). This overlay
+   is nested inside the modal's own .dim-overlay (already dark), so its own
+   tint is much lighter than a standalone confirm-overlay — enough to dim
+   the modal content behind it without doubling up into a washed-out scene. */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(5, 3, 15, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.confirm-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  padding: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
+}
+
+.confirm-title {
+  font-family: 'Bungee', sans-serif;
+  font-size: 16px;
+  color: var(--text-body);
+  margin: 0;
+  text-align: center;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.confirm-cancel {
+  flex: 1;
+  border: 1px solid var(--border-soft);
+  background: transparent;
+  color: var(--text-body);
+  border-radius: 100px;
+  padding: 11px 14px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.confirm-remove {
+  flex: 1;
+  border: none;
+  background: #f4562b;
+  color: #fff;
+  border-radius: 100px;
+  padding: 11px 14px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+}
+
 .section-block {
   display: flex;
   flex-direction: column;
@@ -268,8 +456,8 @@
 
 .section-title {
   font-family: 'Bungee', sans-serif;
-  font-size: 13px;
-  color: var(--violet);
+  font-size: 15px;
+  color: #fff;
   letter-spacing: 0.3px;
 }
 
@@ -281,14 +469,14 @@
 
 .stat-row {
   display: grid;
-  grid-template-columns: 40px 1fr 34px;
+  grid-template-columns: 68px 1fr 34px;
   align-items: center;
   gap: 10px;
 }
 
 .stat-name {
   font-family: 'Space Mono', monospace;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--text-muted);
   text-transform: uppercase;
 }

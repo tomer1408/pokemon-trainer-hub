@@ -1,0 +1,306 @@
+<div class="home" [class.light]="theme.isLight()">
+  <div class="content">
+    @if (isLoading()) {
+      <div class="hero-outer">
+        <div class="hero-inner">
+          <div class="skel-hex"></div>
+          <div class="skel-lines">
+            <div class="skel-line skel-line-1"></div>
+            <div class="skel-line skel-line-2"></div>
+            <div class="skel-line skel-line-3"></div>
+          </div>
+        </div>
+      </div>
+      <div class="skel-card"></div>
+    } @else if (hasError()) {
+      <div class="error-state">
+        <p class="error-message">We couldn't load your home page right now.</p>
+        <p class="error-sub">Please check your connection and try again.</p>
+        <button type="button" class="retry-btn" (click)="retry()">Try again</button>
+      </div>
+    } @else {
+      <!-- ===== TRAINER HERO ===== -->
+      <div class="hero-outer">
+        <div class="hero-inner">
+          <div class="avatar-hex">
+            @if (avatarSprite(); as sprite) {
+              <img class="avatar-sprite" [src]="sprite" alt="Trainer avatar" />
+            } @else {
+              {{ trainerInitial() }}
+            }
+          </div>
+
+          <div class="hero-copy">
+            <div class="hero-kicker">Welcome back, trainer</div>
+            <div class="hero-name-row">
+              <h1 class="hero-name">{{ trainerName() }}</h1>
+              <span class="tier-pill">{{ tier() }}</span>
+            </div>
+
+            @if (!hasTeam()) {
+              <p class="sub-copy">Your team is waiting &mdash; go find your first Pok&eacute;mon.</p>
+            }
+
+            <div class="progress-row">
+              <div class="progress-pips">
+                @for (filled of pips(); track $index) {
+                  <div class="pip" [class.filled]="filled"></div>
+                }
+              </div>
+              <span class="progress-label">{{ teamCount() }}/5 on your team</span>
+            </div>
+          </div>
+
+          <div class="hero-stats">
+            <div class="stat-cell">
+              <div class="stat-value">{{ teamPower() }}</div>
+              <div class="stat-label">Team Power</div>
+            </div>
+            <div class="stat-cell">
+              <div class="stat-value">{{ favoritesCount() }}</div>
+              <div class="stat-label">Favorites</div>
+            </div>
+            <div class="stat-cell">
+              <div class="stat-value">{{ teamCount() }}/5</div>
+              <div class="stat-label">Team size</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== BENTO ROW 1: TEAM + POWER ===== -->
+      <div class="bento-row-1">
+
+        <!-- Dream Team -->
+        <div class="team-card">
+          <div class="card-head">
+            <span class="card-title team-name-title">{{ profile()?.teamName || 'Your Dream Team' }}</span>
+            <a routerLink="/manage-team" class="manage-link">Manage Team <span class="link-arrow">&rarr;</span></a>
+          </div>
+          <div class="team-row">
+            @for (member of slots(); track $index) {
+              @if (member) {
+                <div class="team-slot" (click)="openDetail(member.pokemonId)">
+                  <div class="hex-badge">{{ member.baseExperience }}</div>
+                  <div class="slot-art">
+                    @if (member.spriteUrl) {
+                      <img [src]="member.spriteUrl" alt="{{ member.pokemonName }}" />
+                    }
+                  </div>
+                  <div class="slot-name">{{ member.pokemonName }}</div>
+                  @if (member.types[0]; as type) {
+                    <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                      <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
+                    </span>
+                  }
+                </div>
+              } @else {
+                <a routerLink="/explorer" class="team-slot-empty">
+                  <div class="plus">+</div>
+                  <div class="empty-label">Add</div>
+                </a>
+              }
+            }
+          </div>
+
+          <a routerLink="/explorer" class="explore-more-row">
+            <span class="explore-more-text">Want a stronger line-up?</span>
+            <span class="explore-more-link">
+              Explore More Pok&eacute;mon <span class="explore-more-arrow">&rarr;</span>
+            </span>
+          </a>
+        </div>
+
+        <!-- Power / type-coverage cluster -->
+        <div class="power-card">
+          <div class="power-top">
+            <div class="power-label">Type Coverage</div>
+            <div class="power-number">{{ typeCoveragePct() }}%</div>
+          </div>
+          <div class="ring-wrap">
+            <div class="ring" [style.background]="'conic-gradient(var(--cyan) ' + (typeCoveragePct() * 3.6) + 'deg, var(--overlay-08) 0deg)'">
+              <div class="ring-hole">
+                <div class="ring-value">{{ typeCoveragePct() }}%</div>
+                <div class="ring-sub">coverage</div>
+              </div>
+            </div>
+          </div>
+          <div class="mini-stat-row">
+            <div class="mini-stat">
+              <span class="mini-value">{{ teamPower() }}</span>
+              <span class="mini-label">Team Power</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-value">{{ teamCount() }}/5</span>
+              <span class="mini-label">Team Size</span>
+            </div>
+          </div>
+          <a routerLink="/battle" class="battle-btn">Start Battle Simulation <span class="link-arrow">&rarr;</span></a>
+        </div>
+      </div>
+
+      <!-- ===== BENTO ROW 2: POTD + ACTIONS + ACTIVITY ===== -->
+      @if (potd(); as p) {
+        <div class="bento-row-2">
+
+          <!-- Pokémon of the Day -->
+          <div class="potd-card" (click)="openDetail(p.id)">
+            <div class="potd-art" [style.background]="typeColor(p.types[0]) + '22'">
+              <div class="potd-badge">Pok&eacute;mon of the Day</div>
+              @if (p.spriteUrl) {
+                <img class="potd-sprite" [src]="p.spriteUrl" alt="{{ p.name }}" />
+              }
+            </div>
+            <div class="potd-info">
+              <h3 class="potd-name">{{ p.name }}</h3>
+              @if (p.types[0]; as type) {
+                <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                  <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
+                </span>
+              }
+              @if (p.flavorText) {
+                <p class="potd-flavor">{{ p.flavorText }}</p>
+              }
+              <span class="potd-cta">View entry &rarr;</span>
+            </div>
+          </div>
+
+          <!-- Quick actions -->
+          <div class="actions-card">
+            <div class="card-title">Quick Actions</div>
+            <div class="actions-grid">
+              <a routerLink="/explorer" class="action-tile">
+                <span class="action-icon-wrap"><span class="action-icon"></span></span>
+                <span class="action-label">Explorer</span>
+              </a>
+              <a routerLink="/my-team" class="action-tile">
+                <span class="action-icon-wrap"><span class="action-icon"></span></span>
+                <span class="action-label">My Team</span>
+              </a>
+              <a routerLink="/manage-team" class="action-tile">
+                <span class="action-icon-wrap"><span class="action-icon"></span></span>
+                <span class="action-label">Manage Team</span>
+              </a>
+              <a routerLink="/ai-assistant" class="action-tile">
+                <span class="action-icon-wrap"><span class="action-icon"></span></span>
+                <span class="action-label">AI Assistant</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Recent activity -->
+          <div class="activity-card">
+            <div class="card-title">Recent Activity</div>
+            <div class="activity-list">
+              @for (ev of recentActivity(); track ev.title + ev.time) {
+                <div class="activity-row">
+                  <span class="activity-dot"></span>
+                  <div class="activity-text-wrap">
+                    <div class="activity-title">{{ ev.title }}</div>
+                    <div class="activity-time">{{ ev.time }}</div>
+                  </div>
+                </div>
+              }
+              @if (recentActivity().length === 0) {
+                <p class="activity-empty">
+                  No activity yet &mdash; add a Pok&eacute;mon to your team or favorites to see it here.
+                </p>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ===== LIVE MARQUEE ===== -->
+      <div class="marquee-card">
+        <div class="marquee-header">
+          <span class="marquee-title">Fresh catches roll in daily</span>
+          <span class="marquee-sub">{{ marqueeTiles().total }} Pok&eacute;mon in the Pok&eacute;dex</span>
+        </div>
+        <div class="marquee-mask">
+          <div class="marquee-track">
+            @for (tile of marqueeTiles().results; track 'a-' + tile.id) {
+              <div class="marquee-tile">
+                @if (tile.spriteUrl) {
+                  <img [src]="tile.spriteUrl" alt="{{ tile.name }}" />
+                }
+              </div>
+            }
+            @for (tile of marqueeTiles().results; track 'b-' + tile.id) {
+              <div class="marquee-tile">
+                @if (tile.spriteUrl) {
+                  <img [src]="tile.spriteUrl" alt="{{ tile.name }}" />
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-top-band"></div>
+
+    <div class="footer-body">
+      <div class="footer-col">
+        <span class="footer-col-title">Explore</span>
+        <a routerLink="/explorer" class="footer-link">EXPLORER</a>
+      </div>
+      <div class="footer-col">
+        <span class="footer-col-title">Trainer</span>
+        <a routerLink="/my-team" class="footer-link">MY TEAM</a>
+        <a routerLink="/profile" class="footer-link">PROFILE</a>
+      </div>
+      <div class="footer-col">
+        <span class="footer-col-title">Smart Tools</span>
+        <a routerLink="/ai-assistant" class="footer-link">AI TRAINER ASSISTANT</a>
+      </div>
+      <div class="footer-brand-col">
+        <span class="footer-wordmark">POK&Eacute;MON TRAINER HUB</span>
+        <span class="footer-tagline">Build your dream team.</span>
+      </div>
+    </div>
+
+    <div class="fine-print">
+      Pok&eacute;mon Trainer Hub is an independent educational fan project and is not affiliated with Nintendo, Game
+      Freak, Creatures, or The Pok&eacute;mon Company. Pok&eacute;mon data is provided by PokéAPI.
+    </div>
+
+    @if (cookieChoice() === null) {
+      <div class="cookie-bar">
+        <div class="cookie-text">
+          We use essential cookies to keep you signed in and remember your preferences.
+        </div>
+        <div class="cookie-btn-row">
+          <button type="button" class="cookie-decline" (click)="declineCookies()">Decline</button>
+          <button type="button" class="cookie-accept" (click)="acceptCookies()">Accept</button>
+        </div>
+      </div>
+    }
+  </footer>
+
+  @if (selectedPokemonId(); as id) {
+    <app-pokemon-detail-modal
+      [pokemonId]="id"
+      [isFavorite]="isFavorite(id)"
+      [isOnTeam]="isOnTeam(id)"
+      [teamFull]="teamFull()"
+      [isLight]="theme.isLight()"
+      (closed)="closeDetail()"
+      (toggleFavorite)="toggleFavorite(id)"
+      (addToTeam)="addToTeam(id)"
+    />
+  }
+
+  @if (swapCandidateId(); as candidateId) {
+    <app-team-swap-modal
+      [selectedPokemonId]="candidateId"
+      [comparisonCandidates]="team() ?? []"
+      mode="overflow"
+      (closed)="closeSwap()"
+      (swapped)="onSwapped()"
+    />
+  }
+</div>

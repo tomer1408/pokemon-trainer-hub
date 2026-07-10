@@ -38,10 +38,15 @@ export class Callback {
   private checkProfile(): void {
     this.state.set('checking');
     this.profileService.getProfileStrict().subscribe({
-      next: () => this.router.navigateByUrl('/dashboard'),
+      next: () => this.router.navigateByUrl('/home'),
       error: (err) => {
         if (err?.status === 404) {
           this.router.navigateByUrl('/onboarding');
+        } else if (err?.status === 401 || err?.status === 403) {
+          // A bad/expired token can't be fixed by repeating the same GET —
+          // route it through the same retry path as a failed code exchange
+          // (fresh loginWithRedirect()) instead of the generic profile error.
+          this.state.set('error-auth');
         } else {
           this.state.set('error-profile');
         }

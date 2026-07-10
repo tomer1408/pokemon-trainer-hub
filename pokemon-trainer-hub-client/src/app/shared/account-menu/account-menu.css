@@ -54,6 +54,7 @@
   left: 0;
   z-index: 41;
   width: 240px;
+  max-width: calc(100vw - 24px);
   background: var(--surface);
   border: 1px solid var(--border-soft);
   border-radius: 16px;
@@ -62,13 +63,27 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
+  box-sizing: border-box;
+}
+
+.user-info {
+  padding: 10px 12px 8px;
+}
+
+.user-name {
+  font-family: 'Bungee', sans-serif;
+  font-size: 13.5px;
+  color: var(--text-body);
 }
 
 .email-row {
   font-family: 'Space Mono', monospace;
-  font-size: 11.5px;
+  font-size: 11px;
   color: var(--text-muted);
-  padding: 10px 12px 8px;
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .item {
@@ -95,6 +110,19 @@
 
 .item.logout {
   color: var(--bad);
+}
+
+/* The most important link in this menu — heavier weight, bigger, tinted
+   background so it's unmistakably the primary action, not just another
+   row in the list. */
+.item-profile {
+  font-weight: 800;
+  font-size: 14px;
+  background: var(--overlay-hover);
+}
+
+.item-profile:hover {
+  background: rgba(94, 234, 212, 0.14);
 }
 
 .divider {
@@ -148,3 +176,4 @@
   background: var(--violet-deep);
   color: #fff;
 }
+

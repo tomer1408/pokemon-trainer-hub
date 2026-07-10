@@ -1,14 +1,18 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { PokemonService, PokemonDetail } from '../../core/pokemon';
+import { NotesService, TrainerNote } from '../../core/notes';
 import { TYPE_COLORS, PokemonTypeName } from '../pokemon-types';
+import { LoadingScreen } from '../loading-screen/loading-screen';
 
-type Tab = 'overview' | 'abilities' | 'moves';
+type Tab = 'overview' | 'abilities' | 'moves' | 'notes';
 
 // Shared, presentational: the host page owns favorite/team state and mutations
 // (it already has that data reactively) — this component only displays a
 // Pokémon's detail and emits the user's intent (toggleFavorite/addToTeam).
 @Component({
   selector: 'app-pokemon-detail-modal',
+  imports: [FormsModule, LoadingScreen],
   templateUrl: './pokemon-detail-modal.html',
   styleUrl: './pokemon-detail-modal.css',
 })
@@ -24,11 +28,17 @@ export class PokemonDetailModal implements OnChanges {
   @Output() addToTeam = new EventEmitter<void>();
 
   private readonly pokemonService = inject(PokemonService);
+  private readonly notesService = inject(NotesService);
 
   protected readonly pokemon = signal<PokemonDetail | null>(null);
   protected readonly isLoading = signal(true);
   protected readonly tab = signal<Tab>('overview');
   protected readonly expandedAbilities = signal<Set<number>>(new Set());
+
+  protected readonly notes = signal<TrainerNote[]>([]);
+  protected readonly newNoteText = signal('');
+  protected readonly addingNote = signal(false);
+  protected readonly pendingDeleteNoteId = signal<number | null>(null);
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['pokemonId']) {
@@ -36,11 +46,47 @@ export class PokemonDetailModal implements OnChanges {
       this.expandedAbilities.set(new Set());
       this.isLoading.set(true);
       this.pokemon.set(null);
+      this.notes.set([]);
+      this.newNoteText.set('');
+      this.pendingDeleteNoteId.set(null);
       this.pokemonService.getById(this.pokemonId).subscribe((p) => {
         this.pokemon.set(p);
         this.isLoading.set(false);
       });
+      this.notesService.getNotes(this.pokemonId).subscribe((notes) => this.notes.set(notes));
     }
+  }
+
+  addNote(): void {
+    const text = this.newNoteText().trim();
+    if (!text) return;
+
+    this.addingNote.set(true);
+    this.notesService.addNote(this.pokemonId, text).subscribe((note) => {
+      this.addingNote.set(false);
+      if (note) {
+        this.notes.update((list) => [note, ...list]);
+        this.newNoteText.set('');
+      }
+    });
+  }
+
+  requestDeleteNote(noteId: number): void {
+    this.pendingDeleteNoteId.set(noteId);
+  }
+
+  cancelDeleteNote(): void {
+    this.pendingDeleteNoteId.set(null);
+  }
+
+  confirmDeleteNote(): void {
+    const noteId = this.pendingDeleteNoteId();
+    if (noteId == null) return;
+
+    this.notesService.deleteNote(noteId).subscribe((ok) => {
+      if (ok) this.notes.update((list) => list.filter((n) => n.id !== noteId));
+      this.pendingDeleteNoteId.set(null);
+    });
   }
 
   setTab(tab: Tab): void {
@@ -64,6 +110,22 @@ export class PokemonDetailModal implements OnChanges {
 
   statFillPct(value: number): number {
     return Math.min(100, (value / 150) * 100);
+  }
+
+  // Displayed without the "special" prefix (e.g. "special-attack" → "attack")
+  // per request — the raw PokeAPI stat name is kept as-is everywhere else.
+  statDisplayName(name: string): string {
+    return name.replace('special-', '').replace('-', ' ');
+  }
+
+  formatNoteDate(createdAt: string): string {
+    return new Date(createdAt).toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
   }
 
   playCry(): void {

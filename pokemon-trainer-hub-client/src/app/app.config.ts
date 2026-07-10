@@ -20,7 +20,7 @@ export const appConfig: ApplicationConfig = {
       httpInterceptor: {
         allowedList: ['http://localhost:3000/*'],
       },
-      // CallbackPage owns the post-login redirect decision (dashboard vs.
+      // CallbackPage owns the post-login redirect decision (home vs.
       // onboarding, based on real profile data) — without this, the SDK would
       // auto-navigate to '/' right after the code exchange, racing our own logic.
       skipRedirectCallback: true,

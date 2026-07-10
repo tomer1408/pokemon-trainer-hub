@@ -1,7 +1,7 @@
-import { Component, computed, inject, input, model, signal } from '@angular/core';
+import { Component, HostListener, computed, inject, input, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '@auth0/auth0-angular';
-
-export type ColorblindMode = 'off' | 'protanopia' | 'deuteranopia' | 'tritanopia';
+import { ColorblindService, ColorblindMode } from '../colorblind';
 
 const COLORBLIND_MODES: { value: ColorblindMode; label: string }[] = [
   { value: 'off', label: 'Off' },
@@ -12,16 +12,17 @@ const COLORBLIND_MODES: { value: ColorblindMode; label: string }[] = [
 
 @Component({
   selector: 'app-account-menu',
+  imports: [RouterLink],
   templateUrl: './account-menu.html',
   styleUrl: './account-menu.css',
 })
 export class AccountMenu {
   private readonly auth = inject(AuthService);
+  protected readonly colorblind = inject(ColorblindService);
 
   readonly trainerName = input('Trainer');
   readonly email = input('');
   readonly isLight = input(false);
-  readonly colorblindMode = model<ColorblindMode>('off');
 
   protected readonly colorblindModes = COLORBLIND_MODES;
   protected readonly initial = computed(() => this.trainerName().charAt(0).toUpperCase() || 'T');
@@ -36,8 +37,16 @@ export class AccountMenu {
     this.open.set(false);
   }
 
+  // The scrim already closes on an outside click — this covers the keyboard
+  // path, which is the one piece of expected dropdown behavior that wasn't
+  // there before.
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.open()) this.close();
+  }
+
   setColorblindMode(mode: ColorblindMode): void {
-    this.colorblindMode.set(mode);
+    this.colorblind.setMode(mode);
   }
 
   logout(): void {

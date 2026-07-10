@@ -18,6 +18,11 @@ model DreamTeamMember {
   pokemonName String
   spriteUrl   String
   addedAt     DateTime @default(now())
+  // Drag-and-drop slot order within the team (0 = first slot). Not unique at
+  // the DB level — the reorder endpoint is what guarantees each user's
+  // members always hold distinct, contiguous values; this column is just
+  // storage for whatever it last computed.
+  position    Int      @default(0)
 
   @@unique([auth0UserId, pokemonId])
 }
@@ -33,6 +38,18 @@ model Favorite {
   @@unique([auth0UserId, pokemonId])
 }
 
+// A trainer's personal free-text notes about a specific Pokémon — works for
+// ANY Pokémon opened in the Detail Modal, not just ones on the team/favorited.
+// One Pokémon can have many notes (a running log), each individually
+// deletable — no unique constraint, unlike Favorite/DreamTeamMember.
+model TrainerNote {
+  id          Int      @id @default(autoincrement())
+  auth0UserId String
+  pokemonId   Int
+  text        String
+  createdAt   DateTime @default(now())
+}
+
 model TrainerProfile {
   id              Int      @id @default(autoincrement())
   auth0UserId     String   @unique
@@ -46,6 +63,9 @@ model TrainerProfile {
   // Real Pokédex id of the trainer's chosen profile icon — nullable since
   // existing profiles (and the "no selection yet" state) don't have one.
   avatarPokemonId Int?
+  // The trainer's custom name for their Dream Team — optional, falls back to
+  // a generic "Your Dream Team" label in the UI when not set.
+  teamName        String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

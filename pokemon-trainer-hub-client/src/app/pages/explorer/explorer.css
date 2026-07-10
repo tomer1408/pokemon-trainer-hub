@@ -178,25 +178,31 @@
 /* ---- Type chip row ---- */
 .type-chip-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  overflow-x: auto;
+  gap: 6px;
   max-width: 1440px;
   margin: 16px auto 0;
-  padding: 0 32px;
+  padding: 0 16px 6px;
   box-sizing: border-box;
+  scrollbar-width: thin;
 }
 
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 5px;
   border: none;
   border-radius: 100px;
-  padding: 8px 14px;
+  padding: 7px 12px;
   cursor: pointer;
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
-  font-size: 12.5px;
+  font-size: 11.5px;
+  white-space: nowrap;
 }
 
 .all-chip {
@@ -214,8 +220,8 @@
 }
 
 .chip-glyph {
-  width: 9px;
-  height: 9px;
+  width: 6px;
+  height: 6px;
   border-radius: 2px;
   flex-shrink: 0;
   display: inline-block;
@@ -280,13 +286,13 @@
 
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
 }
 
 .skel-card {
-  height: 250px;
-  border-radius: 18px;
+  height: 330px;
+  border-radius: 20px;
   background: linear-gradient(90deg, var(--overlay-05) 0px, var(--overlay-12) 150px, var(--overlay-05) 300px);
   background-size: 600px 100%;
   animation: shimmer 1.6s linear infinite;
@@ -342,11 +348,11 @@
   position: relative;
   background: var(--surface);
   border: 1px solid var(--border-soft);
-  border-radius: 18px;
-  padding: 16px;
+  border-radius: 20px;
+  padding: 22px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 11px;
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
@@ -363,15 +369,15 @@
 
 .fav-btn {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 16px;
+  right: 16px;
   border: none;
   background: var(--overlay-08);
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 18px;
   color: var(--overlay-40);
   display: flex;
   align-items: center;
@@ -383,37 +389,48 @@
 }
 
 .card-art {
-  height: 120px;
-  border-radius: 12px;
+  height: 160px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .card-art img {
-  width: 96px;
-  height: 96px;
+  width: 130px;
+  height: 130px;
   object-fit: contain;
 }
 
 .card-dex {
   font-family: 'Space Mono', monospace;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--text-muted);
 }
 
 .card-name {
   font-family: 'Bungee', sans-serif;
-  font-size: 14px;
+  font-size: 18px;
   color: var(--text-body);
   text-transform: capitalize;
 }
 
 .card-types {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
+}
+
+.card-types .type-pill {
+  gap: 6px;
+  padding: 4px 12px 4px 8px;
+  font-size: 13px;
+}
+
+.card-types .type-glyph {
+  width: 8px;
+  height: 8px;
 }
 
 .type-pill {
@@ -438,32 +455,32 @@
 .card-power {
   display: flex;
   align-items: baseline;
-  gap: 6px;
-  margin-top: 2px;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 .power-label {
   font-family: 'Space Mono', monospace;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--text-muted);
 }
 
 .power-value {
   font-family: 'Space Mono', monospace;
-  font-size: 15px;
+  font-size: 19px;
   color: var(--cyan);
   font-weight: 700;
 }
 
 .card-action {
-  margin-top: 4px;
+  margin-top: 6px;
   border: none;
-  border-radius: 10px;
-  padding: 9px 12px;
+  border-radius: 12px;
+  padding: 12px 14px;
   cursor: pointer;
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
-  font-size: 12.5px;
+  font-size: 15px;
   background: linear-gradient(120deg, var(--violet-deep), var(--cyan));
   color: #fff;
 }
@@ -513,23 +530,63 @@
 }
 
 /* ---- Team sidebar / panel (shared desktop + mobile drawer) ---- */
+.sidebar-col {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  position: sticky;
+  top: 20px;
+  margin-top: 12px;
+}
+
 .sidebar {
   background: var(--surface);
   border: 1px solid var(--border-soft);
-  border-radius: 20px;
-  padding: 20px;
+  border-radius: 22px;
+  padding: 26px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  position: sticky;
-  top: 20px;
+  gap: 20px;
+}
+
+.sidebar-title-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .sidebar-title {
   font-family: 'Bungee', sans-serif;
-  font-size: 15px;
+  font-size: 26px;
+  line-height: 1.2;
   color: var(--text-body);
 }
+
+.potd-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.potd-panel-heading {
+  font-family: 'Bungee', sans-serif;
+  font-size: 18px;
+  color: var(--text-body);
+}
+
+.sidebar-title-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--cyan);
+  text-decoration: none;
+}
+
 
 .sidebar-slots {
   display: flex;
@@ -756,7 +813,7 @@
     max-width: 640px;
   }
 
-  .sidebar {
+  .sidebar-col {
     display: none;
   }
 

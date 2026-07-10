@@ -1,12 +1,20 @@
-<div class="my-team" [class.light]="theme.isLight()">
+<div class="my-team" [class.light]="theme.isLight()" [style.height.px]="pageHeightPx()">
   <div class="content">
+    @if (isLoading()) {
+      <app-loading-screen [isLight]="theme.isLight()" />
+    } @else if (hasError()) {
+      <div class="error-state">
+        <p class="error-message">We couldn't load your team right now.</p>
+        <p class="error-sub">Please check your connection and try again.</p>
+        <button type="button" class="error-retry-btn" (click)="retry()">Try again</button>
+      </div>
+    } @else {
     <div class="header-row">
       <div class="header-block">
-        <h1 class="page-title">My Team</h1>
-        <p class="page-subtitle">Manage your Dream Team and see how it stacks up.</p>
+        <h1 class="page-title">{{ teamName() }}</h1>
+        <a routerLink="/manage-team" class="manage-team-link">Manage My Team &rarr;</a>
       </div>
       <div class="header-actions">
-        <a routerLink="/team-card" class="tool-btn"><span class="tool-icon"></span> Team Card</a>
         <a routerLink="/ai-assistant" class="tool-btn"><span class="tool-icon"></span> AI Trainer Assistant</a>
         <a routerLink="/battle" class="battle-pill">Start Battle Simulation <span>&rarr;</span></a>
       </div>
@@ -18,7 +26,6 @@
         @if (member) {
           <div class="slot-outer" (click)="openDetail(member.pokemonId)">
             <div class="slot-inner">
-              <button type="button" class="remove-btn" (click)="$event.stopPropagation(); requestRemove(member)">&times;</button>
               <div class="hex-badge">#{{ member.pokemonId.toString().padStart(3, '0') }}</div>
               <div class="slot-art">
                 @if (member.spriteUrl) {
@@ -108,11 +115,10 @@
             </span>
           }
         </div>
-        <p class="insight-text">{{ insightText() }}</p>
       </div>
     }
 
-    @if (!isLoading() && !hasTeam()) {
+    @if (!isLoading() && !hasError() && !hasTeam()) {
       <div class="no-team-state">
         <div class="no-team-glyph"></div>
         <div class="no-team-title">No Pok&eacute;mon on your team yet</div>
@@ -122,19 +128,8 @@
         <a routerLink="/explorer" class="no-team-cta">Go to Explorer &rarr;</a>
       </div>
     }
+    }
   </div>
-
-  @if (pendingRemove(); as target) {
-    <div class="confirm-overlay" (click)="cancelRemove()">
-      <div class="confirm-card" (click)="$event.stopPropagation()">
-        <h2 class="confirm-title">Are you sure you want to remove {{ target.name }}?</h2>
-        <div class="confirm-actions">
-          <button type="button" class="confirm-cancel" (click)="cancelRemove()">Cancel</button>
-          <button type="button" class="confirm-remove" (click)="confirmRemove()">Remove</button>
-        </div>
-      </div>
-    </div>
-  }
 
   @if (selectedPokemonId(); as id) {
     <app-pokemon-detail-modal

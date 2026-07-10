@@ -88,6 +88,17 @@
           />
         </label>
 
+        <label class="field-group">
+          <span class="field-label">Team Name</span>
+          <input
+            type="text"
+            placeholder="Name your Dream Team (optional)"
+            name="teamName"
+            [ngModel]="form().teamName"
+            (ngModelChange)="updateField('teamName', $event)"
+          />
+        </label>
+
         <div class="field-group">
           <span class="field-label">Favorite Type</span>
           <div class="type-chip-row">
@@ -132,7 +143,7 @@
       <button type="button" class="submit-btn" [disabled]="!canSubmit() || submitting()" (click)="submitProfile()">
         {{ submitting() ? 'Saving…' : "Let's go!" }}
       </button>
-      <p class="required-note">* All fields are required</p>
+      <p class="required-note">* Required fields</p>
     </div>
   </div>
 </div>

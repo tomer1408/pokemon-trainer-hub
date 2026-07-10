@@ -21,6 +21,7 @@ export interface DreamTeamMember {
   pokemonName: string;
   spriteUrl: string | null;
   addedAt: string;
+  position: number;
   stats: PokemonStat[];
   types: string[];
   baseExperience: number;
@@ -35,6 +36,13 @@ export class TeamService {
   // as an empty Dream Team.
   getTeam(): Observable<DreamTeamMember[]> {
     return this.http.get<DreamTeamMember[]>(`${API_BASE}/team`).pipe(catchError(() => of([])));
+  }
+
+  // Does NOT swallow errors — unlike getTeam() above, callers that need to
+  // tell "genuinely empty team" apart from "the request actually failed"
+  // (e.g. Home's error state) should use this instead.
+  getTeamStrict(): Observable<DreamTeamMember[]> {
+    return this.http.get<DreamTeamMember[]>(`${API_BASE}/team`);
   }
 
   addToTeam(pokemonId: number): Observable<AddToTeamResult> {
@@ -55,6 +63,17 @@ export class TeamService {
 
   removeFromTeam(pokemonId: number): Observable<void> {
     return this.http.delete<void>(`${API_BASE}/team/${pokemonId}`);
+  }
+
+  // Persists a drag-and-drop reorder. `pokemonIds` must be exactly the
+  // current team's ids, just resequenced — the server identifies the user
+  // from the JWT and rejects anything that isn't a pure reshuffle, so this
+  // call can never accidentally add/remove/favorite a member.
+  reorderTeam(pokemonIds: number[]): Observable<boolean> {
+    return this.http.patch(`${API_BASE}/team/reorder`, { pokemonIds }).pipe(
+      map(() => true),
+      catchError(() => of(false)),
+    );
   }
 
   // Backs the Team Swap Modal — one real backend transaction (POST

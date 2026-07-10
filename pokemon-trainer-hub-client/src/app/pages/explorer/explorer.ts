@@ -2,19 +2,23 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { debounceTime, map, switchMap } from 'rxjs';
 import { PokemonService, PokemonListResponse, PokemonSummary } from '../../core/pokemon';
 import { TeamService, DreamTeamMember } from '../../core/team';
 import { FavoritesService, FavoritePokemon } from '../../core/favorites';
+import { ProfileService } from '../../core/profile';
 import { getTeamPower } from '../../shared/team-power';
 import { POKEMON_TYPES, TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
 import { ThemeService } from '../../shared/theme';
 import { PokemonDetailModal } from '../../shared/pokemon-detail-modal/pokemon-detail-modal';
 import { TeamSwapModal } from '../../shared/team-swap-modal/team-swap-modal';
+import { PotdCard } from '../../shared/potd-card/potd-card';
+import { dayOfYearPokemonId } from '../../shared/pokemon-of-the-day';
 
 type SortBy = 'name' | 'power' | 'dex';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 4;
 const MAX_TEAM_SIZE = 5;
 const EMPTY_LIST: PokemonListResponse = { results: [], page: 1, pageSize: PAGE_SIZE, total: 0 };
 
@@ -33,7 +37,7 @@ function sortSummaries(list: PokemonSummary[], sort: SortBy): PokemonSummary[] {
 
 @Component({
   selector: 'app-explorer',
-  imports: [FormsModule, NgTemplateOutlet, PokemonDetailModal, TeamSwapModal],
+  imports: [FormsModule, NgTemplateOutlet, RouterLink, PokemonDetailModal, TeamSwapModal, PotdCard],
   templateUrl: './explorer.html',
   styleUrl: './explorer.css',
 })
@@ -41,9 +45,17 @@ export class Explorer {
   private readonly pokemonService = inject(PokemonService);
   private readonly teamService = inject(TeamService);
   private readonly favoritesService = inject(FavoritesService);
+  private readonly profileService = inject(ProfileService);
   protected readonly theme = inject(ThemeService);
 
   protected readonly types = POKEMON_TYPES;
+
+  private readonly profile = toSignal(this.profileService.getProfile(), { initialValue: null });
+  protected readonly teamName = computed(() => this.profile()?.teamName || 'Your Team');
+
+  protected readonly potd = toSignal(this.pokemonService.getById(dayOfYearPokemonId()), {
+    initialValue: null,
+  });
 
   protected readonly searchInput = signal('');
   private readonly debouncedSearch = toSignal(

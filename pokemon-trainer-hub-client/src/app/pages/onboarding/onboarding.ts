@@ -18,6 +18,7 @@ interface OnboardingForm {
   trainerName: string;
   favoriteType: PokemonType;
   avatarPokemonId: number | null;
+  teamName: string;
 }
 
 // Matches Additional Details.dc.html. One deliberate deviation: Experience
@@ -53,6 +54,7 @@ export class Onboarding {
     trainerName: '',
     favoriteType: POKEMON_TYPES[0],
     avatarPokemonId: null,
+    teamName: '',
   });
 
   protected readonly iconOptions = toSignal(
@@ -71,7 +73,10 @@ export class Onboarding {
     return !!(f.firstName.trim() && f.lastName.trim() && f.trainerName.trim() && f.dateOfBirth && f.country);
   });
 
-  updateField(field: 'firstName' | 'lastName' | 'dateOfBirth' | 'country' | 'trainerName', value: string): void {
+  updateField(
+    field: 'firstName' | 'lastName' | 'dateOfBirth' | 'country' | 'trainerName' | 'teamName',
+    value: string,
+  ): void {
     this.form.set({ ...this.form(), [field]: value });
   }
 
@@ -103,10 +108,11 @@ export class Onboarding {
       dateOfBirth: new Date(f.dateOfBirth).toISOString(),
       country: f.country,
       avatarPokemonId: f.avatarPokemonId,
+      teamName: f.teamName.trim() || null,
     };
 
     this.profileService.saveProfile(payload).subscribe({
-      next: () => this.router.navigateByUrl('/dashboard'),
+      next: () => this.router.navigateByUrl('/home'),
       error: () => {
         this.submitting.set(false);
         this.submitError.set('Something went wrong saving your profile. Please try again.');

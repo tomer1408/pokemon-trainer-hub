@@ -1,8 +1,8 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { forkJoin, map } from 'rxjs';
+import { catchError, forkJoin, map, of, switchMap } from 'rxjs';
 import { COUNTRIES } from '../../countries';
 import { EXPERIENCE_LEVELS, ExperienceLevel, POKEMON_TYPES, PokemonType } from '../../trainer-profile-options';
 import { ProfileService, TrainerProfile } from '../../core/profile';
@@ -13,6 +13,7 @@ import { PROFILE_ICON_POKEMON_IDS } from '../../shared/profile-icons';
 import { getTeamPower, getTeamTier } from '../../shared/team-power';
 import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
 import { ThemeService } from '../../shared/theme';
+import { LoadingScreen } from '../../shared/loading-screen/loading-screen';
 
 interface ProfileDraft {
   trainerName: string;
@@ -23,17 +24,23 @@ interface ProfileDraft {
   dateOfBirth: Date;
   country: string;
   avatarPokemonId: number | null;
+  teamName: string;
 }
 
 type Mode = 'view' | 'edit';
+type ProfileFetchStatus = 'ok' | 'missing' | 'error';
 
 // Matches My Profile.dc.html. The "Profile Icon" picker uses real Pokémon
 // (real sprites/ids, saved to the real avatarPokemonId column) instead of the
 // mockup's fictional 9-type avatar picker — same real-data approach used in
-// Onboarding.
+// Onboarding. The mockup's fake "Trainer ID number"/numeric "Level"/XP bar and
+// most of its Achievements list have no real data behind them anywhere in
+// this app (no battle system, no Pokédex-catch tracking) — see the
+// memberSince/teamCompletionPct/achievements computed signals below for what
+// they were replaced with instead of being faked.
 @Component({
   selector: 'app-profile',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, LoadingScreen],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
@@ -55,8 +62,30 @@ export class Profile {
   protected readonly pokemonTypes = POKEMON_TYPES;
   protected readonly experienceLevels = EXPERIENCE_LEVELS;
 
-  private readonly loadedProfile = toSignal(this.profileService.getProfile());
-  protected readonly isLoading = computed(() => this.loadedProfile() === undefined);
+  private readonly profileRefresh = signal(0);
+  // Distinguishes a genuine fetch failure (real error state, retry-able)
+  // from "this trainer hasn't finished onboarding yet" (404) — the old
+  // getProfile() swallowed both into `null`, which left the page rendering
+  // nothing at all in either case (no error message, no explanation).
+  private readonly profileResult = toSignal(
+    toObservable(this.profileRefresh).pipe(
+      switchMap(() =>
+        this.profileService.getProfileStrict().pipe(
+          map((profile) => ({ status: 'ok' as ProfileFetchStatus, profile })),
+          catchError((err) =>
+            of({
+              status: (err?.status === 404 ? 'missing' : 'error') as ProfileFetchStatus,
+              profile: null as TrainerProfile | null,
+            }),
+          ),
+        ),
+      ),
+    ),
+  );
+  private readonly loadedProfile = computed(() => this.profileResult()?.profile ?? null);
+  protected readonly isLoading = computed(() => this.profileResult() === undefined);
+  protected readonly hasError = computed(() => this.profileResult()?.status === 'error');
+  protected readonly hasNoProfile = computed(() => this.profileResult()?.status === 'missing');
 
   protected readonly mode = signal<Mode>('view');
   protected readonly saved = signal<ProfileDraft | null>(null);
@@ -64,6 +93,7 @@ export class Profile {
 
   protected readonly saving = signal(false);
   protected readonly saveError = signal<string | null>(null);
+  protected readonly showSavedToast = signal(false);
 
   protected readonly team = toSignal(this.teamService.getTeam(), { initialValue: [] });
   protected readonly favorites = toSignal(this.favoritesService.getFavorites(), { initialValue: [] });
@@ -73,12 +103,35 @@ export class Profile {
   protected readonly teamPower = computed(() => getTeamPower(this.team()));
   protected readonly trainerLevel = computed(() => getTeamTier(this.teamCount()));
   protected readonly favoritesCount = computed(() => this.favorites().length);
+  protected readonly teamCompletionPct = computed(() => Math.round((this.teamCount() / 5) * 100));
 
-  protected readonly avatarSprite = computed(() => {
-    const id = this.saved()?.avatarPokemonId;
+  // "Member since" — real, from the profile row's own createdAt, unlike the
+  // mockup's fabricated trainer ID number.
+  protected readonly memberSince = computed(() => {
+    const createdAt = this.loadedProfile()?.createdAt;
+    if (!createdAt) return null;
+    return new Date(createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  });
+
+  // Only 3 badges, all with a real, checkable condition — the mockup's
+  // "Battle Victor" (10 battles won) and "Pokédex 500" (catch 500 species)
+  // have no real tracking anywhere in this app to check them against, and
+  // "Master Tier"/"Squad Goals" would always unlock at exactly the same time
+  // (Master tier IS "team full"), so they'd be a redundant duplicate pair.
+  protected readonly achievements = computed(() => [
+    { name: 'First Catch', desc: 'Add a Pokémon to your team or favorites', earned: this.teamCount() > 0 || this.favoritesCount() > 0 },
+    { name: 'Squad Goals', desc: 'Fill all 5 Dream Team slots', earned: this.teamCount() >= 5 },
+    { name: 'Type Enthusiast', desc: 'Favorite 5 or more Pokémon', earned: this.favoritesCount() >= 5 },
+  ]);
+
+  protected readonly avatarSprite = computed(() => this.spriteForIcon(this.saved()?.avatarPokemonId ?? null));
+  protected readonly draftAvatarSprite = computed(() => this.spriteForIcon(this.draft()?.avatarPokemonId ?? null));
+  protected readonly earnedAchievementsCount = computed(() => this.achievements().filter((b) => b.earned).length);
+
+  private spriteForIcon(id: number | null): string | null {
     if (id == null) return null;
     return this.iconOptions().find((p) => p.id === id)?.spriteUrl ?? null;
-  });
+  }
 
   constructor() {
     effect(() => {
@@ -93,6 +146,7 @@ export class Profile {
           dateOfBirth: new Date(profile.dateOfBirth),
           country: profile.country,
           avatarPokemonId: profile.avatarPokemonId,
+          teamName: profile.teamName ?? '',
         });
       }
     });
@@ -105,7 +159,14 @@ export class Profile {
   formattedDob(): string {
     const s = this.saved();
     if (!s) return '—';
-    return s.dateOfBirth.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    // Explicit UTC — dateOfBirth is stored/parsed as a UTC-midnight instant,
+    // so formatting in the browser's local timezone (the default) could
+    // shift the displayed date back a day for any timezone behind UTC.
+    return s.dateOfBirth.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  }
+
+  retry(): void {
+    this.profileRefresh.update((n) => n + 1);
   }
 
   startEdit(): void {
@@ -122,7 +183,7 @@ export class Profile {
     this.saveError.set(null);
   }
 
-  updateDraft(field: 'trainerName' | 'firstName' | 'lastName' | 'country', value: string): void {
+  updateDraft(field: 'trainerName' | 'firstName' | 'lastName' | 'country' | 'teamName', value: string): void {
     const d = this.draft();
     if (d) this.draft.set({ ...d, [field]: value });
   }
@@ -137,7 +198,7 @@ export class Profile {
     if (d) this.draft.set({ ...d, experienceLevel: value });
   }
 
-  selectIcon(pokemonId: number): void {
+  selectIcon(pokemonId: number | null): void {
     const d = this.draft();
     if (d) this.draft.set({ ...d, avatarPokemonId: pokemonId });
   }
@@ -167,6 +228,7 @@ export class Profile {
       dateOfBirth: d.dateOfBirth.toISOString(),
       country: d.country,
       avatarPokemonId: d.avatarPokemonId,
+      teamName: d.teamName.trim() || null,
     };
 
     this.profileService.saveProfile(payload).subscribe({
@@ -175,6 +237,8 @@ export class Profile {
         this.saved.set(d);
         this.mode.set('view');
         this.draft.set(null);
+        this.showSavedToast.set(true);
+        setTimeout(() => this.showSavedToast.set(false), 2400);
       },
       error: () => {
         this.saving.set(false);

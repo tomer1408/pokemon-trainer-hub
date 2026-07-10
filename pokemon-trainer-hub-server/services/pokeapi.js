@@ -56,48 +56,59 @@ async function fetchPokemonDetail(idOrName) {
 
 // English flavor text for the Detail Modal — a separate PokeAPI endpoint, so
 // this is only called for a single Pokémon's full detail, not for list views.
+// Degrades to null (no flavor text) on any failure — a flaky PokeAPI response
+// here shouldn't take down the rest of the Detail Modal's data (sprite,
+// stats, abilities, etc. are fetched independently and should still show).
 async function fetchSpeciesFlavorText(idOrName) {
   const key = String(idOrName).toLowerCase();
   const cached = pokeCache.get(`species:${key}`);
   if (cached !== undefined) return cached;
 
-  const response = await fetch(`${POKEAPI_BASE}/pokemon-species/${key}`);
-  if (response.status === 404) {
-    pokeCache.set(`species:${key}`, null);
+  try {
+    const response = await fetch(`${POKEAPI_BASE}/pokemon-species/${key}`);
+    if (!response.ok) {
+      if (response.status === 404) pokeCache.set(`species:${key}`, null);
+      return null;
+    }
+
+    const data = await response.json();
+    const entry = data.flavor_text_entries.find((e) => e.language.name === 'en');
+    // Flavor text entries use \n / \f as line-break control characters.
+    const flavorText = entry ? entry.flavor_text.replace(/[\n\f\r]+/g, ' ') : null;
+
+    pokeCache.set(`species:${key}`, flavorText);
+    return flavorText;
+  } catch {
     return null;
   }
-  if (!response.ok) throw new Error(`PokeAPI responded with ${response.status}`);
-
-  const data = await response.json();
-  const entry = data.flavor_text_entries.find((e) => e.language.name === 'en');
-  // Flavor text entries use \n / \f as line-break control characters.
-  const flavorText = entry ? entry.flavor_text.replace(/[\n\f\r]+/g, ' ') : null;
-
-  pokeCache.set(`species:${key}`, flavorText);
-  return flavorText;
 }
 
 // One type's raw weak-against / resistant-against lists — cached per type
 // (not per Pokémon), since every Pokémon sharing a type reuses the same data.
+// Degrades to an empty result on failure — same reasoning as fetchSpeciesFlavorText.
 async function fetchSingleTypeMatchup(typeName) {
   const key = typeName.toLowerCase();
   const cached = pokeCache.get(`typematchup:${key}`);
   if (cached) return cached;
 
-  const response = await fetch(`${POKEAPI_BASE}/type/${key}`);
-  if (!response.ok) throw new Error(`PokeAPI responded with ${response.status}`);
+  try {
+    const response = await fetch(`${POKEAPI_BASE}/type/${key}`);
+    if (!response.ok) return { weak: [], resist: [] };
 
-  const data = await response.json();
-  const result = {
-    weak: data.damage_relations.double_damage_from.map((t) => t.name),
-    resist: [
-      ...data.damage_relations.half_damage_from.map((t) => t.name),
-      ...data.damage_relations.no_damage_from.map((t) => t.name),
-    ],
-  };
+    const data = await response.json();
+    const result = {
+      weak: data.damage_relations.double_damage_from.map((t) => t.name),
+      resist: [
+        ...data.damage_relations.half_damage_from.map((t) => t.name),
+        ...data.damage_relations.no_damage_from.map((t) => t.name),
+      ],
+    };
 
-  pokeCache.set(`typematchup:${key}`, result, 86400);
-  return result;
+    pokeCache.set(`typematchup:${key}`, result, 86400);
+    return result;
+  } catch {
+    return { weak: [], resist: [] };
+  }
 }
 
 // Merges weak/resist lists across a Pokémon's 1-2 types. Simplification: a

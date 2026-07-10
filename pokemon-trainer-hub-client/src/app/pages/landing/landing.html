@@ -1,20 +1,24 @@
 <main class="landing">
   <section class="hero">
     <div class="hero-copy">
-      <p class="kicker">Pokémon Trainer Hub</p>
+      <div class="kicker-row">
+        <span class="pokeball-icon" aria-hidden="true"></span>
+        <p class="kicker">POKÉMON TRAINER HUB</p>
+      </div>
       <h1 class="headline">
-        Catch, compare, and build your <span class="accent">Dream Team</span>.
+        <span class="accent">Pokémon Dream Team</span><br />
+        <span class="headline-sub">Build your ultimate team</span>
       </h1>
       <p class="subhead">
-        Explore the full Pokédex, track your favorites, and assemble a team of up to 5
-        Pokémon that follows you across every session.
+        Explore real Pokémon data, save your favorites, compare stats, and create a
+        team of up to 5 Pokémon that stays with you across every session.
       </p>
-      <button type="button" class="cta" (click)="login()">Get Started</button>
+      <button type="button" class="cta" (click)="login()">Start Training</button>
 
       <ul class="proof-pills">
-        <li>Live PokéAPI data</li>
-        <li>Team Power scoring</li>
-        <li>AI Trainer Assistant</li>
+        <li>Live PokéAPI Data</li>
+        <li>Saved Dream Team</li>
+        <li>Smart Team Insights</li>
       </ul>
     </div>
 
@@ -47,4 +51,8 @@
       }
     </div>
   </section>
+
+  <footer class="site-footer">
+    <p>Made with <span class="footer-heart">♥</span> by @Tomer Rozental</p>
+  </footer>
 </main>

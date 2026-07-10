@@ -1,82 +1,154 @@
 <div class="profile-page" [class.light]="theme.isLight()">
   <div class="content">
     @if (isLoading()) {
-      <div class="loading">Loading your profile&hellip;</div>
-    } @else if (saved(); as s) {
-      <div class="header-row">
-        <div class="header-title-row">
-          <div class="badge-outer"><div class="badge-inner"></div></div>
-          <h1 class="page-title">My Trainer Profile</h1>
-        </div>
-        <p class="page-subtitle">Manage your trainer identity and track your progress.</p>
+      <app-loading-screen [isLight]="theme.isLight()" />
+    } @else if (hasError()) {
+      <div class="error-state">
+        <p class="error-message">We couldn't load your profile right now.</p>
+        <p class="error-sub">Please check your connection and try again.</p>
+        <button type="button" class="error-retry-btn" (click)="retry()">Try again</button>
       </div>
+    } @else if (hasNoProfile()) {
+      <div class="error-state">
+        <p class="error-message">You haven't set up your trainer profile yet.</p>
+        <p class="error-sub">Finish the one-time setup to unlock My Profile.</p>
+        <a routerLink="/onboarding" class="error-retry-btn">Complete Setup</a>
+      </div>
+    } @else if (saved(); as s) {
+      <!-- Trainer ID card -->
+      <div class="id-card-outer">
+        <div class="id-card-inner">
+          <div class="banner">
+            <div class="banner-pattern"></div>
+            @if (memberSince(); as since) {
+              <div class="member-tag">MEMBER SINCE {{ since }}</div>
+            }
+            <div class="tier-chip">{{ trainerLevel() }}</div>
+          </div>
 
-      <!-- Main trainer card -->
-      <div class="trainer-card-outer">
-        <div class="trainer-card-inner">
-          @if (mode() === 'view') {
-            <div class="avatar-wrap">
-              <div class="avatar-hex" [style.background]="typeColor(s.favoriteType) + '55'">
-                @if (avatarSprite(); as sprite) {
-                  <img class="avatar-sprite" [src]="sprite" alt="Trainer avatar" />
-                } @else {
-                  <span class="avatar-glyph" [style.background]="typeColor(s.favoriteType)"></span>
-                }
+          <div class="card-body">
+            @if (mode() === 'view') {
+              <div class="view-top-row">
+                <div class="avatar-hex">
+                  @if (avatarSprite(); as sprite) {
+                    <img class="avatar-sprite" [src]="sprite" alt="Trainer avatar" />
+                  } @else {
+                    <span class="avatar-glyph" [style.background]="typeColor(s.favoriteType)"></span>
+                  }
+                </div>
+
+                <div class="view-info">
+                  <h2 class="trainer-name">{{ s.trainerName }}</h2>
+                  <div class="badge-row">
+                    <span class="type-pill" [style.background]="typeColor(s.favoriteType) + '33'" [style.color]="typeColor(s.favoriteType)">
+                      <span class="type-glyph" [style.background]="typeColor(s.favoriteType)"></span>{{ s.favoriteType }}
+                    </span>
+                    <span class="exp-pill">{{ s.experienceLevel }}</span>
+                    <span class="country-chip"><span class="country-dot"></span>{{ s.country }}</span>
+                  </div>
+                </div>
+
+                <button type="button" class="edit-btn" (click)="startEdit()">Edit Profile</button>
               </div>
-            </div>
-            <div class="name-block">
-              <h2 class="trainer-name">{{ s.trainerName }}</h2>
-              <div class="badge-row">
-                <span class="type-pill" [style.background]="typeColor(s.favoriteType) + '33'" [style.color]="typeColor(s.favoriteType)">
-                  <span class="type-glyph" [style.background]="typeColor(s.favoriteType)"></span>{{ s.favoriteType }}
-                </span>
-                <span class="exp-pill">{{ s.experienceLevel }}</span>
+
+              <div class="progress-block">
+                <div class="progress-top-row">
+                  <span class="progress-title">Dream Team Progress</span>
+                  <span class="progress-value">{{ teamCount() }}/5 Pok&eacute;mon</span>
+                </div>
+                <div class="progress-track"><div class="progress-fill" [style.width.%]="teamCompletionPct()"></div></div>
               </div>
-              <div class="country-row"><span class="country-dot"></span>{{ s.country }}</div>
-            </div>
-            <button type="button" class="edit-btn" (click)="startEdit()">Edit Profile</button>
-          } @else if (draft(); as d) {
-            <div class="avatar-wrap">
-              <div class="avatar-hex" [style.background]="typeColor(d.favoriteType) + '55'">
-                <span class="avatar-glyph" [style.background]="typeColor(d.favoriteType)"></span>
+            } @else if (draft(); as d) {
+              <div class="edit-row">
+                <div class="edit-avatar-block">
+                  <div class="avatar-hex">
+                    @if (draftAvatarSprite(); as sprite) {
+                      <img class="avatar-sprite" [src]="sprite" alt="Trainer avatar" />
+                    } @else {
+                      <span class="avatar-glyph" [style.background]="typeColor(d.favoriteType)"></span>
+                    }
+                  </div>
+                  <div class="avatar-picker-label">Choose avatar</div>
+                  <div class="avatar-picker-grid">
+                    <button
+                      type="button"
+                      class="avatar-none-btn"
+                      [class.active]="d.avatarPokemonId == null"
+                      (click)="selectIcon(null)"
+                    >None</button>
+                    @for (icon of iconOptions(); track icon.id) {
+                      <button
+                        type="button"
+                        class="avatar-opt-btn"
+                        [class.active]="d.avatarPokemonId === icon.id"
+                        (click)="selectIcon(icon.id)"
+                      >
+                        @if (icon.spriteUrl) {
+                          <img [src]="icon.spriteUrl" alt="{{ icon.name }}" />
+                        }
+                      </button>
+                    }
+                  </div>
+                </div>
+
+                <label class="edit-name-block">
+                  <span class="field-label">Trainer Name</span>
+                  <input
+                    type="text"
+                    class="name-input"
+                    name="trainerName"
+                    [ngModel]="d.trainerName"
+                    (ngModelChange)="updateDraft('trainerName', $event)"
+                  />
+                </label>
               </div>
-            </div>
-            <label class="name-edit-block">
-              <span class="field-label">Trainer Name</span>
-              <input
-                type="text"
-                class="name-input"
-                name="trainerName"
-                [ngModel]="d.trainerName"
-                (ngModelChange)="updateDraft('trainerName', $event)"
-              />
-            </label>
-          }
+            }
+          </div>
         </div>
       </div>
 
       <!-- Stats -->
       <div class="stats-grid">
         <div class="stat-cell">
+          <div class="stat-icon-wrap icon-violet"><span class="stat-icon"></span></div>
           <div class="stat-label">Dream Team</div>
           <div class="stat-value">{{ teamCount() }}/5</div>
-          @if (hasTeam()) {
-            <a routerLink="/my-team" class="stat-link">Go to My Team &rarr;</a>
-          } @else {
-            <a routerLink="/explorer" class="stat-cta">Go to Explorer &rarr;</a>
+          @if (!hasTeam()) {
+            <a routerLink="/explorer" class="stat-link accent">Go to Explorer &rarr;</a>
           }
         </div>
         <div class="stat-cell">
+          <div class="stat-icon-wrap icon-cyan"><span class="stat-icon"></span></div>
           <div class="stat-label">Favorites</div>
           <div class="stat-value">{{ favoritesCount() }}</div>
         </div>
         <div class="stat-cell">
+          <div class="stat-icon-wrap icon-yellow"><span class="stat-icon"></span></div>
           <div class="stat-label">Team Power</div>
           <div class="stat-value">{{ teamPower() }}</div>
         </div>
         <div class="stat-cell">
+          <div class="stat-icon-wrap icon-violet"><span class="stat-icon"></span></div>
           <div class="stat-label">Trainer Level</div>
           <div class="stat-value-tier">{{ trainerLevel() }}</div>
+        </div>
+      </div>
+
+      <!-- Achievements -->
+      <div class="achievements-card">
+        <div class="ach-header">
+          <span class="section-title">Achievements</span>
+          <span class="ach-count">{{ earnedAchievementsCount() }} / {{ achievements().length }} unlocked</span>
+        </div>
+        <div class="badges-grid">
+          @for (b of achievements(); track b.name) {
+            <div class="badge-card" [class.earned]="b.earned">
+              <div class="medal"><span class="medal-glyph"></span></div>
+              <div class="badge-name">{{ b.name }}</div>
+              <div class="badge-desc">{{ b.desc }}</div>
+              <div class="badge-status">{{ b.earned ? 'Unlocked' : 'Locked' }}</div>
+            </div>
+          }
         </div>
       </div>
 
@@ -111,6 +183,10 @@
             <div class="detail-row">
               <span class="detail-label">Experience Level</span>
               <span class="detail-value">{{ s.experienceLevel }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Team Name</span>
+              <span class="detail-value">{{ s.teamName || 'Your Dream Team' }}</span>
             </div>
           </div>
         } @else if (draft(); as d) {
@@ -167,27 +243,20 @@
                 }
               </div>
             </div>
-            <div class="edit-field-wide">
-              <label class="field-label">Profile Icon</label>
-              <div class="icon-grid">
-                @for (icon of iconOptions(); track icon.id) {
-                  <button
-                    type="button"
-                    class="icon-wrap"
-                    [class.active]="d.avatarPokemonId === icon.id"
-                    (click)="selectIcon(icon.id)"
-                  >
-                    @if (icon.spriteUrl) {
-                      <img [src]="icon.spriteUrl" alt="{{ icon.name }}" />
-                    }
-                  </button>
-                }
-              </div>
-            </div>
+            <label class="edit-field">
+              <span class="field-label">Team Name</span>
+              <input
+                type="text"
+                name="teamName"
+                placeholder="Name your Dream Team (optional)"
+                [ngModel]="d.teamName"
+                (ngModelChange)="updateDraft('teamName', $event)"
+              />
+            </label>
           </div>
 
           @if (saveError()) {
-            <p class="error-message">{{ saveError() }}</p>
+            <p class="error-message-inline">{{ saveError() }}</p>
           }
 
           <div class="edit-actions-row">
@@ -200,4 +269,8 @@
       </div>
     }
   </div>
+
+  @if (showSavedToast()) {
+    <div class="toast"><span class="toast-dot"></span>Profile saved successfully.</div>
+  }
 </div>
