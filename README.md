@@ -115,14 +115,49 @@ npx ng serve
 
 Client runs on `http://localhost:4200`.
 
+## Deployment
+
+**Live**: Frontend — `https://pokemon-trainer-hub-three.vercel.app` · Backend — `https://pokemon-trainer-hub-server.onrender.com`
+
+| | Local dev | Production |
+|---|---|---|
+| Database | SQL Server via Docker | **Azure SQL Database** — same Prisma schema, same `sqlserver` provider, no code differences |
+| Backend | `node server.js` on `localhost:3000` | Render (free web service) |
+| Frontend | `ng serve` on `localhost:4200` | Vercel |
+| API base URL | `environment.ts` | `environment.production.ts`, swapped in automatically by `ng build`'s `fileReplacements` |
+
+### Database networking — an honest note
+
+Azure SQL's firewall is IP-allowlist based, and Render's free tier doesn't provide a dedicated/static outbound IP (that's a paid add-on, ~$100/month at time of writing — not justified for a student project). Instead, this deployment allowlists **Render's published outbound CIDR ranges for its region** (Render Dashboard → service → Connect → Outbound tab), which are shared across *all* Render customers in that region, not exclusive to this app.
+
+This means the network-level allowlist is broader than a dedicated IP would be — acceptable for a demo/take-home project, where the real access boundary is still the database password (never committed, stored only in Render's environment variables) plus Auth0 authentication and JWT validation on every backend route. **This is not the setup you'd want for a real production system** — for that, use Render's paid dedicated outbound IP feature (or host the backend on Azure itself, e.g. App Service, so Azure SQL's "allow Azure services" applies directly) and allowlist only that.
+
+### Environment variables (Render)
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | Azure SQL connection string — `sqlserver://<server>.database.windows.net:1433;database=PokemonTrainerHub;user=<login>;password={...};encrypt=true;trustServerCertificate=false` (note: no `tcp:` prefix — that's an ADO.NET-format leftover that breaks `@prisma/adapter-mssql`'s simpler `host:port` parser) |
+| `AUTH0_AUDIENCE` | Same as local `.env` |
+| `AUTH0_ISSUER_BASE_URL` | Same as local `.env` |
+| `CORS_ORIGIN` | The deployed Vercel URL, so the API only accepts cross-origin requests from the real frontend |
+
+Auth0's **Allowed Callback URLs**, **Logout URLs**, and **Web Origins** must include the Vercel URL alongside `localhost:4200` (not replacing it, so local dev keeps working).
+
+### Deployment health check
+
+**`GET /api/health/db`** confirms the deployed backend can actually reach the database (not just that the Node process is up) — see the Health section below.
+
 ## API Reference
 
 All endpoints except `/api/health` require a valid Auth0 access token: `Authorization: Bearer <token>`. The user is always identified server-side from the token's subject claim — no endpoint accepts or trusts a user id sent by the client. Missing/invalid tokens get a `401`. Unexpected server errors return a `500` with a generic message (details are logged server-side, never sent to the client).
 
 ### Health
 
-**`GET /api/health`** — no auth required.
+**`GET /api/health`** — no auth required. Confirms the server process is up — does not touch the database.
 Response: `{ "status": "ok", "message": "..." }`
+
+**`GET /api/health/db`** — no auth required. Confirms the server can actually reach the database (used to verify the Render → Azure SQL connection after deploying). Deliberately returns nothing beyond ok/error — no row data, counts, or connection details, even on failure.
+Response: `{ "status": "ok", "db": "ok" }`, or `503 { "status": "error", "db": "error" }` on failure.
 
 ### Pokémon
 
