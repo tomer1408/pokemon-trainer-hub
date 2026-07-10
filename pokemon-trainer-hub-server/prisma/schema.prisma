@@ -66,6 +66,11 @@ model TrainerProfile {
   // The trainer's custom name for their Dream Team — optional, falls back to
   // a generic "Your Dream Team" label in the UI when not set.
   teamName        String?
+  // Real, server-side record of whether this trainer has finished the
+  // Starter Quiz — deliberately NOT client-side storage, so it's tied to
+  // the actual logged-in user (survives across devices/browsers) instead of
+  // one browser's localStorage.
+  hasCompletedStarterQuiz Boolean @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

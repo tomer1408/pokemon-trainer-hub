@@ -16,6 +16,7 @@ const PROFILE_SELECT = {
   country: true,
   avatarPokemonId: true,
   teamName: true,
+  hasCompletedStarterQuiz: true,
   createdAt: true,
 };
 
@@ -84,6 +85,23 @@ router.post('/', jwtCheck, async (req, res) => {
   });
 
   res.json(profile);
+});
+
+// Marks the current user's Starter Quiz as completed — real, server-side,
+// tied to the JWT-identified user (not client-side storage). 404s if the
+// trainer somehow has no profile row yet, since onboarding always creates
+// one before Home (and this endpoint) is reachable.
+router.patch('/starter-quiz', jwtCheck, async (req, res) => {
+  try {
+    const profile = await prisma.trainerProfile.update({
+      where: { auth0UserId: req.auth.payload.sub },
+      data: { hasCompletedStarterQuiz: true },
+      select: PROFILE_SELECT,
+    });
+    res.json(profile);
+  } catch (err) {
+    res.status(404).json({ message: 'No profile found for this user.' });
+  }
 });
 
 module.exports = router;
