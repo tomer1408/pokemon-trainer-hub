@@ -38,10 +38,18 @@ app.get('/api/health/db', async (req, res) => {
     await prisma.$queryRaw`SELECT 1`;
     res.json({ status: 'ok', db: 'ok' });
   } catch (err) {
-    // Logged server-side only, and only the error's generic type (e.g.
-    // "PrismaClientKnownRequestError") — never its message, which could
-    // otherwise echo back connection details.
-    console.error('Health check: database connectivity failed —', err?.name || 'UnknownError');
+    // TEMPORARY diagnostic logging while troubleshooting the Render -> Azure
+    // SQL connection — server-side only (never sent to the client), and
+    // limited to a few safe fields: the error's class name, its driver/Prisma
+    // error code, and a truncated slice of its message. None of these are
+    // expected to contain DATABASE_URL, the password, or any token — driver
+    // connection errors describe *what* failed (timeout, auth, TLS), not the
+    // credentials used. Remove this once the connection issue is resolved.
+    console.error('DB health check failed', {
+      name: err?.name,
+      code: err?.code,
+      message: String(err?.message || '').slice(0, 300),
+    });
     res.status(503).json({ status: 'error', db: 'error' });
   }
 });
