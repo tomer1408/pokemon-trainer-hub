@@ -1,11 +1,10 @@
 import { AfterViewInit, Component, ElementRef, HostListener, computed, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { TeamService } from '../../core/team';
 import { FavoritesService } from '../../core/favorites';
-import { ProfileService } from '../../core/profile';
 import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
+import { getTeamPower, getTeamTier, getTypeSegments } from '../../shared/team-power';
 import { ThemeService } from '../../shared/theme';
 import { PokemonDetailModal } from '../../shared/pokemon-detail-modal/pokemon-detail-modal';
 import { LoadingScreen } from '../../shared/loading-screen/loading-screen';
@@ -46,7 +45,6 @@ interface DragState {
 export class ManageTeam implements AfterViewInit {
   private readonly teamService = inject(TeamService);
   private readonly favoritesService = inject(FavoritesService);
-  private readonly profileService = inject(ProfileService);
   private readonly router = inject(Router);
   private readonly elementRef = inject(ElementRef<HTMLElement>);
 
@@ -67,9 +65,6 @@ export class ManageTeam implements AfterViewInit {
     this.pageHeightPx.set(window.innerHeight - top);
   }
   protected readonly theme = inject(ThemeService);
-
-  private readonly profile = toSignal(this.profileService.getProfile(), { initialValue: null });
-  protected readonly pageTitle = computed(() => this.profile()?.teamName || 'Manage My Team');
 
   protected readonly isLoading = signal(true);
 
@@ -145,6 +140,15 @@ export class ManageTeam implements AfterViewInit {
     if (draftOrder.length !== savedOrder.length) return true;
     return draftOrder.some((id, i) => id !== savedOrder[i]);
   });
+
+  // Live preview of the draft team's stats — recomputed from teamDraft(),
+  // not savedTeam(), using the exact same shared calculations as Home/My
+  // Team, so dragging a card in updates Power/tier/coverage immediately,
+  // before Save Changes — lets a trainer see the effect of a change before
+  // committing to it.
+  protected readonly draftTeamPower = computed(() => getTeamPower(this.teamDraft()));
+  protected readonly draftTeamTier = computed(() => getTeamTier(this.teamDraft().length));
+  protected readonly draftTypeSegments = computed(() => getTypeSegments(this.teamDraft()));
 
   typeColor(type: string): string {
     return TYPE_COLORS[type as PokemonTypeName] ?? TYPE_COLORS['normal'];

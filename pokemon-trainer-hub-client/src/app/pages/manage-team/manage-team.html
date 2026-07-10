@@ -5,7 +5,7 @@
     <div class="content">
       <div class="header-row">
         <div class="header-block">
-          <h1 class="page-title">{{ pageTitle() }}</h1>
+          <h1 class="page-title">Manage My Team</h1>
           <p class="page-subtitle">
             Drag Pok&eacute;mon to build your line-up &mdash; reorder your team or pull favorites in and out.
           </p>
@@ -183,6 +183,45 @@
               <div class="pool-empty">
                 <div class="pool-empty-icon">&#9711;</div>
                 <div>Drag a Pok&eacute;mon here to set it aside while you swap your line-up.</div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Live preview of the draft team's stats — recomputed from the
+             in-progress drag arrangement, not the last saved team, so you can
+             see the effect of a change before deciding to Save it. -->
+        <div class="pool-section stats-panel">
+          <div class="section-head-row">
+            <span class="section-title">Live Team Stats</span>
+          </div>
+          <div class="stats-panel-card">
+            @if (teamDraft().length === 0) {
+              <div class="pool-empty">Add Pok&eacute;mon to your team to see live stats here.</div>
+            } @else {
+              <div class="stats-panel-body">
+                <div class="stats-panel-row">
+                  <span class="stats-panel-label">Team Power</span>
+                  <span class="stats-panel-value">{{ draftTeamPower() }}</span>
+                </div>
+                <div class="stats-panel-row">
+                  <span class="stats-panel-label">Tier</span>
+                  <span class="tier-pill">{{ draftTeamTier() }}</span>
+                </div>
+
+                <div class="stats-panel-coverage-title">Type Coverage</div>
+                <div class="segmented-bar">
+                  @for (seg of draftTypeSegments(); track seg.type) {
+                    <div class="segment" [style.width.%]="seg.pct" [style.background]="typeColor(seg.type)"></div>
+                  }
+                </div>
+                <div class="type-legend">
+                  @for (seg of draftTypeSegments(); track seg.type) {
+                    <span class="type-pill" [style.background]="typeColor(seg.type) + '33'" [style.color]="typeColor(seg.type)">
+                      <span class="type-glyph" [style.background]="typeColor(seg.type)"></span>{{ seg.type }} {{ seg.pct }}%
+                    </span>
+                  }
+                </div>
               </div>
             }
           </div>

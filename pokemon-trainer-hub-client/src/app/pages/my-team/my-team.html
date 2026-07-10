@@ -12,7 +12,6 @@
     <div class="header-row">
       <div class="header-block">
         <h1 class="page-title">{{ teamName() }}</h1>
-        <a routerLink="/manage-team" class="manage-team-link">Manage My Team &rarr;</a>
       </div>
       <div class="header-actions">
         <a routerLink="/ai-assistant" class="tool-btn"><span class="tool-icon"></span> AI Trainer Assistant</a>
@@ -52,6 +51,11 @@
         }
       }
     </div>
+
+    <a routerLink="/manage-team" class="explore-more-row">
+      <span class="explore-more-text">Want to reorder or swap your line-up?</span>
+      <span class="explore-more-link">Manage My Team <span class="explore-more-arrow">&rarr;</span></span>
+    </a>
 
     @if (hasTeam()) {
       <!-- Team Statistics -->
@@ -98,22 +102,22 @@
             </div>
           }
         </div>
-      </div>
 
-      <!-- Type coverage -->
-      <div class="type-card">
-        <div class="type-card-title">Type Coverage</div>
-        <div class="segmented-bar">
-          @for (seg of typeSegments(); track seg.type) {
-            <div class="segment" [style.width.%]="seg.pct" [style.background]="typeColor(seg.type)"></div>
-          }
-        </div>
-        <div class="type-legend">
-          @for (seg of typeSegments(); track seg.type) {
-            <span class="type-pill" [style.background]="typeColor(seg.type) + '33'" [style.color]="typeColor(seg.type)">
-              <span class="type-glyph" [style.background]="typeColor(seg.type)"></span>{{ seg.type }} {{ seg.pct }}%
-            </span>
-          }
+        <!-- Type coverage -->
+        <div class="type-coverage-section">
+          <div class="type-card-title">Type Coverage</div>
+          <div class="segmented-bar">
+            @for (seg of typeSegments(); track seg.type) {
+              <div class="segment" [style.width.%]="seg.pct" [style.background]="typeColor(seg.type)"></div>
+            }
+          </div>
+          <div class="type-legend">
+            @for (seg of typeSegments(); track seg.type) {
+              <span class="type-pill" [style.background]="typeColor(seg.type) + '33'" [style.color]="typeColor(seg.type)">
+                <span class="type-glyph" [style.background]="typeColor(seg.type)"></span>{{ seg.type }} {{ seg.pct }}%
+              </span>
+            }
+          </div>
         </div>
       </div>
     }

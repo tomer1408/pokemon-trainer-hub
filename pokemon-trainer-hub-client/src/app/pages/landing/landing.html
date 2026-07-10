@@ -1,58 +1,106 @@
 <main class="landing">
+  <div class="aurora aurora-a"></div>
+  <div class="aurora aurora-b"></div>
+  <div class="stars">
+    @for (s of stars; track $index) {
+      <span
+        class="star"
+        [style.top.%]="s.top"
+        [style.left.%]="s.left"
+        [style.width.px]="s.size"
+        [style.height.px]="s.size"
+        [style.background]="s.color"
+        [style.box-shadow]="'0 0 6px ' + s.color"
+        [style.animation-duration.s]="s.duration"
+        [style.animation-delay.s]="s.delay"
+      ></span>
+    }
+  </div>
+
   <section class="hero">
     <div class="hero-copy">
-      <div class="kicker-row">
-        <span class="pokeball-icon" aria-hidden="true"></span>
-        <p class="kicker">POKÉMON TRAINER HUB</p>
-      </div>
-      <h1 class="headline">
-        <span class="accent">Pokémon Dream Team</span><br />
-        <span class="headline-sub">Build your ultimate team</span>
-      </h1>
-      <p class="subhead">
-        Explore real Pokémon data, save your favorites, compare stats, and create a
-        team of up to 5 Pokémon that stays with you across every session.
-      </p>
-      <button type="button" class="cta" (click)="login()">Start Training</button>
+      <span class="logo"><span class="logo-ball"></span>Pokemon Trainer Hub</span>
 
-      <ul class="proof-pills">
-        <li>Live PokéAPI Data</li>
-        <li>Saved Dream Team</li>
-        <li>Smart Team Insights</li>
-      </ul>
+      <div class="kicker-row">
+        <span class="kicker-dot"></span>
+        <p class="kicker">Real Pok&eacute;mon data, live from Pok&eacute;API</p>
+      </div>
+
+      <h1 class="headline">
+        <span class="headline-line">Build your</span>
+        <span class="headline-line headline-accent">Pok&eacute;mon Dream Team</span>
+      </h1>
+
+      <p class="subhead">
+        Search every Pok&eacute;mon, stack them side by side, and lock in your five champions
+        &mdash; one hub built for trainers who play to win.
+      </p>
+
+      <button type="button" class="cta" (click)="login()">
+        <span class="cta-shine"></span>
+        Get Started <span class="cta-arrow">&rarr;</span>
+      </button>
+
+      <div class="stat-strip">
+        @for (s of statCells(); track s.label) {
+          <div class="stat-cell">
+            <div class="stat-value">{{ s.value }}</div>
+            <div class="stat-label">{{ s.label }}</div>
+          </div>
+        }
+      </div>
     </div>
 
     <div class="hero-stage">
+      <div class="ring-outer"></div>
+      <div class="ring-inner"></div>
+      <div class="center-glow"></div>
+
       @for (card of heroCards(); track card.name) {
         <div
           class="hero-card"
           [style.top]="card.top"
           [style.left]="card.left"
-          [style.--hue]="card.hue"
           [style.animation-name]="card.driftAnimation"
           [style.animation-delay]="card.driftDelay"
           [style.z-index]="card.zIndex"
         >
-          <div class="hero-card-art">
-            <div class="hero-card-glow"></div>
-            @if (card.spriteUrl) {
-              <img class="hero-card-sprite" [src]="card.spriteUrl" alt="{{ card.name }}" />
-            }
-          </div>
-          <p class="hero-card-dex">{{ card.dex }}</p>
-          <h3 class="hero-card-name">{{ card.name }}</h3>
-          <p class="hero-card-type">{{ card.type }}</p>
-          <div class="hero-card-stats">
-            <span>HP {{ card.hp }}</span>
-            <span>ATK {{ card.attack }}</span>
-            <span>SPD {{ card.speed }}</span>
+          <div class="hero-card-inner">
+            <div class="hex-badge" title="Power">{{ card.power }}</div>
+            <div class="hero-card-top-row">
+              <span class="hero-card-dex">{{ card.dex }}</span>
+              <span class="type-pill" [style.background]="card.typeColor + '33'" [style.color]="card.typeColor">
+                <span class="type-glyph" [style.background]="card.typeColor"></span>{{ card.type }}
+              </span>
+            </div>
+            <div class="hero-card-art">
+              <div class="hero-card-glow" [style.background]="card.typeColor"></div>
+              @if (card.spriteUrl) {
+                <img class="hero-card-sprite" [src]="card.spriteUrl" alt="{{ card.name }}" />
+              }
+            </div>
+            <div class="hero-card-name">{{ card.name }}</div>
+            <div class="hero-card-stats">
+              <span>HP <strong>{{ card.hp }}</strong></span>
+              <span>ATK <strong>{{ card.attack }}</strong></span>
+            </div>
           </div>
         </div>
       }
     </div>
   </section>
 
+  <div class="marquee-mask">
+    <div class="marquee-track">
+      @for (m of marqueeItems; track $index) {
+        <span class="type-pill marquee-pill" [style.background]="m.color + '33'" [style.color]="m.color">
+          <span class="type-glyph" [style.background]="m.color"></span>{{ m.label }}
+        </span>
+      }
+    </div>
+  </div>
+
   <footer class="site-footer">
-    <p>Made with <span class="footer-heart">♥</span> by @Tomer Rozental</p>
+    <p>Made with <span class="footer-heart">&hearts;</span> by &commat;Tomer Rozental</p>
   </footer>
 </main>

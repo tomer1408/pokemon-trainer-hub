@@ -53,10 +53,10 @@
   max-width: 1200px;
   width: 100%;
   margin: 0 auto;
-  padding: 18px 40px 24px;
+  padding: 6px 40px 24px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   box-sizing: border-box;
   overflow-y: auto;
 }
@@ -72,7 +72,7 @@
 
 .header-block {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   flex-wrap: wrap;
   gap: 14px;
 }
@@ -91,13 +91,48 @@
   margin: 0;
 }
 
-.manage-team-link {
-  font-family: 'Manrope', sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  color: var(--cyan);
+/* Full-width gradient banner CTA — same visual pattern as Home's
+   "Explore More"/"Starter Quiz" nudge banners, reused here so Manage My
+   Team reads as a prominent next step instead of a small header link. */
+.explore-more-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 8px;
+  padding: 12px 26px;
+  border-radius: 18px;
+  background: linear-gradient(120deg, var(--violet-deep), var(--cyan));
   text-decoration: none;
-  white-space: nowrap;
+  box-shadow: 0 14px 30px rgba(124, 58, 237, 0.3);
+  transition: transform 0.15s ease;
+}
+
+.explore-more-row:hover {
+  transform: translateY(-2px);
+}
+
+.explore-more-text {
+  font-family: 'Bungee', sans-serif;
+  font-size: 17px;
+  color: #fff;
+}
+
+.explore-more-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 17px;
+  color: #0d0a1e;
+  text-decoration: none;
+}
+
+.explore-more-arrow {
+  font-size: 22px;
+  line-height: 1;
 }
 
 .header-actions {
@@ -203,11 +238,11 @@
   position: relative;
   background: var(--surface);
   border-radius: 17px;
-  padding: 14px 12px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   text-align: center;
 }
 
@@ -230,10 +265,10 @@
 }
 
 .slot-art {
-  width: 54px;
-  height: 54px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
-  margin-top: 6px;
+  margin-top: 2px;
   background: var(--overlay-05);
   display: flex;
   align-items: center;
@@ -242,8 +277,8 @@
 }
 
 .slot-art img {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   object-fit: contain;
 }
 
@@ -451,15 +486,15 @@
 }
 
 /* ---- Type coverage ---- */
-.type-card {
-  background: var(--surface);
-  border: 1px solid var(--border-soft);
-  border-radius: 20px;
-  padding: 18px 22px;
+/* Now a section inside .stats-card (not its own card) — Team Statistics
+   and Type Coverage are one unified component, separated by a divider
+   instead of two separate cards stacked on top of each other. */
+.type-coverage-section {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  box-sizing: border-box;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-soft);
 }
 
 .type-card-title {
