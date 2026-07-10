@@ -67,6 +67,10 @@ app.get('/api/health/db', async (req, res) => {
       name: err?.name,
       code: err?.code,
       message: String(err?.message || '').slice(0, 300),
+      // Folded in here (not just at startup) so it's guaranteed to show up
+      // right alongside the error in whatever log window is visible, instead
+      // of requiring a separate scroll back to the boot-time line.
+      dbTarget: safeDbTarget(process.env.DATABASE_URL),
     });
     res.status(503).json({ status: 'error', db: 'error' });
   }
