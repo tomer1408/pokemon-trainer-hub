@@ -15,6 +15,24 @@ const app = express();
 // the local-dev fallback.
 const PORT = process.env.PORT || 3000;
 
+// TEMPORARY startup diagnostic — logs only which DB *target* this process
+// actually resolved DATABASE_URL to (host:port + database name), never the
+// credentials. This is what's letting us tell "DATABASE_URL isn't reaching
+// this process at all" apart from "it's set, but to the wrong value" or "a
+// real network/firewall/auth problem downstream." Remove once the Render ->
+// Azure SQL connection issue is resolved.
+function safeDbTarget(url) {
+  if (!url) return { hasDatabaseUrl: false };
+  const host = url.replace(/^sqlserver:\/\//i, '').split(';')[0];
+  const databaseMatch = url.match(/database=([^;]+)/i);
+  return {
+    hasDatabaseUrl: true,
+    host,
+    database: databaseMatch ? databaseMatch[1] : undefined,
+  };
+}
+console.log('DB config target:', safeDbTarget(process.env.DATABASE_URL));
+
 // CORS_ORIGIN lets production restrict this to the real deployed client URL
 // (e.g. https://pokemon-trainer-hub.vercel.app) via an env var instead of
 // hardcoding it — falls back to allowing any origin for local dev, where
