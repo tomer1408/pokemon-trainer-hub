@@ -4,6 +4,14 @@ import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@a
 import { provideAuth0, AuthHttpInterceptor } from '@auth0/auth0-angular';
 
 import { routes } from './app.routes';
+import { environment } from '../environments/environment';
+
+// Derived from the same environment.apiBase used everywhere else (never a
+// second hardcoded host) — this is what tells the Auth0 SDK's interceptor
+// which requests should get a Bearer token attached. If this doesn't match
+// the real deployed API's origin, every API call silently goes out with no
+// token and every protected route 401s.
+const apiOrigin = new URL(environment.apiBase).origin;
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -18,7 +26,7 @@ export const appConfig: ApplicationConfig = {
         audience: 'https://pokemon-trainer-hub-api',
       },
       httpInterceptor: {
-        allowedList: ['http://localhost:3000/*'],
+        allowedList: [`${apiOrigin}/*`],
       },
       // CallbackPage owns the post-login redirect decision (home vs.
       // onboarding, based on real profile data) — without this, the SDK would
