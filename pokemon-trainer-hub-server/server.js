@@ -15,24 +15,6 @@ const app = express();
 // the local-dev fallback.
 const PORT = process.env.PORT || 3000;
 
-// TEMPORARY startup diagnostic — logs only which DB *target* this process
-// actually resolved DATABASE_URL to (host:port + database name), never the
-// credentials. This is what's letting us tell "DATABASE_URL isn't reaching
-// this process at all" apart from "it's set, but to the wrong value" or "a
-// real network/firewall/auth problem downstream." Remove once the Render ->
-// Azure SQL connection issue is resolved.
-function safeDbTarget(url) {
-  if (!url) return { hasDatabaseUrl: false };
-  const host = url.replace(/^sqlserver:\/\//i, '').split(';')[0];
-  const databaseMatch = url.match(/database=([^;]+)/i);
-  return {
-    hasDatabaseUrl: true,
-    host,
-    database: databaseMatch ? databaseMatch[1] : undefined,
-  };
-}
-console.log('DB config target:', safeDbTarget(process.env.DATABASE_URL));
-
 // CORS_ORIGIN lets production restrict this to the real deployed client URL
 // (e.g. https://pokemon-trainer-hub.vercel.app) via an env var instead of
 // hardcoding it — falls back to allowing any origin for local dev, where
@@ -56,22 +38,10 @@ app.get('/api/health/db', async (req, res) => {
     await prisma.$queryRaw`SELECT 1`;
     res.json({ status: 'ok', db: 'ok' });
   } catch (err) {
-    // TEMPORARY diagnostic logging while troubleshooting the Render -> Azure
-    // SQL connection — server-side only (never sent to the client), and
-    // limited to a few safe fields: the error's class name, its driver/Prisma
-    // error code, and a truncated slice of its message. None of these are
-    // expected to contain DATABASE_URL, the password, or any token — driver
-    // connection errors describe *what* failed (timeout, auth, TLS), not the
-    // credentials used. Remove this once the connection issue is resolved.
-    console.error('DB health check failed', {
-      name: err?.name,
-      code: err?.code,
-      message: String(err?.message || '').slice(0, 300),
-      // Folded in here (not just at startup) so it's guaranteed to show up
-      // right alongside the error in whatever log window is visible, instead
-      // of requiring a separate scroll back to the boot-time line.
-      dbTarget: safeDbTarget(process.env.DATABASE_URL),
-    });
+    // Deliberately minimal — no connection details, host, database name, or
+    // Prisma error message, so nothing about the DB target ever ends up in
+    // logs beyond "it failed."
+    console.error('DB health check failed');
     res.status(503).json({ status: 'error', db: 'error' });
   }
 });
