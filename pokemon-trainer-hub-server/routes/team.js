@@ -25,6 +25,28 @@ router.get('/', jwtCheck, async (req, res) => {
   res.json(team);
 });
 
+// PUT /api/team  { pokemonIds: number[] }
+// Replaces Manage My Team's old remove-then-add-then-reorder sequence (3
+// separate calls) with one atomic save of the whole target team. The user is
+// always identified from the JWT — the client never sends and the server
+// never trusts an auth0UserId from the body. Returns the saved team as
+// re-read from the database, so the client can trust it as the new
+// authoritative saved state.
+router.put('/', jwtCheck, async (req, res) => {
+  const { pokemonIds } = req.body;
+  if (!Array.isArray(pokemonIds) || !pokemonIds.every((id) => Number.isInteger(id))) {
+    return res.status(400).json({ message: 'pokemonIds must be an array of Pokémon ids.' });
+  }
+
+  try {
+    const team = await teamService.saveTeam(req.auth.payload.sub, pokemonIds);
+    res.status(200).json(team);
+  } catch (err) {
+    if (err instanceof ServiceError) return respondToServiceError(err, res);
+    throw err;
+  }
+});
+
 // POST /api/team/swap  { removePokemonId, addPokemonId }
 // Must be declared before POST /:id — otherwise Express would match "swap"
 // as the :id param and this route would never be reached.

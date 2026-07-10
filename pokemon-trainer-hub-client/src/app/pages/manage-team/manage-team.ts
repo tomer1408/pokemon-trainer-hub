@@ -1,8 +1,8 @@
 import { AfterViewInit, Component, ElementRef, HostListener, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { forkJoin, of, catchError, map, switchMap, Observable } from 'rxjs';
-import { TeamService, AddToTeamResult } from '../../core/team';
+import { forkJoin } from 'rxjs';
+import { TeamService } from '../../core/team';
 import { FavoritesService } from '../../core/favorites';
 import { ProfileService } from '../../core/profile';
 import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
@@ -301,48 +301,30 @@ export class ManageTeam implements AfterViewInit {
   }
 
   confirmSave(): void {
-    const saved = this.savedIds();
-    const draftIds = new Set(this.teamDraft().map((m) => m.pokemonId));
-    const toRemove = [...saved].filter((id) => !draftIds.has(id));
-    const toAdd = this.teamDraft().filter((m) => !saved.has(m.pokemonId)).map((m) => m.pokemonId);
     const finalOrder = this.teamDraft().map((m) => m.pokemonId);
 
     this.isSaving.set(true);
     this.saveError.set(null);
 
-    const removeStep: Observable<unknown> = toRemove.length
-      ? forkJoin(toRemove.map((id) => this.teamService.removeFromTeam(id)))
-      : of(null);
-
-    removeStep
-      .pipe(
-        switchMap(() =>
-          toAdd.length
-            ? forkJoin(toAdd.map((id) => this.teamService.addToTeam(id)))
-            : of([] as AddToTeamResult[]),
-        ),
-        switchMap((addResults) => {
-          const failed = addResults.find((r) => !r.ok);
-          if (failed) throw new Error(failed.message);
-          return this.teamService.reorderTeam(finalOrder);
-        }),
-        map((reorderOk) => {
-          if (!reorderOk) throw new Error('Reorder failed');
-          return true;
-        }),
-        catchError(() => of(false)),
-      )
-      .subscribe((success) => {
-        this.isSaving.set(false);
-        if (!success) {
-          this.saveError.set('Could not save team changes. Please try again.');
-          return;
-        }
-        this.showSaveConfirm.set(false);
-        this.savedTeam.set(this.teamDraft());
-        this.showSavedToast.set(true);
-        setTimeout(() => this.showSavedToast.set(false), 2400);
-      });
+    // One atomic backend call (add/remove/reorder together) instead of three
+    // separate requests — either the whole new team lands, or none of it
+    // does. `teamDraft` is left untouched until the server confirms success,
+    // so a failed save never pretends to have worked.
+    this.teamService.saveTeam(finalOrder).subscribe((result) => {
+      this.isSaving.set(false);
+      if (!result.ok) {
+        this.saveError.set(result.message);
+        return;
+      }
+      this.showSaveConfirm.set(false);
+      // savedState comes from what the server actually persisted, not from
+      // the local draft — the two should match, but the server's response is
+      // the authoritative one.
+      this.savedTeam.set(result.team);
+      this.teamDraft.set(result.team);
+      this.showSavedToast.set(true);
+      setTimeout(() => this.showSavedToast.set(false), 2400);
+    });
   }
 
   // ---- Revert ----

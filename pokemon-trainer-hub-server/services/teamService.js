@@ -172,4 +172,78 @@ async function reorderTeam(auth0UserId, orderedPokemonIds) {
   );
 }
 
-module.exports = { getTeam, addToTeam, removeFromTeam, swapTeamMember, reorderTeam };
+// Replaces the old client-side remove-then-add-then-reorder sequence (3
+// separate HTTP round-trips, not atomic) with one call that applies the
+// entire target team — additions, removals, and the final slot order — as a
+// single Prisma transaction. Either the whole new team state lands, or none
+// of it does; there's no window where a partial save can be left behind.
+// Throws ServiceError('INVALID_ORDER' | 'NOT_FOUND' | 'UPSTREAM_ERROR').
+async function saveTeam(auth0UserId, orderedPokemonIds) {
+  if (orderedPokemonIds.length > MAX_TEAM_SIZE) {
+    throw new ServiceError('INVALID_ORDER', `A Dream Team can have at most ${MAX_TEAM_SIZE} members.`);
+  }
+
+  const uniqueIds = new Set(orderedPokemonIds);
+  if (uniqueIds.size !== orderedPokemonIds.length) {
+    throw new ServiceError('INVALID_ORDER', 'The submitted team contains a duplicate Pokémon.');
+  }
+
+  const current = await prisma.dreamTeamMember.findMany({ where: { auth0UserId } });
+  const currentIds = new Set(current.map((m) => m.pokemonId));
+  const toRemove = current.filter((m) => !uniqueIds.has(m.pokemonId));
+  const toAddIds = orderedPokemonIds.filter((id) => !currentIds.has(id));
+
+  // Fetch real PokeAPI details for newly-added members up front — outside the
+  // DB transaction, since this is a network call, not a DB one — so a bad id
+  // or a PokeAPI hiccup fails the whole save before anything is written.
+  let addedDetails;
+  try {
+    addedDetails = await Promise.all(toAddIds.map((id) => fetchPokemonDetail(id)));
+  } catch (err) {
+    throw new ServiceError('UPSTREAM_ERROR', 'PokeAPI is unavailable. Please try again later.');
+  }
+  const missingIndex = addedDetails.findIndex((d) => !d);
+  if (missingIndex !== -1) {
+    throw new ServiceError('NOT_FOUND', `Pokémon ${toAddIds[missingIndex]} not found.`);
+  }
+  const detailByAddedId = new Map(toAddIds.map((id, i) => [id, addedDetails[i]]));
+
+  const ops = toRemove.map((member) =>
+    prisma.dreamTeamMember.delete({
+      where: { auth0UserId_pokemonId: { auth0UserId, pokemonId: member.pokemonId } },
+    })
+  );
+
+  orderedPokemonIds.forEach((pokemonId, index) => {
+    if (currentIds.has(pokemonId)) {
+      // Already on the team — just move it to its new slot.
+      ops.push(
+        prisma.dreamTeamMember.update({
+          where: { auth0UserId_pokemonId: { auth0UserId, pokemonId } },
+          data: { position: index },
+        })
+      );
+    } else {
+      const detail = detailByAddedId.get(pokemonId);
+      ops.push(
+        prisma.dreamTeamMember.create({
+          data: {
+            auth0UserId,
+            pokemonId: detail.id,
+            pokemonName: detail.name,
+            spriteUrl: detail.spriteUrl,
+            position: index,
+          },
+        })
+      );
+    }
+  });
+
+  if (ops.length > 0) {
+    await prisma.$transaction(ops);
+  }
+
+  return getTeam(auth0UserId);
+}
+
+module.exports = { getTeam, addToTeam, removeFromTeam, swapTeamMember, reorderTeam, saveTeam };

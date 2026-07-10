@@ -76,6 +76,22 @@ export class TeamService {
     );
   }
 
+  // Backs Manage My Team's Save Changes — one real backend transaction (PUT
+  // /api/team) instead of separate remove/add/reorder calls from the client.
+  // `pokemonIds` is the FULL target team in its final order; the server
+  // diffs it against the current team itself and applies every add, remove,
+  // and position change atomically. Returns the saved team as read back from
+  // the database, so the caller can trust it as the new authoritative state
+  // instead of assuming the draft it sent is what actually landed.
+  saveTeam(pokemonIds: number[]): Observable<{ ok: true; team: DreamTeamMember[] } | { ok: false; message: string }> {
+    return this.http.put<DreamTeamMember[]>(`${API_BASE}/team`, { pokemonIds }).pipe(
+      map((team): { ok: true; team: DreamTeamMember[] } => ({ ok: true, team })),
+      catchError((err: HttpErrorResponse) =>
+        of({ ok: false as const, message: err.error?.message ?? 'Could not save team changes. Please try again.' }),
+      ),
+    );
+  }
+
   // Backs the Team Swap Modal — one real backend transaction (POST
   // /api/team/swap) instead of a separate remove+add from the client.
   swapTeamMember(removePokemonId: number, addPokemonId: number): Observable<AddToTeamResult> {
