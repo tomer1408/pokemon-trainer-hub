@@ -82,7 +82,9 @@
             <span class="team-kicker">YOUR DREAM TEAM</span>
             <span class="card-title team-name-title">{{ profile()?.teamName || 'Your Dream Team' }}</span>
           </div>
-          <a routerLink="/manage-team" class="manage-link">Manage Team <span class="link-arrow">&rarr;</span></a>
+          @if (hasTeam()) {
+            <a routerLink="/manage-team" class="manage-link">Manage Team <span class="link-arrow">&rarr;</span></a>
+          }
         </div>
 
         @if (hasTeam()) {
@@ -114,9 +116,9 @@
         } @else {
           <div class="team-empty">
             <span class="empty-ball"><span class="empty-ball-band"></span><span class="empty-ball-center"></span></span>
-            <div class="empty-title">You haven't added any Pok&eacute;mon yet</div>
-            <div class="empty-sub">Your Dream Team holds up to 5 Pok&eacute;mon. Start with the one that fits your style.</div>
-            <a routerLink="/explorer" class="empty-cta">Find Your First Pok&eacute;mon &rarr;</a>
+            <div class="empty-title">Your Dream Team is empty</div>
+            <div class="empty-sub">Start by adding your first Pok&eacute;mon.</div>
+            <a routerLink="/explorer" class="empty-cta">Explore Pok&eacute;mon &rarr;</a>
           </div>
         }
       </div>

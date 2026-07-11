@@ -52,10 +52,12 @@
       }
     </div>
 
-    <a routerLink="/manage-team" class="explore-more-row">
-      <span class="explore-more-text">Want to reorder or swap your line-up?</span>
-      <span class="explore-more-link">Manage My Team <span class="explore-more-arrow">&rarr;</span></span>
-    </a>
+    @if (hasTeam()) {
+      <a routerLink="/manage-team" class="explore-more-row">
+        <span class="explore-more-text">Want to reorder or swap your line-up?</span>
+        <span class="explore-more-link">Manage My Team <span class="explore-more-arrow">&rarr;</span></span>
+      </a>
+    }
 
     @if (hasTeam()) {
       <!-- Team Statistics -->

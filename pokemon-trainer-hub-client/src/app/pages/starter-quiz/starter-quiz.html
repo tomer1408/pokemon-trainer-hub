@@ -20,7 +20,6 @@
             <button type="button" class="back-btn" (click)="goBack()">&larr;</button>
           }
           <div class="progress-track"><div class="progress-fill" [style.width.%]="progressPct()"></div></div>
-          <span class="step-label">Question {{ stepNumber() }} of {{ totalSteps }}</span>
         </div>
 
         <h1 class="question-title">{{ currentQuestion().question }}</h1>
@@ -29,7 +28,6 @@
           @for (answer of currentQuestion().answers; track answer.id) {
             <button type="button" class="option-card" (click)="selectAnswer(answer)">
               <span class="option-label">{{ answer.label }}</span>
-              <span class="option-choose">Choose &rarr;</span>
             </button>
           }
         </div>
@@ -54,7 +52,6 @@
       <div class="results-shell">
         <div class="results-kicker"><span class="kicker-dot"></span>Your matches are in</div>
         <h1 class="results-title">Meet your <span class="results-title-accent">recommended starters</span></h1>
-        <p class="results-subtitle">Based on your answers, these Pok&eacute;mon fit your style best.</p>
 
         @if (actionError()) {
           <p class="action-error">{{ actionError() }}</p>
@@ -65,6 +62,10 @@
             <div class="rec-card-outer" [class.top-pick]="i === 0">
               <div class="rec-card-inner">
                 <div class="rank-badge" [class.gold]="i === 0">{{ i === 0 ? 'TOP MATCH' : i === 1 ? '2ND' : '3RD' }}</div>
+                <div class="match-percent-hero">
+                  <span class="match-percent-num">{{ r.matchPercent }}%</span>
+                  <span class="match-percent-label">MATCH</span>
+                </div>
                 <button type="button" class="rec-art" (click)="openDetail(r.pokemon.id)" [style.background]="'radial-gradient(circle at 50% 38%, ' + typeColor(r.pokemon.types[0]) + '55, ' + typeColor(r.pokemon.types[0]) + '11)'">
                   @if (r.pokemon.spriteUrl) {
                     <img [src]="r.pokemon.spriteUrl" alt="{{ r.pokemon.name }}" />
@@ -78,17 +79,19 @@
                     </span>
                   }
                 </div>
-                <div class="match-row">
-                  <div class="match-track"><div class="match-fill" [style.width.%]="r.matchPercent"></div></div>
-                  <span class="match-label">{{ r.matchPercent }}% match</span>
-                </div>
                 <div class="rec-reason-wrap">
                   <p class="rec-reason">{{ r.reasons[0] }}</p>
                 </div>
 
                 <div class="rec-actions">
-                  <button type="button" class="rec-action-btn primary" [disabled]="isOnTeam(r.pokemon.id)" (click)="addToTeam(r.pokemon.id)">
-                    {{ isOnTeam(r.pokemon.id) ? 'Already in Team' : 'Add to Team' }}
+                  <button
+                    type="button"
+                    class="rec-action-btn primary"
+                    [class.compare]="!isOnTeam(r.pokemon.id) && teamFull()"
+                    [disabled]="isOnTeam(r.pokemon.id)"
+                    (click)="addToTeam(r.pokemon.id)"
+                  >
+                    {{ actionLabel(r.pokemon.id) }}
                   </button>
                   <button type="button" class="rec-action-btn outline" [disabled]="isFavorite(r.pokemon.id)" (click)="addToFavorites(r.pokemon.id)">
                     {{ isFavorite(r.pokemon.id) ? 'Already a Favorite' : 'Add to Favorites' }}
@@ -101,8 +104,7 @@
         </div>
 
         <div class="results-actions">
-          <a routerLink="/explorer" class="primary-btn results-action-link">Go to Explorer</a>
-          <a routerLink="/home" class="retake-btn results-action-link">Back to Home</a>
+          <a routerLink="/home" class="primary-btn results-action-link">Let&rsquo;s Begin</a>
           <button type="button" class="skip-link" (click)="retakeQuiz()">&#8635; Retake Quiz</button>
         </div>
       </div>

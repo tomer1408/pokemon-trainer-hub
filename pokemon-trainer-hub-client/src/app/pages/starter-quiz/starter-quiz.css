@@ -209,13 +209,6 @@
   transition: width 0.3s ease;
 }
 
-.step-label {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 10px;
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-
 .question-title {
   font-family: 'Bungee', sans-serif;
   font-size: clamp(20px, 3.4vw, 26px);
@@ -259,8 +252,8 @@
   box-shadow: 0 16px 34px rgba(94, 234, 212, 0.22);
 }
 
-/* Fixed-height label area (room for 2 lines) so the "Choose" arrow below it
-   always sits in the same spot whether the label wraps or not. */
+/* Fixed-height label area (room for 2 lines) so every option card stays the
+   same height whether the label wraps or not. */
 .option-label {
   display: flex;
   align-items: center;
@@ -268,16 +261,9 @@
   min-height: 36px;
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
-  font-size: 14px;
+  font-size: 18px;
   line-height: 1.25;
   color: var(--text-body);
-}
-
-.option-choose {
-  font-family: 'Space Mono', monospace;
-  font-size: 11px;
-  color: var(--cyan);
-  font-weight: 700;
 }
 
 .quiz-hint {
@@ -327,13 +313,6 @@
   color: var(--cyan);
 }
 
-.results-subtitle {
-  font-size: 14px;
-  color: var(--text-muted);
-  margin: 0;
-  max-width: 440px;
-}
-
 .action-error {
   color: var(--danger);
   font-size: 13px;
@@ -370,7 +349,7 @@
    reason text is or how many type badges it has, so the row never jitters. */
 .rec-card-inner {
   position: relative;
-  height: 478px;
+  height: 498px;
   background: var(--surface);
   border-radius: 21px;
   padding: 24px 18px 20px;
@@ -401,12 +380,36 @@
   background: var(--yellow);
 }
 
+/* The headline stat of the whole card — shown before the sprite/name so
+   it's one of the first things noticed. */
+.match-percent-hero {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 16px;
+}
+
+.match-percent-num {
+  font-family: 'Bungee', sans-serif;
+  font-size: 34px;
+  color: var(--cyan);
+  line-height: 1;
+}
+
+.match-percent-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+
 .rec-art {
   position: relative;
   width: 100%;
   height: 112px;
   border-radius: 16px;
-  margin-top: 14px;
+  margin-top: 4px;
   border: none;
   cursor: pointer;
   display: flex;
@@ -459,33 +462,6 @@
   flex-shrink: 0;
 }
 
-.match-row {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  margin-top: 2px;
-}
-
-.match-track {
-  height: 6px;
-  border-radius: 4px;
-  background: var(--overlay-08);
-  overflow: hidden;
-}
-
-.match-fill {
-  height: 100%;
-  border-radius: 4px;
-  background: linear-gradient(90deg, var(--violet-deep), var(--cyan));
-}
-
-.match-label {
-  font-family: 'Space Mono', monospace;
-  font-size: 10px;
-  color: var(--text-muted);
-}
-
 /* Fixed height (~3 lines) so shorter/longer reason strings never move the
    action buttons below them. */
 .rec-reason-wrap {
@@ -534,6 +510,14 @@
   color: var(--cyan);
 }
 
+/* Team is full but this Pokémon isn't on it yet — clicking opens the
+   compare/swap flow instead of adding directly, same as Explorer. */
+.rec-action-btn.primary.compare {
+  background: transparent;
+  border: 1.5px solid var(--cyan);
+  color: var(--cyan);
+}
+
 .rec-action-btn:disabled {
   cursor: default;
   background: var(--overlay-06);
@@ -554,21 +538,9 @@
   margin-top: 26px;
 }
 
-.retake-btn {
-  border: 1.5px solid var(--border-soft);
-  background: transparent;
-  color: var(--text-body);
-  border-radius: 100px;
-  padding: 11px 20px;
-  font-family: 'Manrope', sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-/* Reused on <a> tags in .results-actions (primary-btn/retake-btn were only
-   ever <button>s before) — needs explicit centering/no-underline that a
-   plain anchor doesn't get by default. */
+/* Reused on the <a> tag in .results-actions (primary-btn was only ever a
+   <button> before) — needs explicit centering/no-underline that a plain
+   anchor doesn't get by default. */
 .results-action-link {
   text-decoration: none;
   display: inline-flex;

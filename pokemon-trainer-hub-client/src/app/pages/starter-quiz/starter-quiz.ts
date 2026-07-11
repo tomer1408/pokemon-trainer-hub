@@ -17,6 +17,8 @@ import { TeamSwapModal } from '../../shared/team-swap-modal/team-swap-modal';
 
 type Phase = 'intro' | 'quiz' | 'loading' | 'results' | 'error';
 
+const MAX_TEAM_SIZE = 5;
+
 // Rule-based Starter Quiz — not AI/LLM. Each answer adds fixed points to a
 // preference profile (shared/quiz/quiz-questions.ts); the profile is scored
 // against real Gen 1 Pokémon data at the end (quiz-recommendation.service.ts)
@@ -48,7 +50,6 @@ export class StarterQuiz {
   protected readonly recommendations = signal<ScoredPokemon[]>([]);
 
   protected readonly currentQuestion = computed(() => this.questions[Math.min(this.step(), this.questions.length - 1)]);
-  protected readonly stepNumber = computed(() => Math.min(this.step() + 1, this.totalSteps));
   protected readonly canGoBack = computed(() => this.step() > 0);
   protected readonly progressPct = computed(() => ((this.step() + 1) / this.totalSteps) * 100);
 
@@ -62,7 +63,7 @@ export class StarterQuiz {
     toObservable(this.favoritesRefresh).pipe(switchMap(() => this.favoritesService.getFavorites())),
     { initialValue: [] },
   );
-  protected readonly teamFull = computed(() => this.team().length >= 5);
+  protected readonly teamFull = computed(() => this.team().length >= MAX_TEAM_SIZE);
 
   protected readonly selectedPokemonId = signal<number | null>(null);
   protected readonly swapCandidateId = signal<number | null>(null);
@@ -134,6 +135,15 @@ export class StarterQuiz {
 
   isFavorite(pokemonId: number): boolean {
     return this.favorites().some((f) => f.pokemonId === pokemonId);
+  }
+
+  // Mirrors Explorer's actionLabel() so Add to Team behaves/reads identically
+  // on both pages: a full (but not-yet-on-team) result opens the swap/compare
+  // flow instead of silently failing, and the button says so up front.
+  actionLabel(pokemonId: number): string {
+    if (this.isOnTeam(pokemonId)) return 'On Team';
+    if (this.teamFull()) return 'Compare';
+    return 'Add to Team';
   }
 
   addToTeam(pokemonId: number): void {

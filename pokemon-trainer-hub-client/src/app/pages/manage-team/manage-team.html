@@ -40,14 +40,16 @@
                     }
                   </div>
                   <div class="slot-name">{{ member.pokemonName }}</div>
-                  @if (member.types[0]; as type) {
-                    <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
-                      <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
-                    </span>
-                  }
-                  <div class="power-row">
-                    <span class="power-label">PWR</span>
-                    <span class="power-value">{{ member.baseExperience }}</span>
+                  <div class="type-power-row">
+                    @if (member.types[0]; as type) {
+                      <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                        <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
+                      </span>
+                    }
+                    <div class="power-row">
+                      <span class="power-label">PWR</span>
+                      <span class="power-value">{{ member.baseExperience }}</span>
+                    </div>
                   </div>
                   <button
                     type="button"
@@ -70,6 +72,17 @@
               </div>
             }
           }
+        </div>
+
+        <div
+          class="trash-zone"
+          [class.active]="drag()?.from === 'team'"
+          [class.drag-over]="overTrash()"
+          (dragover)="$event.preventDefault(); onTrashDragOver()"
+          (drop)="$event.preventDefault(); moveToTrash()"
+        >
+          <span class="trash-icon">&#128465;&#65039;</span>
+          <span class="trash-text">{{ overTrash() ? 'Drop here to remove' : 'Drag Pokémon here to remove' }}</span>
         </div>
       </div>
 
@@ -294,8 +307,30 @@
       </div>
     }
 
+    @if (pendingRemove()) {
+      <div class="confirm-overlay" (click)="cancelRemove()">
+        <div class="confirm-card" (click)="$event.stopPropagation()">
+          <h2 class="confirm-title">Remove this Pok&eacute;mon from your Dream Team?</h2>
+          <p class="confirm-body">You can add it again later from the Explorer.</p>
+          @if (removeError()) {
+            <p class="confirm-error">{{ removeError() }}</p>
+          }
+          <div class="confirm-actions">
+            <button type="button" class="confirm-cancel" [disabled]="isRemoving()" (click)="cancelRemove()">Cancel</button>
+            <button type="button" class="confirm-delete" [disabled]="isRemoving()" (click)="confirmRemove()">
+              {{ isRemoving() ? 'Removing…' : 'Remove Pokémon' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
     @if (showSavedToast()) {
       <div class="toast"><span class="toast-dot"></span>Team changes saved successfully.</div>
+    }
+
+    @if (showRemovedToast()) {
+      <div class="toast"><span class="toast-dot"></span>Pok&eacute;mon removed from your Dream Team.</div>
     }
 
     @if (selectedPokemonId(); as id) {

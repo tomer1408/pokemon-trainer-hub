@@ -80,6 +80,7 @@ export class ManageTeam implements AfterViewInit {
   protected readonly overTeamIndex = signal<number | null>(null);
   protected readonly overFav = signal(false);
   protected readonly overBench = signal(false);
+  protected readonly overTrash = signal(false);
 
   protected readonly showSaveConfirm = signal(false);
   protected readonly showRevertConfirm = signal(false);
@@ -88,6 +89,20 @@ export class ManageTeam implements AfterViewInit {
   protected readonly isSaving = signal(false);
   protected readonly saveError = signal<string | null>(null);
   protected readonly selectedPokemonId = signal<number | null>(null);
+
+  // ---- Trash / Remove drop zone ----
+  // Dropping here never deletes anything by itself — it only stages a
+  // confirmation (pendingRemove). Dropping optimistically hides the card
+  // from its team slot immediately (index kept so Cancel can put it back in
+  // the same spot) — only confirmRemove() actually calls the backend, and it
+  // does so immediately (the existing DELETE /api/team/:id, same endpoint
+  // Explorer's remove button already uses) rather than going through the
+  // draft/Save Changes flow, since a confirmed removal is a real, committed
+  // action, not a pending edit.
+  protected readonly pendingRemove = signal<{ item: ComparablePokemon; index: number } | null>(null);
+  protected readonly isRemoving = signal(false);
+  protected readonly removeError = signal<string | null>(null);
+  protected readonly showRemovedToast = signal(false);
 
   // ---- Head-to-Head comparison (reuses TeamSwapModal) ----
   protected readonly compareAnchorId = signal<number | null>(null);
@@ -179,6 +194,7 @@ export class ManageTeam implements AfterViewInit {
     this.overTeamIndex.set(null);
     this.overFav.set(false);
     this.overBench.set(false);
+    this.overTrash.set(false);
   }
 
   onTeamSlotDragOver(index: number): void {
@@ -186,6 +202,7 @@ export class ManageTeam implements AfterViewInit {
       this.overTeamIndex.set(index);
       this.overFav.set(false);
       this.overBench.set(false);
+      this.overTrash.set(false);
     }
   }
 
@@ -194,6 +211,7 @@ export class ManageTeam implements AfterViewInit {
       this.overFav.set(true);
       this.overTeamIndex.set(null);
       this.overBench.set(false);
+      this.overTrash.set(false);
     }
   }
 
@@ -202,6 +220,16 @@ export class ManageTeam implements AfterViewInit {
       this.overBench.set(true);
       this.overTeamIndex.set(null);
       this.overFav.set(false);
+      this.overTrash.set(false);
+    }
+  }
+
+  onTrashDragOver(): void {
+    if (!this.overTrash()) {
+      this.overTrash.set(true);
+      this.overTeamIndex.set(null);
+      this.overFav.set(false);
+      this.overBench.set(false);
     }
   }
 
@@ -253,6 +281,61 @@ export class ManageTeam implements AfterViewInit {
     this.teamDraft.update((list) => list.filter((m) => m.pokemonId !== drag.item.pokemonId));
     this.benchDraft.update((list) => [...list.filter((m) => m.pokemonId !== drag.item.pokemonId), drag.item]);
     this.endDrag();
+  }
+
+  // Only accepts drags that originate FROM the team — dropping a Favorites
+  // or Bench card here does nothing, since those aren't team members to
+  // remove. The card disappears from its team slot right away (optimistic —
+  // Cancel puts it straight back in the same spot); only confirming actually
+  // deletes anything.
+  moveToTrash(): void {
+    const drag = this.drag();
+    this.endDrag();
+    if (!drag || drag.from !== 'team') return;
+
+    const index = this.teamDraft().findIndex((m) => m.pokemonId === drag.item.pokemonId);
+    if (index === -1) return;
+
+    this.removeError.set(null);
+    this.teamDraft.update((list) => list.filter((m) => m.pokemonId !== drag.item.pokemonId));
+    this.pendingRemove.set({ item: drag.item, index });
+  }
+
+  cancelRemove(): void {
+    if (this.isRemoving()) return;
+    const pending = this.pendingRemove();
+    if (pending) {
+      const idx = Math.min(pending.index, this.teamDraft().length);
+      this.teamDraft.update((list) => [...list.slice(0, idx), pending.item, ...list.slice(idx)]);
+    }
+    this.pendingRemove.set(null);
+  }
+
+  confirmRemove(): void {
+    const pending = this.pendingRemove();
+    if (!pending) return;
+    const target = pending.item;
+
+    this.isRemoving.set(true);
+    this.removeError.set(null);
+
+    this.teamService.removeFromTeam(target.pokemonId).subscribe({
+      next: () => {
+        this.isRemoving.set(false);
+        // Already gone from teamDraft since the drop itself — just reconcile
+        // savedState now that the backend confirms it's really deleted, so
+        // hasUnsavedChanges() still correctly reflects only whatever OTHER
+        // reorder is pending.
+        this.savedTeam.update((list) => list.filter((m) => m.pokemonId !== target.pokemonId));
+        this.pendingRemove.set(null);
+        this.showRemovedToast.set(true);
+        setTimeout(() => this.showRemovedToast.set(false), 2400);
+      },
+      error: () => {
+        this.isRemoving.set(false);
+        this.removeError.set('Something went wrong removing this Pokémon. Please try again.');
+      },
+    });
   }
 
   openDetail(pokemonId: number): void {
