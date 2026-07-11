@@ -13,10 +13,6 @@
       <div class="header-block">
         <h1 class="page-title">{{ teamName() }}</h1>
       </div>
-      <div class="header-actions">
-        <a routerLink="/ai-assistant" class="tool-btn"><span class="tool-icon"></span> AI Trainer Assistant</a>
-        <a routerLink="/battle" class="battle-pill">Start Battle Simulation <span>&rarr;</span></a>
-      </div>
     </div>
 
     <!-- 5 Team Slots -->
@@ -53,10 +49,11 @@
     </div>
 
     @if (hasTeam()) {
-      <a routerLink="/manage-team" class="explore-more-row">
-        <span class="explore-more-text">Want to reorder or swap your line-up?</span>
-        <span class="explore-more-link">Manage My Team <span class="explore-more-arrow">&rarr;</span></span>
-      </a>
+      <div class="header-actions">
+        <a routerLink="/manage-team" class="tool-btn"><span class="tool-icon">&#9881;</span> Manage My Team</a>
+        <a routerLink="/ai-assistant" class="tool-btn"><span class="tool-icon">&#10024;</span> AI Trainer Assistant</a>
+        <a routerLink="/battle" class="tool-btn"><span class="tool-icon">&#9876;</span> Start Battle Simulation</a>
+      </div>
     }
 
     @if (hasTeam()) {
