@@ -1,0 +1,96 @@
+<div class="support-page" [class.light]="theme.isLight()">
+  <div class="content">
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-badge">?</div>
+      <h1 class="hero-title">Support Center</h1>
+      <p class="hero-sub">Need help on your trainer journey? We're here to guide you.</p>
+      <div class="hero-cta-row">
+        <a href="#faq" class="hero-primary">Browse FAQ</a>
+        <a href="#contact" class="hero-secondary">Contact Support</a>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div id="faq" class="card">
+      <div class="card-head">
+        <span class="card-title">Frequently Asked Questions</span>
+        <span class="card-helper">Tap a question to see the answer.</span>
+      </div>
+      <div class="faq-list">
+        @for (f of faqs; track f.q; let i = $index) {
+          <div class="faq-item" [class.open]="openFaqIndex() === i">
+            <button type="button" class="faq-q-btn" (click)="toggleFaq(i)">
+              <span class="faq-q-text">{{ f.q }}</span>
+              <span class="faq-chev"></span>
+            </button>
+            @if (openFaqIndex() === i) {
+              <div class="faq-a">{{ f.a }}</div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Contact form -->
+    <div id="contact" class="card">
+      <div class="card-head">
+        <span class="card-title">Contact Support</span>
+        <span class="card-helper">Tell us what happened and we'll help you get back to your trainer journey.</span>
+      </div>
+
+      @if (submitted()) {
+        <div class="success-box">
+          <span class="success-check"><span class="success-check-mark"></span></span>
+          <div class="success-title">Thanks! Your support request was received.</div>
+          <div class="success-sub">Our team will get back to you by email soon. In the meantime, the FAQ above covers most questions.</div>
+          <button type="button" class="success-btn" (click)="resetForm()">Send another request</button>
+        </div>
+      } @else {
+        <div class="form-grid">
+          <label class="field">
+            <span class="field-label">Full Name</span>
+            <input type="text" placeholder="Your name" [ngModel]="form().name" (ngModelChange)="updateField('name', $event)" />
+          </label>
+          <label class="field">
+            <span class="field-label">Email <span class="req">*</span></span>
+            <input type="email" placeholder="you@email.com" [ngModel]="form().email" (ngModelChange)="updateField('email', $event)" [class.err]="emailErr()" />
+            @if (emailErr()) {
+              <div class="err-text">Please enter a valid email.</div>
+            }
+          </label>
+          <div class="field-wide">
+            <span class="field-label">Topic <span class="req">*</span></span>
+            <div class="topic-row">
+              @for (t of topics; track t) {
+                <button type="button" class="topic-chip" [class.active]="form().topic === t" (click)="pickTopic(t)">{{ t }}</button>
+              }
+            </div>
+            @if (topicErr()) {
+              <div class="err-text">Please choose a topic.</div>
+            }
+          </div>
+          <label class="field-wide">
+            <span class="field-label">Message <span class="req">*</span></span>
+            <textarea placeholder="Describe what happened…" rows="4" [ngModel]="form().message" (ngModelChange)="updateField('message', $event)" [class.err]="msgErr()"></textarea>
+            @if (msgErr()) {
+              <div class="err-text">Please describe the issue.</div>
+            }
+          </label>
+        </div>
+
+        @if (submitError()) {
+          <p class="submit-error">{{ submitError() }}</p>
+        }
+
+        <div class="form-actions">
+          <button type="button" class="submit-btn" [disabled]="sending()" (click)="submit()">
+            {{ sending() ? 'Sending…' : 'Send Support Request' }}
+          </button>
+        </div>
+      }
+    </div>
+
+  </div>
+</div>

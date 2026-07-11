@@ -44,8 +44,8 @@
                 <span class="typing-dot" [style.animation-delay.s]="0.15"></span>
                 <span class="typing-dot" [style.animation-delay.s]="0.3"></span>
               </div>
-            } @else if (analysisFailed()) {
-              <p class="bubble-text">I couldn't analyze your team just now — try Refresh Analysis in a moment.</p>
+            } @else if (analysisError(); as errMsg) {
+              <p class="bubble-text">{{ errMsg }}</p>
             } @else if (analysisResult(); as result) {
               <div class="rec-card">
                 <div class="rec-kicker">Recommended catch</div>
@@ -66,7 +66,7 @@
         </div>
       </div>
       <button type="button" class="secondary-btn" [disabled]="analysisLoading()" (click)="onRerollAnalysis()">
-        {{ analysisLoading() ? 'Analyzing…' : 'Refresh Analysis' }}
+        Refresh Analysis
       </button>
     }
 

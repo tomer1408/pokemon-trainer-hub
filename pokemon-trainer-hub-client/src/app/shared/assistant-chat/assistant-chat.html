@@ -1,0 +1,116 @@
+@if (open()) {
+  <div class="chat-panel" [class.light]="theme.isLight()">
+    <div class="chat-header">
+      <div class="chat-header-left">
+        <span class="chat-avatar">
+          @if (avatarSprite()?.spriteUrl; as sprite) {
+            <img [src]="sprite" alt="Pikachu" />
+          }
+        </span>
+        <div class="chat-header-text">
+          <span class="chat-header-name">Trainer Assistant</span>
+          <span class="chat-header-status"><span class="chat-dot"></span>Online</span>
+        </div>
+      </div>
+      <div class="chat-header-actions">
+        <button type="button" class="chat-reset-btn" title="Reset Chat" (click)="resetChat()">&#8635;</button>
+        <button type="button" class="chat-close-btn" (click)="close()">&times;</button>
+      </div>
+    </div>
+
+    <div class="chat-body" #scrollEl>
+      @for (m of messages(); track $index) {
+        <div class="chat-row" [class.mine]="m.role === 'user'">
+          <div class="chat-bubble" [class.mine]="m.role === 'user'">
+            {{ m.text }}
+            @if (m.pokemon; as p) {
+              <button type="button" class="pokemon-chip" (click)="openDetail(p.id)">
+                @if (p.spriteUrl) {
+                  <img class="pokemon-chip-sprite" [src]="p.spriteUrl" alt="{{ p.name }}" />
+                }
+                <span class="pokemon-chip-name">{{ p.name }}</span>
+                <span class="pokemon-chip-arrow">&rarr;</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      @if (thinking()) {
+        <div class="chat-row">
+          <div class="typing-bubble">
+            <span class="typing-dot" [style.animation-delay.s]="0"></span>
+            <span class="typing-dot" [style.animation-delay.s]="0.18"></span>
+            <span class="typing-dot" [style.animation-delay.s]="0.36"></span>
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (showSuggestions()) {
+      <div class="suggest-row">
+        @for (s of suggestions; track s) {
+          <button type="button" class="suggest-chip" (click)="pickSuggestion(s)">{{ s }}</button>
+        }
+      </div>
+    }
+
+    <div class="chat-input-row">
+      <input
+        type="text"
+        class="chat-input"
+        placeholder="Ask about teams, battles…"
+        [ngModel]="draft()"
+        (ngModelChange)="onDraftChange($event)"
+        (keydown)="onKeydown($event)"
+      />
+      <button type="button" class="chat-send-btn" [disabled]="sendDisabled()" (click)="send()">&rarr;</button>
+    </div>
+  </div>
+}
+
+<button type="button" class="chat-fab" [class.light]="theme.isLight()" (click)="toggle()">
+  @if (open()) {
+    <span class="fab-close-glyph">&times;</span>
+  } @else if (avatarSprite()?.spriteUrl; as sprite) {
+    <img class="fab-sprite" [src]="sprite" alt="Ask the Trainer Assistant" />
+  }
+</button>
+
+@if (selectedPokemonId(); as id) {
+  <app-pokemon-detail-modal
+    [pokemonId]="id"
+    [isFavorite]="isFavorite(id)"
+    [isOnTeam]="isOnTeam(id)"
+    [teamFull]="teamFull()"
+    [hasTeam]="hasTeam()"
+    [isLight]="theme.isLight()"
+    (closed)="closeDetail()"
+    (toggleFavorite)="toggleFavorite(id)"
+    (addToTeam)="onAction(id)"
+    (compare)="onCompareWithTeam(id)"
+    (removeFromTeam)="removeFromTeamModal(id)"
+  />
+}
+
+@if (swapCandidateId(); as candidateId) {
+  <app-team-swap-modal
+    [selectedPokemonId]="candidateId"
+    [comparisonCandidates]="team()"
+    mode="overflow"
+    [isLight]="theme.isLight()"
+    (closed)="closeSwap()"
+    (swapped)="onSwapped()"
+  />
+}
+
+@if (compareCandidateId(); as candidateId) {
+  <app-team-swap-modal
+    [selectedPokemonId]="candidateId"
+    [comparisonCandidates]="team()"
+    mode="compare"
+    [isLight]="theme.isLight()"
+    (closed)="closeCompareWithTeam()"
+    (added)="onCompareAdded()"
+  />
+}

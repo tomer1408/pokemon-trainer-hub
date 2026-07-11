@@ -4,12 +4,13 @@ import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { AuthService } from '@auth0/auth0-angular';
 import { Navbar } from './shared/navbar/navbar';
+import { AssistantChat } from './shared/assistant-chat/assistant-chat';
 
 const NAVBAR_HIDDEN_ON = ['/', '/callback', '/onboarding', '/starter-quiz'];
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Navbar],
+  imports: [RouterOutlet, Navbar, AssistantChat],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

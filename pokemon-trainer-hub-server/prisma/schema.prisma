@@ -50,6 +50,21 @@ model TrainerNote {
   createdAt   DateTime @default(now())
 }
 
+// A trainer's Contact Support submission — a running log (multiple per
+// user allowed, like TrainerNote), never edited after creation. There's no
+// admin UI for this yet, so rows are only ever reviewed directly in the
+// database — an honest, real (if minimal) alternative to faking a "request
+// sent" success message with nothing behind it.
+model SupportRequest {
+  id          Int      @id @default(autoincrement())
+  auth0UserId String
+  name        String
+  email       String
+  topic       String
+  message     String
+  createdAt   DateTime @default(now())
+}
+
 model TrainerProfile {
   id              Int      @id @default(autoincrement())
   auth0UserId     String   @unique

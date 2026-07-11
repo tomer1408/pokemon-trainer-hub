@@ -48,7 +48,7 @@ export class AiTrainerAssistant {
   protected readonly analysisIntro = "Looking at your squad, here's what I'm seeing.";
   protected readonly analysisResult = signal<AssistantRecommendation | null>(null);
   protected readonly analysisLoading = signal(false);
-  protected readonly analysisFailed = signal(false);
+  protected readonly analysisError = signal<string | null>(null);
 
   protected readonly queryText = signal('');
   protected readonly chatMessages = signal<ChatMessage[]>([]);
@@ -75,11 +75,15 @@ export class AiTrainerAssistant {
 
   private runAnalysis(): void {
     this.analysisLoading.set(true);
-    this.analysisFailed.set(false);
+    this.analysisError.set(null);
     this.assistantService.analyzeTeam().subscribe((result) => {
       this.analysisLoading.set(false);
-      this.analysisResult.set(result);
-      this.analysisFailed.set(result === null);
+      if (result.ok) {
+        this.analysisResult.set(result.value);
+      } else {
+        this.analysisResult.set(null);
+        this.analysisError.set(result.message);
+      }
     });
   }
 
@@ -99,18 +103,15 @@ export class AiTrainerAssistant {
       this.isThinking.set(false);
       this.chatMessages.update((msgs) => [
         ...msgs,
-        result
+        result.ok
           ? {
               role: 'assistant',
               text: "Based on what you described, here's what I'd catch:",
-              recType: result.type,
-              recPokemon: result.pokemon,
-              recReasoning: result.reasoning,
+              recType: result.value.type,
+              recPokemon: result.value.pokemon,
+              recReasoning: result.value.reasoning,
             }
-          : {
-              role: 'assistant',
-              text: "I couldn't reach the assistant just now — please try again in a moment.",
-            },
+          : { role: 'assistant', text: result.message },
       ]);
     });
   }

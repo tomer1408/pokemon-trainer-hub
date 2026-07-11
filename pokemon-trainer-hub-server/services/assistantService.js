@@ -1,6 +1,34 @@
 const { ChatGoogleGenerativeAI } = require('@langchain/google-genai');
+const { SystemMessage, HumanMessage, AIMessage } = require('@langchain/core/messages');
 const { z } = require('zod');
 const { getListByType, fetchPokemonDetail } = require('./pokeapi');
+
+// Only the most recent messages are sent — keeps token usage (and cost/
+// quota, even on the free tier) bounded regardless of how long a
+// conversation runs.
+const MAX_CHAT_HISTORY = 10;
+
+const CHAT_SYSTEM_PROMPT =
+  'You are the Trainer Assistant, a friendly in-app help bot for Pokémon Trainer Hub — a web app ' +
+  'where users build a Dream Team (up to 5 Pokémon), browse Pokémon in Explorer (search/filter/sort), ' +
+  'save Favorites, take a Starter Quiz for recommendations, manage their team via drag-and-drop in ' +
+  'Manage My Team, edit their Trainer Profile, adjust app preferences in Settings, and run simplified, ' +
+  'stat-based battle simulations (no moves/turns/HP — just a power comparison) against a random ' +
+  "opponent team. Pokémon data comes from PokéAPI. Answer concisely (2-4 sentences), warm and " +
+  'encouraging, and point users to the right page (Explorer, My Team, Starter Quiz, Settings) when ' +
+  'relevant. If asked something unrelated to Pokémon or the app, gently steer back. Plain text only, no markdown. ' +
+  'If your answer centers on or recommends one specific Pokémon, set pokemonName to its exact ' +
+  'lowercase species name as used by PokéAPI (e.g. "charizard", "mr-mime"); otherwise set pokemonName to null.';
+
+// text is free-form, like before — pokemonName is the ONLY thing the model
+// decides here that turns into real data: if set, the server looks it up
+// via fetchPokemonDetail() below, so the client only ever gets a real
+// PokéAPI Pokémon (or null if the name doesn't resolve), never anything the
+// model invented.
+const ChatReplySchema = z.object({
+  text: z.string(),
+  pokemonName: z.string().nullable(),
+});
 
 const POKEMON_TYPES = [
   'normal', 'fire', 'water', 'electric', 'grass', 'ice', 'fighting', 'poison',
@@ -79,4 +107,36 @@ async function getStrongestOfType(type) {
   return valid.reduce((a, b) => (b.baseExperience > a.baseExperience ? b : a));
 }
 
-module.exports = { analyzeTeam, queryDescription, getStrongestOfType };
+// Real, open-ended multi-turn conversation — unlike analyzeTeam/
+// queryDescription, the reply text itself is free-form, not a fixed shape.
+// `history` is [{ role: 'user' | 'assistant', text }, ...], oldest first.
+// Returns { text, pokemon }, where pokemon is only ever real PokeAPI data
+// (or null) — see ChatReplySchema/CHAT_SYSTEM_PROMPT above for why.
+async function chatWithAssistant(history) {
+  const recent = history.slice(-MAX_CHAT_HISTORY);
+  const messages = [
+    new SystemMessage(CHAT_SYSTEM_PROMPT),
+    ...recent.map((m) => (m.role === 'user' ? new HumanMessage(m.text) : new AIMessage(m.text))),
+  ];
+
+  const model = buildModel().withStructuredOutput(ChatReplySchema);
+  const result = await model.invoke(messages);
+
+  let pokemon = null;
+  if (result.pokemonName) {
+    pokemon = await fetchPokemonDetail(result.pokemonName).catch(() => null);
+  }
+
+  return { text: result.text, pokemon };
+}
+
+// The free tier's daily/per-minute quota is real and low (Gemini returns a
+// 429 with "quota exceeded" wording, not a generic failure) — routes use
+// this to tell that case apart from a real outage and show an honest
+// "come back tomorrow" message instead of a vague "something went wrong."
+function isRateLimitError(err) {
+  const msg = String(err?.message || '').toLowerCase();
+  return msg.includes('429') || msg.includes('quota exceeded') || msg.includes('resource_exhausted');
+}
+
+module.exports = { analyzeTeam, queryDescription, getStrongestOfType, chatWithAssistant, isRateLimitError };
