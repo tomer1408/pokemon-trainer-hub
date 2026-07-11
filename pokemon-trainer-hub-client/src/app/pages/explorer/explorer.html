@@ -57,6 +57,15 @@
     </div>
   }
 
+  @if (compareSlotA(); as a) {
+    @if (!compareSlotB()) {
+      <div class="swap-notice">
+        <span>Comparing <strong>{{ a.name }}</strong> &mdash; pick a second Pok&eacute;mon to compare it with.</span>
+        <button type="button" class="swap-notice-close" (click)="cancelCompareSelection()">&times;</button>
+      </div>
+    }
+  }
+
   <div class="shell">
     <!-- Grid column -->
     <div class="grid-col">
@@ -83,6 +92,15 @@
         <div class="card-grid">
           @for (p of listResult().results; track p.id) {
             <div class="pokemon-card" [class.surprised]="surpriseId() === p.id" (click)="openDetail(p)">
+              <button
+                type="button"
+                class="compare-toggle-btn"
+                [class.active]="isComparing(p.id)"
+                title="Compare with another Pokémon"
+                (click)="$event.stopPropagation(); toggleCompareSlot(p)"
+              >
+                &#8644;
+              </button>
               <button
                 type="button"
                 class="fav-btn"
@@ -260,5 +278,17 @@
       (closed)="closeCompareWithTeam()"
       (added)="onCompareAdded()"
     />
+  }
+
+  <!-- Compare any two Pokémon (standalone, no team/swap action) -->
+  @if (compareSlotA(); as a) {
+    @if (compareSlotB(); as b) {
+      <app-pokemon-compare-modal
+        [pokemonA]="a"
+        [pokemonB]="b"
+        [isLight]="theme.isLight()"
+        (closed)="closeCompareModal()"
+      />
+    }
   }
 </div>
