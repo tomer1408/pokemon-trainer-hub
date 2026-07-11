@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, of } from 'rxjs';
 import { API_BASE } from './api-base';
+import { PokemonStat } from './team';
 
 export interface PokemonSummary {
   id: number;
@@ -9,6 +10,12 @@ export interface PokemonSummary {
   baseExperience: number;
   types: string[];
   spriteUrl: string | null;
+  // GET /api/pokemon already includes each entry's real stats (it's built
+  // from the same fetchPokemonDetail() the single-item route uses) — this
+  // was just never declared here since nothing needed it until the Starter
+  // Quiz's scoring, which reads it straight off search() results instead of
+  // paying for 151 individual getById() calls.
+  stats: PokemonStat[];
 }
 
 export interface PokemonAbility {

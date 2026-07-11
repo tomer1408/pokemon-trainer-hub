@@ -68,6 +68,13 @@
         </div>
       </div>
 
+      @if (showQuizNudge()) {
+        <a routerLink="/starter-quiz" class="explore-more-row">
+          <span class="explore-more-text">Haven't found your starter yet?</span>
+          <span class="explore-more-link">Take the Starter Quiz <span class="explore-more-arrow">&rarr;</span></span>
+        </a>
+      }
+
       <!-- ===== BENTO ROW 1: TEAM + POWER ===== -->
       <div class="bento-row-1">
 

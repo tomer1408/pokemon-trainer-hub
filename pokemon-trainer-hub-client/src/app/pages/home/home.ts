@@ -160,6 +160,13 @@ export class Home {
 
   protected readonly cookieChoice = signal<'accepted' | 'declined' | null>(null);
 
+  // Real, server-side flag (not client storage) — stays visible on every
+  // Home visit until the trainer actually completes the quiz, skipping only
+  // defers the redirect guard, not this nudge.
+  protected readonly showQuizNudge = computed(
+    () => this.profile()?.hasCompletedStarterQuiz === false,
+  );
+
   protected readonly teamFull = computed(() => this.teamCount() >= MAX_TEAM_SIZE);
 
   typeColor(type: string): string {

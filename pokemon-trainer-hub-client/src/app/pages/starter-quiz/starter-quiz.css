@@ -1,0 +1,581 @@
+:host {
+  --bg: #0D0A1E;
+  --surface: #1A1533;
+  --surface-raised: #221B45;
+  --border-soft: rgba(196, 181, 253, 0.16);
+  --text-body: #F1EEFB;
+  --text-muted: rgba(230, 225, 250, 0.6);
+  --violet: #A78BFA;
+  --violet-deep: #7C3AED;
+  --cyan: #5EEAD4;
+  --yellow: #FDE68A;
+  --overlay-05: rgba(255, 255, 255, 0.05);
+  --overlay-06: rgba(255, 255, 255, 0.06);
+  --overlay-08: rgba(255, 255, 255, 0.08);
+  --danger: #f87171;
+
+  display: block;
+  min-height: 100vh;
+}
+
+.quiz-page.light {
+  --bg: #F5F3FF;
+  --surface: #FFFFFF;
+  --surface-raised: #EFEBFC;
+  --border-soft: rgba(76, 29, 149, 0.12);
+  --text-body: #1C1533;
+  --text-muted: rgba(28, 21, 51, 0.55);
+  --violet-deep: #6D28D9;
+  --cyan: #0E9488;
+  --yellow: #B45309;
+  --overlay-05: rgba(28, 21, 51, 0.05);
+  --overlay-06: rgba(28, 21, 51, 0.06);
+  --overlay-08: rgba(28, 21, 51, 0.08);
+}
+
+.quiz-page {
+  min-height: 100vh;
+  padding: 40px 24px 60px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse 900px 620px at 50% 6%, rgba(124, 58, 237, 0.18), transparent 60%), var(--bg);
+  font-family: 'Manrope', sans-serif;
+}
+
+.content {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+/* ---- Intro ---- */
+.intro-shell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  max-width: 520px;
+}
+
+.intro-ball {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #F4562B 0 47%, #1C1533 47% 53%, var(--text-body) 53% 100%);
+  border: 3px solid #1C1533;
+  box-sizing: border-box;
+}
+
+.ball-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #1C1533;
+  box-sizing: border-box;
+}
+
+.intro-title {
+  font-family: 'Bungee', sans-serif;
+  font-size: 34px;
+  color: var(--text-body);
+  margin: 0;
+}
+
+.intro-subtitle {
+  font-size: 15px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.primary-btn {
+  border: none;
+  border-radius: 100px;
+  padding: 16px 32px;
+  cursor: pointer;
+  background: linear-gradient(120deg, var(--violet-deep), var(--cyan));
+  color: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  margin-top: 6px;
+}
+
+.skip-for-now-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-top: -4px;
+}
+
+/* ---- Error state ---- */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  padding: 80px 24px;
+}
+
+.error-message {
+  font-family: 'Bungee', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-body);
+  margin: 0;
+}
+
+.error-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.error-retry-btn {
+  margin-top: 8px;
+  border: none;
+  border-radius: 100px;
+  padding: 12px 24px;
+  background: linear-gradient(120deg, var(--violet-deep), var(--cyan));
+  color: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+/* ---- Quiz card ---- */
+.quiz-card {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 28px;
+  padding: 30px 30px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  box-sizing: border-box;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.42);
+}
+
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.back-btn {
+  border: 1px solid var(--border-soft);
+  background: var(--overlay-06);
+  color: var(--text-body);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.progress-track {
+  flex: 1;
+  height: 8px;
+  border-radius: 5px;
+  background: var(--overlay-08);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--violet-deep), var(--cyan));
+  box-shadow: 0 0 12px var(--cyan);
+  transition: width 0.3s ease;
+}
+
+.step-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.question-title {
+  font-family: 'Bungee', sans-serif;
+  font-size: clamp(20px, 3.4vw, 26px);
+  color: var(--text-body);
+  margin: 0;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* Fixed height (not just padding) so every answer card is the same size
+   regardless of question — a 1-word label ("Fire") and a long one ("I do
+   not have a favorite type") would otherwise produce visibly different
+   card heights from question to question. */
+.option-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 136px;
+  background: var(--overlay-05);
+  border: 1.5px solid var(--border-soft);
+  border-radius: 20px;
+  padding: 16px 14px;
+  cursor: pointer;
+  text-align: center;
+  box-sizing: border-box;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+}
+
+.option-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--cyan);
+  box-shadow: 0 16px 34px rgba(94, 234, 212, 0.22);
+}
+
+/* Fixed-height label area (room for 2 lines) so the "Choose" arrow below it
+   always sits in the same spot whether the label wraps or not. */
+.option-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  line-height: 1.25;
+  color: var(--text-body);
+}
+
+.option-choose {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--cyan);
+  font-weight: 700;
+}
+
+.quiz-hint {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ---- Results ---- */
+.results-shell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  max-width: 900px;
+}
+
+.results-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: var(--yellow);
+  letter-spacing: 1px;
+}
+
+.kicker-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 10px var(--cyan);
+}
+
+.results-title {
+  font-family: 'Bungee', sans-serif;
+  font-size: clamp(24px, 3.6vw, 32px);
+  color: var(--text-body);
+  margin: 6px 0 0;
+  line-height: 1.15;
+}
+
+.results-title-accent {
+  color: var(--cyan);
+}
+
+.results-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+  max-width: 440px;
+}
+
+.action-error {
+  color: var(--danger);
+  font-size: 13px;
+  margin: 4px 0 0;
+}
+
+.results-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.rec-card-outer {
+  position: relative;
+  width: 250px;
+  border-radius: 24px;
+  padding: 3px;
+  background: linear-gradient(135deg, var(--violet-deep), var(--cyan), var(--yellow), var(--violet-deep));
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.3);
+  transition: transform 0.18s ease;
+}
+
+.rec-card-outer:hover {
+  transform: translateY(-6px);
+}
+
+.rec-card-outer.top-pick {
+  box-shadow: 0 24px 54px rgba(253, 230, 138, 0.35);
+}
+
+/* Fixed height — every card is identical size regardless of how long its
+   reason text is or how many type badges it has, so the row never jitters. */
+.rec-card-inner {
+  position: relative;
+  height: 478px;
+  background: var(--surface);
+  border-radius: 21px;
+  padding: 24px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.rank-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: var(--violet);
+  color: #1C1533;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  padding: 7px 12px;
+  border-radius: 100px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+}
+
+.rank-badge.gold {
+  background: var(--yellow);
+}
+
+.rec-art {
+  position: relative;
+  width: 100%;
+  height: 112px;
+  border-radius: 16px;
+  margin-top: 14px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.rec-art img {
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.3));
+}
+
+.rec-name {
+  font-family: 'Bungee', sans-serif;
+  font-size: 19px;
+  color: var(--text-body);
+  margin-top: 4px;
+  text-transform: capitalize;
+}
+
+/* Fixed height so a 1-type vs 2-type Pokémon never shifts what's below it. */
+.rec-type-row {
+  height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.type-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px 4px 7px;
+  border-radius: 100px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: capitalize;
+}
+
+.type-glyph {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.match-row {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.match-track {
+  height: 6px;
+  border-radius: 4px;
+  background: var(--overlay-08);
+  overflow: hidden;
+}
+
+.match-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--violet-deep), var(--cyan));
+}
+
+.match-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* Fixed height (~3 lines) so shorter/longer reason strings never move the
+   action buttons below them. */
+.rec-reason-wrap {
+  width: 100%;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.rec-reason {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.rec-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.rec-action-btn {
+  width: 100%;
+  border: none;
+  border-radius: 100px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+.rec-action-btn.primary {
+  background: linear-gradient(120deg, var(--violet-deep), var(--cyan));
+  color: #fff;
+}
+
+.rec-action-btn.outline {
+  background: transparent;
+  border: 1.5px solid var(--cyan);
+  color: var(--cyan);
+}
+
+.rec-action-btn:disabled {
+  cursor: default;
+  background: var(--overlay-06);
+  border-color: transparent;
+  color: var(--text-muted);
+}
+
+.rec-action-btn.ghost {
+  background: transparent;
+  border: 1px solid var(--border-soft);
+  color: var(--text-body);
+}
+
+.results-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 26px;
+}
+
+.retake-btn {
+  border: 1.5px solid var(--border-soft);
+  background: transparent;
+  color: var(--text-body);
+  border-radius: 100px;
+  padding: 11px 20px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.skip-link {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .options-grid {
+    grid-template-columns: 1fr;
+  }
+}

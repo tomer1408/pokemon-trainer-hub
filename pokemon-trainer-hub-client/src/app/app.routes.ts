@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuardFn } from '@auth0/auth0-angular';
 import { onboardingGuard } from './shared/onboarding-guard';
+import { starterQuizGuard } from './shared/starter-quiz-guard';
 
 // Every route below (except '' and 'callback') is wrapped in authGuardFn — the
 // SDK's official guard, which redirects unauthenticated visitors straight to
@@ -25,7 +26,7 @@ export const routes: Routes = [
   },
   {
     path: 'home',
-    canActivate: [authGuardFn],
+    canActivate: [authGuardFn, starterQuizGuard],
     loadComponent: () => import('./pages/home/home').then((m) => m.Home),
   },
   {
@@ -58,6 +59,11 @@ export const routes: Routes = [
     path: 'battle',
     canActivate: [authGuardFn],
     loadComponent: () => import('./pages/battle/battle').then((m) => m.Battle),
+  },
+  {
+    path: 'starter-quiz',
+    canActivate: [authGuardFn],
+    loadComponent: () => import('./pages/starter-quiz/starter-quiz').then((m) => m.StarterQuiz),
   },
   {
     // Not auth-guarded on purpose — a mistyped URL shouldn't force a

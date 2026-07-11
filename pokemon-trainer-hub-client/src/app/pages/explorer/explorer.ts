@@ -121,6 +121,7 @@ export class Explorer {
                   baseExperience: f.baseExperience,
                   types: f.types,
                   spriteUrl: f.spriteUrl,
+                  stats: f.stats,
                 })),
                 q.sort,
               );

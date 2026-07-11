@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, of } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
 import { API_BASE } from './api-base';
 
 export interface TrainerProfile {
@@ -18,6 +18,9 @@ export interface TrainerProfile {
   teamName: string | null;
   // Only present on responses (GET/POST) — never sent by the client on save.
   createdAt?: string;
+  // Real, server-side flag — not client storage — so it's tied to the
+  // actual logged-in user instead of one browser's localStorage.
+  hasCompletedStarterQuiz?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -44,5 +47,14 @@ export class ProfileService {
   // (first save) and the Profile page (edits) against the same endpoint.
   saveProfile(profile: TrainerProfile): Observable<TrainerProfile> {
     return this.http.post<TrainerProfile>(`${API_BASE}/profile`, profile);
+  }
+
+  // Real, server-side record that this trainer finished the Starter Quiz —
+  // the user is identified from the JWT server-side, never sent from here.
+  markStarterQuizCompleted(): Observable<boolean> {
+    return this.http.patch(`${API_BASE}/profile/starter-quiz`, {}).pipe(
+      map(() => true),
+      catchError(() => of(false)),
+    );
   }
 }
