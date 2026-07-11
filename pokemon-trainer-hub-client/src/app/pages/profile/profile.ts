@@ -13,6 +13,7 @@ import { getTeamPower, getTeamTier } from '../../shared/team-power';
 import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
 import { ThemeService } from '../../shared/theme';
 import { LoadingScreen } from '../../shared/loading-screen/loading-screen';
+import { TeamNameGeneratorModal } from '../../shared/team-name-generator-modal/team-name-generator-modal';
 
 interface ProfileDraft {
   trainerName: string;
@@ -47,7 +48,7 @@ type ProfileFetchStatus = 'ok' | 'missing' | 'error';
 // read-only in Personal Details; policy acceptance is likewise permanent.
 @Component({
   selector: 'app-profile',
-  imports: [FormsModule, RouterLink, LoadingScreen],
+  imports: [FormsModule, RouterLink, LoadingScreen, TeamNameGeneratorModal],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
@@ -107,6 +108,8 @@ export class Profile {
   protected readonly saving = signal(false);
   protected readonly saveError = signal<string | null>(null);
   protected readonly showSavedToast = signal(false);
+
+  protected readonly showNameGenerator = signal(false);
 
   protected readonly isDirty = computed(() => {
     const s = this.saved();
@@ -231,6 +234,22 @@ export class Profile {
   updateDraft(field: 'trainerName' | 'teamName', value: string): void {
     const d = this.draft();
     if (d) this.draft.set({ ...d, [field]: value });
+  }
+
+  openNameGenerator(): void {
+    this.showNameGenerator.set(true);
+  }
+
+  closeNameGenerator(): void {
+    this.showNameGenerator.set(false);
+  }
+
+  // The edit modal already has its own Save/Discard flow (confirmSaveChanges
+  // below) — a picked suggestion only updates the draft, exactly like typing
+  // it in by hand. It isn't persisted until the trainer hits Save Changes.
+  onNameSelected(name: string): void {
+    this.updateDraft('teamName', name);
+    this.showNameGenerator.set(false);
   }
 
   updateFavoriteType(value: PokemonType): void {

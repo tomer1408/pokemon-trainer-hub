@@ -10,12 +10,13 @@ import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
 import { ThemeService } from '../../shared/theme';
 import { PokemonDetailModal } from '../../shared/pokemon-detail-modal/pokemon-detail-modal';
 import { LoadingScreen } from '../../shared/loading-screen/loading-screen';
+import { TeamNameGeneratorModal } from '../../shared/team-name-generator-modal/team-name-generator-modal';
 
 const MAX_TEAM_SIZE = 5;
 
 @Component({
   selector: 'app-my-team',
-  imports: [RouterLink, PokemonDetailModal, LoadingScreen],
+  imports: [RouterLink, PokemonDetailModal, LoadingScreen, TeamNameGeneratorModal],
   templateUrl: './my-team.html',
   styleUrl: './my-team.css',
 })
@@ -26,8 +27,16 @@ export class MyTeam implements AfterViewInit {
   private readonly elementRef = inject(ElementRef<HTMLElement>);
   protected readonly theme = inject(ThemeService);
 
-  private readonly profile = toSignal(this.profileService.getProfile(), { initialValue: null });
+  private readonly profileRefresh = signal(0);
+  private readonly profile = toSignal(
+    toObservable(this.profileRefresh).pipe(switchMap(() => this.profileService.getProfile())),
+    { initialValue: null },
+  );
   protected readonly teamName = computed(() => this.profile()?.teamName || 'My Team');
+
+  protected readonly showNameGenerator = signal(false);
+  protected readonly savingName = signal(false);
+  protected readonly nameSaveError = signal<string | null>(null);
 
   // The page must never scroll — measures exactly how much viewport space is
   // left below the (real, live) navbar instead of guessing its height in
@@ -143,5 +152,33 @@ export class MyTeam implements AfterViewInit {
 
   retry(): void {
     this.teamRefresh.update((n) => n + 1);
+  }
+
+  openNameGenerator(): void {
+    this.nameSaveError.set(null);
+    this.showNameGenerator.set(true);
+  }
+
+  closeNameGenerator(): void {
+    this.showNameGenerator.set(false);
+  }
+
+  // "Use This Name" saves immediately — My Team has no draft/Save bar of
+  // its own for this field (unlike Onboarding/Profile edit), so the AI
+  // suggestion has to be persisted right away via ProfileService's
+  // lightweight PATCH, not just held in local state.
+  onNameSelected(name: string): void {
+    this.savingName.set(true);
+    this.nameSaveError.set(null);
+
+    this.profileService.updateTeamName(name).subscribe((result) => {
+      this.savingName.set(false);
+      if (result.ok) {
+        this.profileRefresh.update((n) => n + 1);
+        this.showNameGenerator.set(false);
+      } else {
+        this.nameSaveError.set(result.message);
+      }
+    });
   }
 }

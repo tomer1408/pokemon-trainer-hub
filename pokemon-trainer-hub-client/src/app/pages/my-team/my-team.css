@@ -118,6 +118,23 @@
   margin: 0;
 }
 
+.ai-name-btn {
+  border: 1px solid var(--border-soft);
+  background: var(--overlay-05);
+  color: var(--text-body);
+  border-radius: 100px;
+  padding: 7px 14px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.ai-name-btn:hover {
+  border-color: var(--violet-deep);
+}
+
 .header-actions {
   display: flex;
   align-items: stretch;

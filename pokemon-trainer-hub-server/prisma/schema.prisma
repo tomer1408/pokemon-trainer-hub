@@ -93,6 +93,10 @@ model TrainerProfile {
   acceptedPolicyAt     DateTime?
   policyVersion        String?
   marketingEmailsOptIn Boolean   @default(false)
+  // Real, server-side best streak for the "Who's That Pokémon?" quiz — tied
+  // to the actual logged-in user (like hasCompletedStarterQuiz above),
+  // not browser localStorage. Only ever moves up (see routes/profile.js).
+  whosThatBestStreak Int @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

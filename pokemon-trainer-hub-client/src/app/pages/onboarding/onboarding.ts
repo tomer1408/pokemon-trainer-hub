@@ -10,6 +10,7 @@ import { PokemonService, PokemonDetail } from '../../core/pokemon';
 import { PROFILE_ICON_POKEMON_IDS } from '../../shared/profile-icons';
 import { calculateAgeRange, isBelowMinAge, isFutureDate } from '../../shared/age-range';
 import { PolicyModal, PolicyType } from '../../shared/policy-modal/policy-modal';
+import { TeamNameGeneratorModal } from '../../shared/team-name-generator-modal/team-name-generator-modal';
 
 interface OnboardingForm {
   firstName: string;
@@ -34,7 +35,7 @@ interface OnboardingForm {
 // instead of the mockup's colored placeholder circles.
 @Component({
   selector: 'app-onboarding',
-  imports: [FormsModule, PolicyModal],
+  imports: [FormsModule, PolicyModal, TeamNameGeneratorModal],
   templateUrl: './onboarding.html',
   styleUrl: './onboarding.css',
 })
@@ -53,6 +54,11 @@ export class Onboarding {
   // made — canSubmit() below still always gates the button itself.
   protected readonly submitted = signal(false);
   protected readonly openPolicyModal = signal<PolicyType | null>(null);
+  // The trainer has no Dream Team yet at this point in the flow — the
+  // generator modal itself always shows its "add a Pokémon first" state
+  // here (see [teamEmpty]="true" in the template), so this button never
+  // pretends the AI drew on real team data that doesn't exist.
+  protected readonly showNameGenerator = signal(false);
 
   protected readonly form = signal<OnboardingForm>({
     firstName: '',
@@ -138,6 +144,22 @@ export class Onboarding {
 
   closePolicy(): void {
     this.openPolicyModal.set(null);
+  }
+
+  openNameGenerator(): void {
+    this.showNameGenerator.set(true);
+  }
+
+  closeNameGenerator(): void {
+    this.showNameGenerator.set(false);
+  }
+
+  // Onboarding has no Save action of its own for this field — it's just
+  // part of the same form submitted by submitProfile() below, so picking a
+  // suggestion only fills the field locally; nothing is persisted yet.
+  onNameSelected(name: string): void {
+    this.updateField('teamName', name);
+    this.showNameGenerator.set(false);
   }
 
   submitProfile(): void {

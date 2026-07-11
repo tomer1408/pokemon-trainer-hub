@@ -1,0 +1,121 @@
+<div class="quiz-page" [class.light]="theme.isLight()">
+  <div class="content">
+    <a routerLink="/home" class="back-link">&larr; Back to Home</a>
+
+    <div class="header-block">
+      <span class="eyebrow">DAILY QUIZ</span>
+      <h1 class="page-title">Who's That Pok&eacute;mon?</h1>
+      <p class="page-subtitle">Guess the Pok&eacute;mon from its silhouette before the timer runs out. Keep your streak alive!</p>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-chip">
+        <span class="stat-label">SCORE</span>
+        <span class="stat-value">{{ score() }}</span>
+      </div>
+      <div class="stat-chip">
+        <span class="stat-label">STREAK</span>
+        <span class="stat-value" [class.streak-active]="streak() > 0">{{ streak() }}</span>
+      </div>
+      <div class="stat-chip">
+        <span class="stat-label">BEST</span>
+        <span class="stat-value stat-value-gold">{{ best() }}</span>
+      </div>
+      <div class="stat-chip">
+        <span class="stat-label">ROUND</span>
+        <span class="stat-value">{{ roundNumber() }}</span>
+      </div>
+    </div>
+
+    @if (roundError(); as err) {
+      <div class="error-state">
+        <p class="error-message">{{ err }}</p>
+        <button type="button" class="error-retry-btn" (click)="retry()">Try again</button>
+      </div>
+    } @else if (loadingRound()) {
+      <div class="quiz-card loading-card">
+        <div class="typing-bubble">
+          <span class="typing-dot" [style.animation-delay.s]="0"></span>
+          <span class="typing-dot" [style.animation-delay.s]="0.15"></span>
+          <span class="typing-dot" [style.animation-delay.s]="0.3"></span>
+        </div>
+      </div>
+    } @else if (round(); as r) {
+      <div class="quiz-card">
+        <!-- silhouette stage -->
+        <div class="stage" [style.background]="typeColor(r.target.types[0]) + (revealed() ? '22' : '11')">
+          <div class="sil-wrap" [class.revealed]="revealed()">
+            @if (r.target.spriteUrl) {
+              <img
+                class="sil-img"
+                [src]="r.target.spriteUrl"
+                alt="{{ revealed() ? r.target.name : 'mystery Pokémon' }}"
+                [style.filter]="revealed() ? 'none' : 'brightness(0)'"
+              />
+            }
+          </div>
+          @if (revealed()) {
+            <div class="reveal-tag">
+              <span
+                class="type-pill"
+                [style.background]="typeColor(r.target.types[0]) + '33'"
+                [style.color]="typeColor(r.target.types[0])"
+              >
+                <span class="type-glyph" [style.background]="typeColor(r.target.types[0])"></span>{{ r.target.types[0] }}
+              </span>
+              <span class="reveal-name">{{ r.target.name }}</span>
+            </div>
+          }
+        </div>
+
+        <!-- timer -->
+        @if (notRevealed()) {
+          <div class="timer-track">
+            <div class="timer-fill" [style.width.%]="timerPct()"></div>
+          </div>
+        }
+
+        <!-- prompt / feedback -->
+        @if (notRevealed()) {
+          <div class="prompt-text">Who's that Pok&eacute;mon?</div>
+        } @else {
+          <div class="feedback-text" [class.correct]="wasCorrect()" [class.wrong]="!wasCorrect()">{{ feedbackText() }}</div>
+        }
+
+        <!-- options -->
+        <div class="options-grid">
+          @for (o of options(); track o.id) {
+            <button
+              type="button"
+              class="option-btn"
+              [class.correct]="revealed() && o.isTarget"
+              [class.wrong-pick]="revealed() && o.isPicked && !o.isTarget"
+              [class.dimmed]="revealed() && !o.isTarget && !o.isPicked"
+              [disabled]="revealed()"
+              (click)="pick(o.name)"
+            >
+              <span
+                class="option-dot"
+                [style.background]="revealed() ? typeColor(o.types[0]) : 'currentColor'"
+                [style.opacity]="revealed() ? 1 : 0.5"
+              ></span>
+              {{ o.name }}
+              @if (revealed() && o.isTarget) {
+                <span class="option-mark option-mark-correct">&check;</span>
+              } @else if (revealed() && o.isPicked) {
+                <span class="option-mark option-mark-wrong">&cross;</span>
+              }
+            </button>
+          }
+        </div>
+
+        <!-- next -->
+        @if (revealed()) {
+          <div class="next-row">
+            <button type="button" class="next-btn" (click)="next()">Next Pok&eacute;mon &rarr;</button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,79 @@
+<div class="dim-overlay" [class.light]="isLight">
+  <div class="modal-outer">
+    <div class="modal-inner">
+      <div class="modal-header">
+        <h2 class="modal-title">Generate Team Name with AI</h2>
+      </div>
+
+      @if (teamEmpty) {
+        <p class="empty-message">Add at least one Pok&eacute;mon before generating a team name.</p>
+        <div class="actions-row">
+          <button type="button" class="secondary-btn" (click)="close()">Close</button>
+        </div>
+      } @else {
+        <p class="modal-sub">Pick a style, then generate 3 name ideas based on your real Dream Team.</p>
+
+        <div class="style-row">
+          @for (s of styles; track s) {
+            <button
+              type="button"
+              class="style-chip"
+              [class.selected]="selectedStyle() === s"
+              [disabled]="loading()"
+              (click)="selectStyle(s)"
+            >
+              {{ s }}
+            </button>
+          }
+        </div>
+
+        @if (loading()) {
+          <div class="typing-bubble">
+            <span class="typing-dot" [style.animation-delay.s]="0"></span>
+            <span class="typing-dot" [style.animation-delay.s]="0.15"></span>
+            <span class="typing-dot" [style.animation-delay.s]="0.3"></span>
+          </div>
+        } @else if (suggestions().length === 0) {
+          <div class="actions-row">
+            <button type="button" class="generate-btn" (click)="generate()">Generate</button>
+            <button type="button" class="cancel-btn" (click)="close()">Cancel</button>
+          </div>
+        }
+
+        @if (generationError(); as err) {
+          <p class="error-text">{{ err }}</p>
+        }
+
+        @if (suggestions().length > 0) {
+          <div class="suggestions-list">
+            @for (name of suggestions(); track name) {
+              <div class="suggestion-row">
+                <span class="suggestion-name">{{ name }}</span>
+                <button type="button" class="use-btn" [disabled]="saving" (click)="useThisName(name)">
+                  Use This Name
+                </button>
+              </div>
+            }
+          </div>
+
+          @if (source() === 'fallback') {
+            <p class="fallback-note">AI is unavailable right now — here are quick suggestions instead.</p>
+          }
+
+          @if (saveError) {
+            <p class="error-text">{{ saveError }}</p>
+          }
+
+          <div class="actions-row">
+            <button type="button" class="secondary-btn" [disabled]="loading() || saving" (click)="generate()">
+              Generate Again
+            </button>
+            <button type="button" class="cancel-btn" [disabled]="saving" (click)="close()">
+              {{ saving ? 'Saving…' : 'Cancel' }}
+            </button>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</div>

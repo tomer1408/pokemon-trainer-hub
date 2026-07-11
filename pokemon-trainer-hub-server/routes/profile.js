@@ -2,6 +2,7 @@ const express = require('express');
 const prisma = require('../services/prisma');
 const jwtCheck = require('../middleware/auth');
 const { MIN_AGE, calculateAge, calculateAgeRange } = require('../services/ageRange');
+const { validateTeamNameValue } = require('../services/teamNameFallback');
 
 const router = express.Router();
 
@@ -26,6 +27,7 @@ const PROFILE_SELECT = {
   acceptedPolicyAt: true,
   policyVersion: true,
   marketingEmailsOptIn: true,
+  whosThatBestStreak: true,
   createdAt: true,
 };
 
@@ -160,6 +162,62 @@ router.patch('/starter-quiz', jwtCheck, async (req, res) => {
     const profile = await prisma.trainerProfile.update({
       where: { auth0UserId: req.auth.payload.sub },
       data: { hasCompletedStarterQuiz: true },
+      select: PROFILE_SELECT,
+    });
+    res.json(withAgeRange(profile));
+  } catch (err) {
+    res.status(404).json({ message: 'No profile found for this user.' });
+  }
+});
+
+// Updates ONLY the team name — lighter than the full POST / upsert above,
+// so callers that already have a name in hand (e.g. the AI Team Name
+// Generator on My Team, which doesn't hold a full profile draft) don't need
+// to fetch and resend the entire profile just to change one field. The
+// value is validated here regardless of where it came from — an AI
+// suggestion is not trusted just because it came from the assistant.
+router.patch('/team-name', jwtCheck, async (req, res) => {
+  const validation = validateTeamNameValue(req.body.name);
+  if (!validation.ok) {
+    return res.status(400).json({ message: validation.message });
+  }
+
+  try {
+    const profile = await prisma.trainerProfile.update({
+      where: { auth0UserId: req.auth.payload.sub },
+      data: { teamName: validation.name },
+      select: PROFILE_SELECT,
+    });
+    res.json(withAgeRange(profile));
+  } catch (err) {
+    res.status(404).json({ message: 'No profile found for this user.' });
+  }
+});
+
+// Records a new "Who's That Pokémon?" streak — real, server-side, tied to
+// the JWT-identified user (not browser localStorage), same reasoning as
+// /starter-quiz above. Only ever moves the stored best up: the client sends
+// whatever streak it just reached, and the server keeps the higher of that
+// and what's already on file, so a stale/out-of-order request can never
+// regress a trainer's real best.
+router.patch('/whos-that-streak', jwtCheck, async (req, res) => {
+  const streak = req.body.streak;
+  if (!Number.isInteger(streak) || streak < 0) {
+    return res.status(400).json({ message: 'streak must be a non-negative integer.' });
+  }
+
+  try {
+    const existing = await prisma.trainerProfile.findUnique({
+      where: { auth0UserId: req.auth.payload.sub },
+      select: { whosThatBestStreak: true },
+    });
+    if (!existing) {
+      return res.status(404).json({ message: 'No profile found for this user.' });
+    }
+
+    const profile = await prisma.trainerProfile.update({
+      where: { auth0UserId: req.auth.payload.sub },
+      data: { whosThatBestStreak: Math.max(existing.whosThatBestStreak, streak) },
       select: PROFILE_SELECT,
     });
     res.json(withAgeRange(profile));

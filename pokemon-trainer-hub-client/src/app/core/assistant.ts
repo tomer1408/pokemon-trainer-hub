@@ -23,6 +23,18 @@ export interface ChatReply {
   pokemon: PokemonSummary | null;
 }
 
+export type TeamNameStyle = 'Epic' | 'Competitive' | 'Mysterious' | 'Cute' | 'Funny';
+
+export const TEAM_NAME_STYLES: TeamNameStyle[] = ['Epic', 'Competitive', 'Mysterious', 'Cute', 'Funny'];
+
+export interface TeamNameSuggestionsResponse {
+  names: string[];
+  // 'fallback' means Gemini was unavailable/invalid/rate-limited and the
+  // server's deterministic, non-AI generator produced these instead — the
+  // feature still works, just without real LLM input.
+  source?: 'ai' | 'fallback';
+}
+
 // Carries the server's specific error message through (e.g. "hit today's AI
 // usage limit") instead of collapsing every failure into a generic string.
 export type AssistantResult<T> = { ok: true; value: T } | { ok: false; message: string };
@@ -60,6 +72,16 @@ export class AssistantService {
   // distinct from the structured type-recommendation calls above.
   chat(messages: ChatTurn[]): Observable<AssistantResult<ChatReply>> {
     return this.http.post<ChatReply>(`${API_BASE}/assistant/chat`, { messages }).pipe(
+      map((value) => ({ ok: true as const, value })),
+      catchError((err: HttpErrorResponse) => of(toErrorResult(err))),
+    );
+  }
+
+  // The server always fetches the current user's real Dream Team itself
+  // (from the JWT) before calling the model — only the chosen style is
+  // sent from here, never any team/Pokémon data.
+  generateTeamNames(style: TeamNameStyle): Observable<AssistantResult<TeamNameSuggestionsResponse>> {
+    return this.http.post<TeamNameSuggestionsResponse>(`${API_BASE}/assistant/team-name`, { style }).pipe(
       map((value) => ({ ok: true as const, value })),
       catchError((err: HttpErrorResponse) => of(toErrorResult(err))),
     );

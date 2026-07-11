@@ -11,6 +11,7 @@ const favoritesRouter = require('./routes/favorites');
 const notesRouter = require('./routes/notes');
 const assistantRouter = require('./routes/assistant');
 const supportRouter = require('./routes/support');
+const quizRouter = require('./routes/quiz');
 
 const app = express();
 // Render (and most hosts) assign the port via this env var — 3000 stays as
@@ -60,6 +61,7 @@ app.use('/api/favorites', favoritesRouter);
 app.use('/api/notes', notesRouter);
 app.use('/api/assistant', assistantRouter);
 app.use('/api/support', supportRouter);
+app.use('/api/quiz', quizRouter);
 
 // Catches every error from the routes above (including auth failures) and
 // always responds with clean JSON instead of Express's default HTML+stack-trace page.

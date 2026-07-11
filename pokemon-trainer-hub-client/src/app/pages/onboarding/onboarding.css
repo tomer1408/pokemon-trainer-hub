@@ -230,6 +230,31 @@
   cursor: pointer;
 }
 
+.input-with-ai {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input-with-ai input {
+  flex: 1;
+  min-width: 0;
+}
+
+.ai-name-btn {
+  flex-shrink: 0;
+  border: 1px solid var(--border-soft);
+  background: transparent;
+  color: var(--cyan);
+  border-radius: 100px;
+  padding: 7px 14px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 .field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

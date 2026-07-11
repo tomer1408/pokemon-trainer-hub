@@ -2,6 +2,7 @@ const { ChatGoogleGenerativeAI } = require('@langchain/google-genai');
 const { SystemMessage, HumanMessage, AIMessage } = require('@langchain/core/messages');
 const { z } = require('zod');
 const { getListByType, fetchPokemonDetail } = require('./pokeapi');
+const { VALID_STYLES, MAX_NAME_LENGTH, buildFallbackNames, sanitizeNames } = require('./teamNameFallback');
 
 // Only the most recent messages are sent — keeps token usage (and cost/
 // quota, even on the free tier) bounded regardless of how long a
@@ -44,6 +45,25 @@ const RecommendationSchema = z.object({
   type: z.enum(POKEMON_TYPES),
   reasoning: z.string(),
 });
+
+// The model only ever decides the 3 name strings themselves — it never sees
+// (and can't invent) anything beyond the real team summary handed to it in
+// the prompt. sanitizeNames() below re-validates every name before it's
+// trusted, regardless of what the schema already enforced.
+const TeamNameSchema = z.object({
+  names: z.array(z.string().min(1).max(MAX_NAME_LENGTH)).length(3),
+});
+
+// Generous but bounded — a hung Gemini call shouldn't hang the request
+// forever; withTimeout() below rejects and the caller falls back.
+const TEAM_NAME_TIMEOUT_MS = 12000;
+
+function withTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Team name generation timed out')), ms)),
+  ]);
+}
 
 // Configurable so a model rename/deprecation is a one-line env var change,
 // not a code change. Defaults to the model available on the free tier at
@@ -130,6 +150,61 @@ async function chatWithAssistant(history) {
   return { text: result.text, pokemon };
 }
 
+// Default model call, split out so tests can inject a fake `invoke` below
+// instead of ever reaching real Gemini.
+function invokeTeamNameModel(prompt) {
+  return buildModel().withStructuredOutput(TeamNameSchema).invoke(prompt);
+}
+
+// Real LLM naming of the trainer's actual Dream Team. Unlike analyzeTeam/
+// queryDescription/chatWithAssistant above, this feature must keep working
+// even when Gemini fails outright (error, timeout, quota, or an invalid/
+// duplicate response) — every failure mode below falls through to
+// buildFallbackNames(), a deterministic, non-AI generator, so the caller
+// always gets exactly 3 usable suggestions and a `source` flag saying which
+// path produced them.
+//
+// `deps` is test-only dependency injection (`invoke`/`timeoutMs`) — production
+// callers never pass it, so real behavior is unchanged.
+async function generateTeamNames(team, style, deps = {}) {
+  const safeStyle = VALID_STYLES.includes(style) ? style : 'Epic';
+  const invoke = deps.invoke ?? invokeTeamNameModel;
+  const timeoutMs = deps.timeoutMs ?? TEAM_NAME_TIMEOUT_MS;
+
+  try {
+    const teamSummary = team
+      .map((m) => `${m.pokemonName} (types: ${m.types.join('/')}, power: ${m.baseExperience})`)
+      .join('; ');
+
+    const result = await withTimeout(
+      invoke(
+        `You are naming a Pokémon trainer's Dream Team.\n\n` +
+        `The real team is:\n${teamSummary}\n\n` +
+        `Selected style: ${safeStyle}\n\n` +
+        `Generate exactly 3 short, distinct team names inspired by the team's types, strengths, ` +
+        `and overall identity.\n\n` +
+        `Rules:\n` +
+        `- Do not invent Pokémon or team facts.\n` +
+        `- Do not claim the team contains Pokémon that were not listed above.\n` +
+        `- Do not provide explanations — return only the structured result.\n` +
+        `- Keep every name under ${MAX_NAME_LENGTH} characters.\n` +
+        `- Match the selected style.\n` +
+        `- Avoid offensive, inappropriate, or adult wording.\n` +
+        `- Avoid trademark-style names copied from existing franchises.\n` +
+        `- Only include a real Pokémon name from the team above if it fits naturally.`,
+      ),
+      timeoutMs,
+    );
+
+    const clean = sanitizeNames(result.names);
+    if (clean) return { names: clean, source: 'ai' };
+  } catch (err) {
+    console.error('Team name generation failed, using fallback:', err.message);
+  }
+
+  return { names: buildFallbackNames(team, safeStyle), source: 'fallback' };
+}
+
 // The free tier's daily/per-minute quota is real and low (Gemini returns a
 // 429 with "quota exceeded" wording, not a generic failure) — routes use
 // this to tell that case apart from a real outage and show an honest
@@ -139,4 +214,12 @@ function isRateLimitError(err) {
   return msg.includes('429') || msg.includes('quota exceeded') || msg.includes('resource_exhausted');
 }
 
-module.exports = { analyzeTeam, queryDescription, getStrongestOfType, chatWithAssistant, isRateLimitError };
+module.exports = {
+  analyzeTeam,
+  queryDescription,
+  getStrongestOfType,
+  chatWithAssistant,
+  generateTeamNames,
+  isRateLimitError,
+  VALID_STYLES,
+};

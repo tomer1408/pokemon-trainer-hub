@@ -748,6 +748,36 @@ select:focus {
   grid-column: 1 / -1;
 }
 
+.input-with-ai {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input-with-ai input {
+  flex: 1;
+  min-width: 0;
+}
+
+.ai-name-btn {
+  flex-shrink: 0;
+  border: 1px solid var(--border-soft);
+  background: var(--overlay-05);
+  color: var(--text-body);
+  border-radius: 100px;
+  padding: 7px 14px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s ease;
+}
+
+.ai-name-btn:hover {
+  border-color: var(--violet-deep);
+}
+
 .chip-row {
   display: flex;
   flex-wrap: wrap;

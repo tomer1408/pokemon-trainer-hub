@@ -3,8 +3,8 @@
   --surface: #1A1533;
   --surface-raised: #221B45;
   --border-soft: rgba(196, 181, 253, 0.16);
-  --text-body: #F1EEFB;
-  --text-muted: rgba(230, 225, 250, 0.6);
+  --text-body: #FFFFFF;
+  --text-muted: rgba(227, 225, 233, 0.6);
   --violet: #A78BFA;
   --violet-deep: #7C3AED;
   --cyan: #5EEAD4;
@@ -82,9 +82,7 @@
    needs the darker, readable variants to keep contrast on a white surface. */
 .home.light .team-kicker,
 .home.light .rec-kicker,
-.home.light .rec-quiz-link,
-.home.light .potd-cta,
-.home.light .battle-promo-cta {
+.home.light .potd-cta {
   color: #0D827A;
 }
 
@@ -472,7 +470,8 @@
 }
 
 .manage-link,
-.rec-cta {
+.rec-cta,
+.quiz-promo-cta {
   display: inline-flex;
   align-items: center;
   text-decoration: none;
@@ -480,6 +479,7 @@
 
 .manage-link,
 .rec-cta,
+.quiz-promo-cta,
 .tier-pill,
 .type-pill,
 .potd-badge {
@@ -758,16 +758,8 @@
   font-size: 20px;
 }
 
-.rec-quiz-link {
-  display: inline-block;
-  font-weight: 700;
-  font-size: 14px;
-  color: var(--cyan);
-  text-decoration: none;
-  margin-top: 6px;
-}
-
-.rec-cta {
+.rec-cta,
+.quiz-promo-cta {
   flex-shrink: 0;
   gap: 8px;
   font-family: 'Bungee', sans-serif;
@@ -778,7 +770,8 @@
   transition: transform 0.15s ease;
 }
 
-.rec-cta:hover {
+.rec-cta:hover,
+.quiz-promo-cta:hover {
   transform: translateY(-3px) scale(1.02);
 }
 
@@ -803,11 +796,61 @@
   cursor: pointer;
 }
 
-.feature-row {
+.feature-row,
+.next-steps-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
   align-items: stretch;
+}
+
+/* .quiz-promo-card sits alongside .rec-card on the same element — unlike
+   rec-card (a <div>, only its inner .rec-cta is a link), the whole quiz
+   card is itself a clickable <a>, so it gets its own hover lift. */
+.quiz-promo-card {
+  text-decoration: none;
+  transition: transform 0.15s ease;
+}
+
+.quiz-promo-card:hover {
+  transform: translateY(-3px);
+}
+
+.quiz-promo-icon-wrap {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--overlay-08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-bottom: 2px;
+}
+
+.quiz-promo-sprite {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  filter: brightness(0);
+  opacity: 0.55;
+}
+
+.quiz-promo-mark {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(120deg, var(--violet-deep), var(--cyan));
+  color: #fff;
+  font-family: 'Bungee', sans-serif;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .potd-card {

@@ -76,6 +76,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/support/support').then((m) => m.Support),
   },
   {
+    path: 'whos-that-pokemon',
+    canActivate: [authGuardFn],
+    loadComponent: () =>
+      import('./pages/whos-that-pokemon/whos-that-pokemon').then((m) => m.WhosThatPokemon),
+  },
+  {
     // Not auth-guarded on purpose — a mistyped URL shouldn't force a
     // logged-out visitor through Auth0 login just to see "page not found".
     path: '**',

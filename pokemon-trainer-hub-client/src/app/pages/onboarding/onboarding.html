@@ -102,13 +102,16 @@
         <label class="field-group">
           <span class="field-label">Team Name</span>
           <div class="helper-text">Name your Dream Team.</div>
-          <input
-            type="text"
-            placeholder="e.g. Thunder Squad, Fire Legends, Pika Crew"
-            name="teamName"
-            [ngModel]="form().teamName"
-            (ngModelChange)="updateField('teamName', $event)"
-          />
+          <div class="input-with-ai">
+            <input
+              type="text"
+              placeholder="e.g. Thunder Squad, Fire Legends, Pika Crew"
+              name="teamName"
+              [ngModel]="form().teamName"
+              (ngModelChange)="updateField('teamName', $event)"
+            />
+            <button type="button" class="ai-name-btn" (click)="openNameGenerator()">&#10024; Generate with AI</button>
+          </div>
         </label>
       </div>
 
@@ -214,5 +217,13 @@
 
   @if (openPolicyModal(); as t) {
     <app-policy-modal [type]="t" (closed)="closePolicy()" />
+  }
+
+  @if (showNameGenerator()) {
+    <app-team-name-generator-modal
+      [teamEmpty]="true"
+      (closed)="closeNameGenerator()"
+      (nameSelected)="onNameSelected($event)"
+    />
   }
 </div>

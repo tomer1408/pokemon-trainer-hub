@@ -12,6 +12,7 @@
     <div class="header-row">
       <div class="header-block">
         <h1 class="page-title">{{ teamName() }}</h1>
+        <button type="button" class="ai-name-btn" (click)="openNameGenerator()">&#10024; Generate with AI</button>
       </div>
     </div>
 
@@ -144,6 +145,17 @@
       (closed)="closeDetail()"
       (toggleFavorite)="toggleFavorite(id)"
       (removeFromTeam)="removeFromTeamModal(id)"
+    />
+  }
+
+  @if (showNameGenerator()) {
+    <app-team-name-generator-modal
+      [isLight]="theme.isLight()"
+      [teamEmpty]="!hasTeam()"
+      [saving]="savingName()"
+      [saveError]="nameSaveError()"
+      (closed)="closeNameGenerator()"
+      (nameSelected)="onNameSelected($event)"
     />
   }
 </div>

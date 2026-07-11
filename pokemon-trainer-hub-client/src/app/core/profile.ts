@@ -1,8 +1,10 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, of } from 'rxjs';
 import { API_BASE } from './api-base';
 import { AgeRange } from '../shared/age-range';
+
+const TEAM_NAME_SAVE_FALLBACK_MESSAGE = 'Could not save the team name. Please try again.';
 
 export interface TrainerProfile {
   trainerName: string;
@@ -31,6 +33,10 @@ export interface TrainerProfile {
   // Response-only — derived server-side from dateOfBirth on every GET/POST,
   // never stored and never sent by the client.
   ageRange?: AgeRange | null;
+  // Real, server-side best streak for the "Who's That Pokémon?" quiz — not
+  // browser localStorage, tied to the actual logged-in user. Response-only;
+  // updated via updateWhosThatBestStreak() below, never sent on saveProfile().
+  whosThatBestStreak?: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -63,6 +69,31 @@ export class ProfileService {
   // the user is identified from the JWT server-side, never sent from here.
   markStarterQuizCompleted(): Observable<boolean> {
     return this.http.patch(`${API_BASE}/profile/starter-quiz`, {}).pipe(
+      map(() => true),
+      catchError(() => of(false)),
+    );
+  }
+
+  // Lightweight alternative to saveProfile() for callers that only have a
+  // name in hand (e.g. the AI Team Name Generator on My Team) — saves
+  // without needing to fetch and resend the whole profile. The server
+  // re-validates the name regardless of whether it came from free typing or
+  // an AI suggestion.
+  updateTeamName(name: string): Observable<{ ok: true } | { ok: false; message: string }> {
+    return this.http.patch(`${API_BASE}/profile/team-name`, { name }).pipe(
+      map((): { ok: true } | { ok: false; message: string } => ({ ok: true })),
+      catchError((err: HttpErrorResponse) =>
+        of({ ok: false as const, message: err.error?.message ?? TEAM_NAME_SAVE_FALLBACK_MESSAGE }),
+      ),
+    );
+  }
+
+  // Real, server-side record of a new "Who's That Pokémon?" streak — the
+  // server itself only ever keeps the higher of this and what's already on
+  // file, so this is safe to call every time a round ends, not just on an
+  // actual new best.
+  updateWhosThatBestStreak(streak: number): Observable<boolean> {
+    return this.http.patch(`${API_BASE}/profile/whos-that-streak`, { streak }).pipe(
       map(() => true),
       catchError(() => of(false)),
     );

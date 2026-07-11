@@ -238,13 +238,18 @@
 
             <label class="edit-field">
               <span class="field-label">Team Name</span>
-              <input
-                type="text"
-                name="teamName"
-                placeholder="Name your Dream Team (optional)"
-                [ngModel]="d.teamName"
-                (ngModelChange)="updateDraft('teamName', $event)"
-              />
+              <div class="input-with-ai">
+                <input
+                  type="text"
+                  name="teamName"
+                  placeholder="Name your Dream Team (optional)"
+                  [ngModel]="d.teamName"
+                  (ngModelChange)="updateDraft('teamName', $event)"
+                />
+                <button type="button" class="ai-name-btn" (click)="openNameGenerator()">
+                  &#10024; Generate with AI
+                </button>
+              </div>
             </label>
           </div>
 
@@ -298,5 +303,14 @@
 
   @if (showSavedToast()) {
     <div class="toast"><span class="toast-dot"></span>Profile saved successfully.</div>
+  }
+
+  @if (showNameGenerator()) {
+    <app-team-name-generator-modal
+      [isLight]="theme.isLight()"
+      [teamEmpty]="!hasTeam()"
+      (closed)="closeNameGenerator()"
+      (nameSelected)="onNameSelected($event)"
+    />
   }
 </div>

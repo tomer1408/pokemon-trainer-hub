@@ -134,25 +134,43 @@
         </div>
       </div>
 
-      <!-- ===== RECOMMENDED NEXT STEP ===== -->
-      <div class="rec-card">
-        <div class="rec-left">
-          <span class="rec-icon" [style.background]="typeColor(rec().iconType) + '33'">
-            <span class="mini-ball mini-ball-lg" [style.border-color]="typeColor(rec().iconType)">
-              <span class="mini-ball-band" [style.background]="typeColor(rec().iconType)"></span>
-              <span class="mini-ball-center" [style.border-color]="typeColor(rec().iconType)"></span>
+      <!-- ===== RECOMMENDED NEXT STEP + DAILY QUIZ ===== -->
+      <div class="next-steps-row">
+        <div class="rec-card">
+          <div class="rec-left">
+            <span class="rec-icon" [style.background]="typeColor(rec().iconType) + '33'">
+              <span class="mini-ball mini-ball-lg" [style.border-color]="typeColor(rec().iconType)">
+                <span class="mini-ball-band" [style.background]="typeColor(rec().iconType)"></span>
+                <span class="mini-ball-center" [style.border-color]="typeColor(rec().iconType)"></span>
+              </span>
             </span>
-          </span>
-          <div class="rec-text-col">
-            <span class="rec-kicker">Recommended next step</span>
-            <span class="rec-title">{{ rec().title }}</span>
-            <span class="rec-sub">{{ rec().subtitle }}</span>
-            @if (rec().showQuiz) {
-              <a routerLink="/starter-quiz" class="rec-quiz-link">Not sure who to pick? Take the Starter Quiz &rarr;</a>
-            }
+            <div class="rec-text-col">
+              <span class="rec-kicker">Recommended next step</span>
+              <span class="rec-title">{{ rec().title }}</span>
+              <span class="rec-sub">{{ rec().subtitle }}</span>
+            </div>
           </div>
+          <a [routerLink]="rec().ctaHref" class="rec-cta">{{ rec().ctaLabel }} <span class="link-arrow">&rarr;</span></a>
         </div>
-        <a [routerLink]="rec().ctaHref" class="rec-cta">{{ rec().ctaLabel }} <span class="link-arrow">&rarr;</span></a>
+
+        <a routerLink="/whos-that-pokemon" class="rec-card quiz-promo-card">
+          <div class="rec-left">
+            <span class="quiz-promo-icon-wrap">
+              @if (potd(); as p) {
+                @if (p.spriteUrl) {
+                  <img class="quiz-promo-sprite" [src]="p.spriteUrl" alt="Mystery Pok&eacute;mon" />
+                }
+              }
+              <span class="quiz-promo-mark">?</span>
+            </span>
+            <div class="rec-text-col">
+              <span class="rec-kicker">Daily Quiz</span>
+              <span class="rec-title">Who's That Pok&eacute;mon?</span>
+              <span class="rec-sub">Guess the Pok&eacute;mon from its silhouette and build a daily streak.</span>
+            </div>
+          </div>
+          <span class="quiz-promo-cta">Play Now <span class="link-arrow">&rarr;</span></span>
+        </a>
       </div>
 
       <!-- ===== JUMP BACK IN ===== -->

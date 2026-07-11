@@ -2,10 +2,16 @@ const express = require('express');
 const jwtCheck = require('../middleware/auth');
 const teamService = require('../services/teamService');
 const assistantService = require('../services/assistantService');
+const { createRateLimiter } = require('../services/rateLimiter');
 
 const router = express.Router();
 
 const RATE_LIMIT_MESSAGE = "We've hit today's AI usage limit — please try again tomorrow.";
+
+// Team-name generation is cheap to abuse (no per-request cost signal to the
+// user like the other assistant features), so it gets its own explicit cap
+// on top of Gemini's own quota — 5 generations per trainer per hour.
+const teamNameRateLimiter = createRateLimiter({ windowSeconds: 60 * 60, maxRequests: 5 });
 
 // Shared by all three routes below — 503 (not 502) for a rate limit, since
 // this is "come back later," not "the upstream service is broken."
@@ -64,6 +70,42 @@ router.post('/chat', jwtCheck, async (req, res) => {
     res.json(reply);
   } catch (err) {
     respondToAssistantError(err, res, 'Assistant chat');
+  }
+});
+
+// POST /api/assistant/team-name  { style }
+// Generates 3 team-name suggestions for the current user's REAL Dream Team
+// (fetched here from the DB, never trusted from the client). Unlike
+// /analyze, /query, /chat, this endpoint always resolves with usable
+// suggestions — assistantService.generateTeamNames() itself falls back to
+// a deterministic, non-AI generator on any Gemini failure (error, timeout,
+// quota) — so a 502/503 here means something unrelated to Gemini broke.
+router.post('/team-name', jwtCheck, async (req, res) => {
+  const auth0UserId = req.auth.payload.sub;
+
+  const style = req.body.style;
+  if (!assistantService.VALID_STYLES.includes(style)) {
+    return res
+      .status(400)
+      .json({ message: `style must be one of: ${assistantService.VALID_STYLES.join(', ')}.` });
+  }
+
+  if (!teamNameRateLimiter.consume(auth0UserId)) {
+    return res
+      .status(429)
+      .json({ message: "You've reached the team-name generation limit for now. Please try again later." });
+  }
+
+  const team = await teamService.getTeam(auth0UserId);
+  if (team.length === 0) {
+    return res.status(400).json({ message: 'Add at least one Pokémon before generating a team name.' });
+  }
+
+  try {
+    const result = await assistantService.generateTeamNames(team, style);
+    res.json(result);
+  } catch (err) {
+    respondToAssistantError(err, res, 'Team name generation');
   }
 });
 

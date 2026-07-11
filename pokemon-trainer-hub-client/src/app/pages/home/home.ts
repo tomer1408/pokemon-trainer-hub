@@ -167,9 +167,9 @@ export class Home {
   protected readonly actionTiles = ACTION_TILES;
 
   // Drives the "Recommended next step" banner — same team-state logic used
-  // to decide the quiz nudge and the empty/growing/complete messaging
-  // elsewhere on this page, just consolidated into one CTA instead of
-  // several separate banners repeating similar advice.
+  // to decide the empty/growing/complete messaging elsewhere on this page,
+  // just consolidated into one CTA instead of several separate banners
+  // repeating similar advice.
   protected readonly rec = computed(() => {
     if (!this.hasTeam()) {
       return {
@@ -178,7 +178,6 @@ export class Home {
         ctaLabel: 'Explore Pokémon',
         ctaHref: '/explorer',
         iconType: 'grass' as PokemonTypeName,
-        showQuiz: this.showQuizNudge(),
       };
     }
     const remaining = MAX_TEAM_SIZE - this.teamCount();
@@ -189,7 +188,6 @@ export class Home {
         ctaLabel: 'Continue Building',
         ctaHref: '/explorer',
         iconType: 'electric' as PokemonTypeName,
-        showQuiz: this.showQuizNudge(),
       };
     }
     return {
@@ -198,7 +196,6 @@ export class Home {
       ctaLabel: 'Start Battle',
       ctaHref: '/battle',
       iconType: 'fire' as PokemonTypeName,
-      showQuiz: false,
     };
   });
 
@@ -211,13 +208,6 @@ export class Home {
   protected readonly marqueeTiles = toSignal(this.pokemonService.search({ sort: 'id', page: 1 }), {
     initialValue: { results: [] as PokemonSummary[], page: 1, pageSize: 20, total: 0 },
   });
-
-  // Real, server-side flag (not client storage) — stays visible on every
-  // Home visit until the trainer actually completes the quiz, skipping only
-  // defers the redirect guard, not this nudge.
-  protected readonly showQuizNudge = computed(
-    () => this.profile()?.hasCompletedStarterQuiz === false,
-  );
 
   protected readonly teamFull = computed(() => this.teamCount() >= MAX_TEAM_SIZE);
 
