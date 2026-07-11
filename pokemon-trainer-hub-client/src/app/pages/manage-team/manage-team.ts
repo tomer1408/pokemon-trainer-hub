@@ -493,10 +493,19 @@ export class ManageTeam implements AfterViewInit {
   // only sitting in the local drag draft (just dragged in, not yet saved),
   // there's nothing real to remove server-side yet — the modal is told to
   // skip the backend call and just report the pick instead.
+  //
+  // The reverse case matters just as much for favorite-vs-team: the "⇄
+  // Compare" button on a Bench card is available for any favorited card,
+  // including one that's still a real saved team member the user only just
+  // dragged onto the Bench locally (not yet saved). Sending that anchor to
+  // the real swap endpoint as the "add" side fails server-side with a
+  // DUPLICATE 409 (it's already on the team in the database) — the modal
+  // never closes because the request never actually succeeds. So this must
+  // go local-only whenever the favorite anchor is already really on the team.
   protected readonly comparePersistImmediately = computed(() => {
-    if (this.compareMode() !== 'team-vs-favorites') return true;
     const id = this.compareAnchorId();
-    return id !== null && this.isSavedOnTeam(id);
+    if (id === null) return true;
+    return this.compareMode() === 'team-vs-favorites' ? this.isSavedOnTeam(id) : !this.isSavedOnTeam(id);
   });
 
   compareFavoriteAgainstTeam(pokemonId: number): void {
