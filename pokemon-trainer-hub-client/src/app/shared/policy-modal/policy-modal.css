@@ -1,0 +1,73 @@
+:host {
+  --surface: #1A1533;
+  --border-soft: rgba(196, 181, 253, 0.16);
+  --text-body: #F1EEFB;
+  --text-muted: rgba(230, 225, 250, 0.6);
+  --violet-deep: #7C3AED;
+  --cyan: #5EEAD4;
+}
+
+.dim-overlay.light {
+  --surface: #FFFFFF;
+  --border-soft: rgba(76, 29, 149, 0.12);
+  --text-body: #1C1533;
+  --text-muted: rgba(28, 21, 51, 0.55);
+  --violet-deep: #6D28D9;
+  --cyan: #0E9488;
+}
+
+.dim-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(5, 3, 15, 0.72);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  padding: 26px 28px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+}
+
+.modal-title {
+  font-family: 'Bungee', sans-serif;
+  font-size: 18px;
+  color: var(--text-body);
+  margin: 0;
+}
+
+.modal-body {
+  font-family: 'Manrope', sans-serif;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.close-btn {
+  align-self: flex-end;
+  margin-top: 6px;
+  border: none;
+  border-radius: 100px;
+  padding: 10px 22px;
+  background: linear-gradient(120deg, var(--violet-deep), var(--cyan));
+  color: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+}

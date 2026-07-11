@@ -755,6 +755,129 @@ select:focus {
   cursor: not-allowed;
 }
 
+/* ---- Age Range (Personal Details edit) ---- */
+.age-range-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.age-range-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.age-range-value {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  background: var(--overlay-05);
+  border: 1px solid var(--border-soft);
+  padding: 3px 11px;
+  border-radius: 100px;
+}
+
+.age-range-value.filled {
+  color: var(--cyan);
+  background: rgba(94, 234, 212, 0.12);
+}
+
+/* ---- Consent & Preferences (edit mode) ---- */
+.policy-accepted-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.policy-check-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--cyan);
+  margin-top: 1px;
+  position: relative;
+}
+
+.policy-check-icon::after {
+  content: '';
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  width: 8px;
+  height: 4px;
+  border-left: 2px solid #0D0A1E;
+  border-bottom: 2px solid #0D0A1E;
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.policy-accepted-text {
+  font-size: 13px;
+  color: var(--text-body);
+  line-height: 1.5;
+}
+
+.consent-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 10px 0 0;
+  cursor: pointer;
+  width: 100%;
+}
+
+.consent-box {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 7px;
+  border: 1.5px solid var(--border-soft);
+  background: var(--overlay-05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.consent-box.checked {
+  background: linear-gradient(135deg, var(--violet-deep), var(--cyan));
+  border-color: transparent;
+}
+
+.checkmark {
+  width: 11px;
+  height: 6px;
+  border-left: 2.5px solid #fff;
+  border-bottom: 2.5px solid #fff;
+  transform: rotate(-45deg) translateY(-1px);
+  opacity: 0;
+}
+
+.consent-box.checked .checkmark {
+  opacity: 1;
+}
+
+.consent-text {
+  font-size: 13px;
+  color: var(--text-body);
+  line-height: 1.5;
+}
+
+.inline-link {
+  color: var(--cyan);
+  font-weight: 700;
+  cursor: pointer;
+}
+
 /* ---- Success toast ---- */
 .toast {
   position: fixed;

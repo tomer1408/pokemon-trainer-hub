@@ -71,6 +71,13 @@ model TrainerProfile {
   // the actual logged-in user (survives across devices/browsers) instead of
   // one browser's localStorage.
   hasCompletedStarterQuiz Boolean @default(false)
+  // Consent/preferences, set once at onboarding and never re-demanded on
+  // later edits (see routes/profile.js) — acceptedPolicyAt/policyVersion are
+  // always server-set, never trusted from the client.
+  acceptedPolicy       Boolean   @default(false)
+  acceptedPolicyAt     DateTime?
+  policyVersion        String?
+  marketingEmailsOptIn Boolean   @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

@@ -60,35 +60,12 @@
               </div>
             } @else if (draft(); as d) {
               <div class="edit-row">
-                <div class="edit-avatar-block">
-                  <div class="avatar-hex">
-                    @if (draftAvatarSprite(); as sprite) {
-                      <img class="avatar-sprite" [src]="sprite" alt="Trainer avatar" />
-                    } @else {
-                      <span class="avatar-glyph" [style.background]="typeColor(d.favoriteType)"></span>
-                    }
-                  </div>
-                  <div class="avatar-picker-label">Choose avatar</div>
-                  <div class="avatar-picker-grid">
-                    <button
-                      type="button"
-                      class="avatar-none-btn"
-                      [class.active]="d.avatarPokemonId == null"
-                      (click)="selectIcon(null)"
-                    >None</button>
-                    @for (icon of iconOptions(); track icon.id) {
-                      <button
-                        type="button"
-                        class="avatar-opt-btn"
-                        [class.active]="d.avatarPokemonId === icon.id"
-                        (click)="selectIcon(icon.id)"
-                      >
-                        @if (icon.spriteUrl) {
-                          <img [src]="icon.spriteUrl" alt="{{ icon.name }}" />
-                        }
-                      </button>
-                    }
-                  </div>
+                <div class="avatar-hex">
+                  @if (draftAvatarSprite(); as sprite) {
+                    <img class="avatar-sprite" [src]="sprite" alt="Trainer avatar" />
+                  } @else {
+                    <span class="avatar-glyph" [style.background]="typeColor(d.favoriteType)"></span>
+                  }
                 </div>
 
                 <label class="edit-name-block">
@@ -202,6 +179,10 @@
             <label class="edit-field">
               <span class="field-label">Date of Birth</span>
               <input type="date" name="dateOfBirth" [ngModel]="dobInputValue" (ngModelChange)="updateDob($event)" />
+              <div class="age-range-row">
+                <span class="age-range-label">Age Range</span>
+                <span class="age-range-value" [class.filled]="ageRange()">{{ ageRange() || '—' }}</span>
+              </div>
             </label>
             <label class="edit-field">
               <span class="field-label">Country</span>
@@ -254,23 +235,78 @@
               />
             </label>
           </div>
-
-          @if (saveError()) {
-            <p class="error-message-inline">{{ saveError() }}</p>
-          }
-
-          <div class="edit-actions-row">
-            <button type="button" class="cancel-btn" (click)="cancelEdit()">Cancel</button>
-            <button type="button" class="save-btn" [disabled]="saving()" (click)="saveChanges()">
-              {{ saving() ? 'Saving…' : 'Save Changes' }}
-            </button>
-          </div>
         }
       </div>
+
+      @if (mode() === 'edit' && draft(); as d) {
+        <!-- Avatar / Logo -->
+        <div class="details-card">
+          <div class="details-header">Avatar / Logo</div>
+          <div class="edit-row">
+            <div class="edit-avatar-block">
+              <div class="avatar-picker-label">Choose avatar</div>
+              <div class="avatar-picker-grid">
+                <button
+                  type="button"
+                  class="avatar-none-btn"
+                  [class.active]="d.avatarPokemonId == null"
+                  (click)="selectIcon(null)"
+                >None</button>
+                @for (icon of iconOptions(); track icon.id) {
+                  <button
+                    type="button"
+                    class="avatar-opt-btn"
+                    [class.active]="d.avatarPokemonId === icon.id"
+                    (click)="selectIcon(icon.id)"
+                  >
+                    @if (icon.spriteUrl) {
+                      <img [src]="icon.spriteUrl" alt="{{ icon.name }}" />
+                    }
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Consent & Preferences -->
+        <div class="details-card">
+          <div class="details-header">Consent &amp; Preferences</div>
+          <div class="policy-accepted-row">
+            <span class="policy-check-icon"></span>
+            <span class="policy-accepted-text">
+              You accepted our
+              <a class="inline-link" (click)="showPolicy('terms')">Terms of Use</a>
+              and
+              <a class="inline-link" (click)="showPolicy('privacy')">Privacy Policy</a>
+              @if (formattedAcceptedPolicyAt(); as at) { on {{ at }}. } @else { . }
+            </span>
+          </div>
+          <button type="button" class="consent-row" (click)="toggleMarketing()">
+            <span class="consent-box" [class.checked]="d.marketingEmailsOptIn"><span class="checkmark"></span></span>
+            <span class="consent-text">Send me trainer tips, team suggestions, and app updates by email.</span>
+          </button>
+        </div>
+
+        @if (saveError()) {
+          <p class="error-message-inline">{{ saveError() }}</p>
+        }
+
+        <div class="edit-actions-row">
+          <button type="button" class="cancel-btn" (click)="cancelEdit()">Cancel</button>
+          <button type="button" class="save-btn" [disabled]="saving()" (click)="saveChanges()">
+            {{ saving() ? 'Saving…' : 'Save Changes' }}
+          </button>
+        </div>
+      }
     }
   </div>
 
   @if (showSavedToast()) {
     <div class="toast"><span class="toast-dot"></span>Profile saved successfully.</div>
+  }
+
+  @if (openPolicyModal(); as t) {
+    <app-policy-modal [type]="t" [isLight]="theme.isLight()" (closed)="closePolicy()" />
   }
 </div>

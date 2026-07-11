@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, of } from 'rxjs';
 import { API_BASE } from './api-base';
+import { AgeRange } from '../shared/age-range';
 
 export interface TrainerProfile {
   trainerName: string;
@@ -21,6 +22,15 @@ export interface TrainerProfile {
   // Real, server-side flag — not client storage — so it's tied to the
   // actual logged-in user instead of one browser's localStorage.
   hasCompletedStarterQuiz?: boolean;
+  // Consent, set once at first profile creation. acceptedPolicyAt/policyVersion
+  // are server-decided (never sent by the client) — see routes/profile.js.
+  acceptedPolicy: boolean;
+  acceptedPolicyAt?: string;
+  policyVersion?: string;
+  marketingEmailsOptIn: boolean;
+  // Response-only — derived server-side from dateOfBirth on every GET/POST,
+  // never stored and never sent by the client.
+  ageRange?: AgeRange | null;
 }
 
 @Injectable({ providedIn: 'root' })

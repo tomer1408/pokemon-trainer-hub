@@ -19,12 +19,15 @@ export class App {
 
   protected readonly isAuthenticated = toSignal(this.auth.isAuthenticated$, { initialValue: false });
 
+  // Path only, no query string — urlAfterRedirects on /callback always
+  // carries ?code=...&state=..., which made a straight string match against
+  // NAVBAR_HIDDEN_ON silently fail and show the navbar there.
   private readonly currentUrl = toSignal(
     this.router.events.pipe(
       filter((e) => e instanceof NavigationEnd),
-      map((e) => e.urlAfterRedirects),
+      map((e) => e.urlAfterRedirects.split('?')[0].split('#')[0]),
     ),
-    { initialValue: this.router.url },
+    { initialValue: this.router.url.split('?')[0].split('#')[0] },
   );
 
   // Navbar must never flicker: isAuthenticated$ already waits for the SDK's

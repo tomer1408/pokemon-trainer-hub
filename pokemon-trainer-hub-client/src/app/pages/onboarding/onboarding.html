@@ -3,39 +3,50 @@
 
   <div class="shell">
     <div class="header-block">
-      <span class="kicker"><span class="kicker-dot"></span>Welcome, Trainer</span>
-      <h1 class="title">Just a few details before your journey begins.</h1>
-      <p class="subtitle">This helps us personalize your Trainer Hub &mdash; it only takes a minute.</p>
+      <span class="kicker"><span class="kicker-dot"></span>Create Your Trainer Profile</span>
+      <h1 class="title">Let's personalize your trainer profile</h1>
     </div>
 
-    <div class="form-grid">
-      <!-- Left column: personal info -->
-      <div class="col-card">
-        <div class="col-title">About You</div>
-
-        <div class="field-row">
-          <label class="field-group">
-            <span class="field-label">First Name <span class="required-mark">*</span></span>
-            <input
-              type="text"
-              placeholder="Ash"
-              name="firstName"
-              [ngModel]="form().firstName"
-              (ngModelChange)="updateField('firstName', $event)"
-            />
-          </label>
-          <label class="field-group">
-            <span class="field-label">Last Name <span class="required-mark">*</span></span>
-            <input
-              type="text"
-              placeholder="Ketchum"
-              name="lastName"
-              [ngModel]="form().lastName"
-              (ngModelChange)="updateField('lastName', $event)"
-            />
-          </label>
+    <!-- ===== SECTION 1: ABOUT ME ===== -->
+    <div class="section-card">
+      <div class="section-head">
+        <span class="section-num">01</span>
+        <div>
+          <div class="section-title">About Me</div>
+          <div class="section-sub">These details help us personalize your trainer experience.</div>
         </div>
+      </div>
 
+      <div class="field-row">
+        <label class="field-group">
+          <span class="field-label">First Name <span class="required-mark">*</span></span>
+          <input
+            type="text"
+            placeholder="e.g. Ash"
+            name="firstName"
+            [ngModel]="form().firstName"
+            (ngModelChange)="updateField('firstName', $event)"
+          />
+          @if (submitted() && !form().firstName.trim()) {
+            <div class="field-error">First name is required</div>
+          }
+        </label>
+        <label class="field-group">
+          <span class="field-label">Last Name <span class="required-mark">*</span></span>
+          <input
+            type="text"
+            placeholder="e.g. Ketchum"
+            name="lastName"
+            [ngModel]="form().lastName"
+            (ngModelChange)="updateField('lastName', $event)"
+          />
+          @if (submitted() && !form().lastName.trim()) {
+            <div class="field-error">Last name is required</div>
+          }
+        </label>
+      </div>
+
+      <div class="field-row">
         <label class="field-group">
           <span class="field-label">Date of Birth <span class="required-mark">*</span></span>
           <input
@@ -44,8 +55,10 @@
             [ngModel]="form().dateOfBirth"
             (ngModelChange)="updateField('dateOfBirth', $event)"
           />
+          @if (submitted() && dobError()) {
+            <div class="field-error">{{ dobError() }}</div>
+          }
         </label>
-
         <label class="field-group">
           <span class="field-label">Country <span class="required-mark">*</span></span>
           <select name="country" [ngModel]="form().country" (ngModelChange)="updateField('country', $event)">
@@ -54,85 +67,138 @@
               <option [value]="c">{{ c }}</option>
             }
           </select>
+          @if (submitted() && !form().country) {
+            <div class="field-error">Please select your country</div>
+          }
         </label>
+      </div>
+    </div>
 
-        <div class="field-group">
-          <span class="field-label">Experience Level</span>
-          <div class="segment-row">
-            @for (level of experienceLevels; track level) {
-              <button
-                type="button"
-                class="segment-btn"
-                [class.active]="form().experienceLevel === level"
-                (click)="updateExperienceLevel(level)"
-              >
-                {{ level }}
-              </button>
-            }
-          </div>
+    <!-- ===== SECTION 2: TRAINER IDENTITY ===== -->
+    <div class="section-card">
+      <div class="section-head">
+        <span class="section-num">02</span>
+        <div>
+          <div class="section-title">Your Trainer Identity</div>
+          <div class="section-sub">How you'll show up across the Hub.</div>
         </div>
       </div>
 
-      <!-- Right column: trainer identity -->
-      <div class="col-card">
-        <div class="col-title">Your Trainer Identity</div>
-
+      <div class="field-row">
         <label class="field-group">
           <span class="field-label">Trainer Name <span class="required-mark">*</span></span>
+          <div class="helper-text">What should other trainers call you?</div>
           <input
             type="text"
-            placeholder="How should we call you?"
+            placeholder="e.g. PikaFan, FireMaster, AshK"
             name="trainerName"
             [ngModel]="form().trainerName"
             (ngModelChange)="updateField('trainerName', $event)"
           />
+          @if (submitted() && !form().trainerName.trim()) {
+            <div class="field-error">Choose a trainer name</div>
+          }
         </label>
-
         <label class="field-group">
           <span class="field-label">Team Name</span>
+          <div class="helper-text">Name your Dream Team.</div>
           <input
             type="text"
-            placeholder="Name your Dream Team (optional)"
+            placeholder="e.g. Thunder Squad, Fire Legends, Pika Crew"
             name="teamName"
             [ngModel]="form().teamName"
             (ngModelChange)="updateField('teamName', $event)"
           />
         </label>
+      </div>
 
-        <div class="field-group">
-          <span class="field-label">Favorite Type</span>
-          <div class="type-chip-row">
-            @for (t of pokemonTypes; track t) {
-              <button
-                type="button"
-                class="type-chip"
-                [class.active]="form().favoriteType === t"
-                (click)="updateFavoriteType(t)"
-              >
-                {{ t }}
-              </button>
-            }
-          </div>
-        </div>
-
-        <div class="field-group">
-          <span class="field-label">Profile Icon</span>
-          <div class="icon-grid">
-            @for (icon of iconOptions(); track icon.id) {
-              <button
-                type="button"
-                class="icon-wrap"
-                [class.active]="form().avatarPokemonId === icon.id"
-                (click)="selectIcon(icon.id)"
-              >
-                @if (icon.spriteUrl) {
-                  <img [src]="icon.spriteUrl" alt="{{ icon.name }}" />
-                }
-              </button>
-            }
-          </div>
+      <div class="field-group">
+        <span class="field-label">Favorite Type</span>
+        <div class="type-chip-row">
+          @for (t of pokemonTypes; track t) {
+            <button
+              type="button"
+              class="type-chip"
+              [class.active]="form().favoriteType === t"
+              (click)="updateFavoriteType(t)"
+            >
+              {{ t }}
+            </button>
+          }
         </div>
       </div>
+
+      <div class="field-group">
+        <span class="field-label">Experience Level</span>
+        <div class="segment-row">
+          @for (level of experienceLevels; track level) {
+            <button
+              type="button"
+              class="segment-btn"
+              [class.active]="form().experienceLevel === level"
+              (click)="updateExperienceLevel(level)"
+            >
+              {{ level }}
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION 3: AVATAR ===== -->
+    <div class="section-card">
+      <div class="section-head">
+        <span class="section-num">03</span>
+        <div>
+          <div class="section-title">Choose Your Trainer Avatar</div>
+          <div class="section-sub">Pick an icon for your trainer profile.</div>
+        </div>
+      </div>
+      <div class="icon-grid">
+        @for (icon of iconOptions(); track icon.id) {
+          <button
+            type="button"
+            class="icon-wrap"
+            [class.active]="form().avatarPokemonId === icon.id"
+            (click)="selectIcon(icon.id)"
+          >
+            @if (icon.spriteUrl) {
+              <img [src]="icon.spriteUrl" alt="{{ icon.name }}" />
+            }
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- ===== SECTION 4: CONSENT ===== -->
+    <div class="section-card">
+      <div class="section-head">
+        <span class="section-num">04</span>
+        <div>
+          <div class="section-title">Consent &amp; Preferences</div>
+          <div class="section-sub">Just one required agreement before you start.</div>
+        </div>
+      </div>
+
+      <button type="button" class="consent-row" (click)="toggleAcceptedPolicy()">
+        <span class="consent-box" [class.checked]="form().acceptedPolicy"><span class="checkmark"></span></span>
+        <span class="consent-text">
+          I understand and agree to the
+          <a class="inline-link" (click)="$event.stopPropagation(); showPolicy('terms')">Terms of Use</a>
+          and
+          <a class="inline-link" (click)="$event.stopPropagation(); showPolicy('privacy')">Privacy Policy</a>.
+          <span class="required-mark">*</span>
+        </span>
+      </button>
+      @if (submitted() && !form().acceptedPolicy) {
+        <div class="field-error">You must accept the Terms of Use and Privacy Policy to continue.</div>
+      }
+
+      <button type="button" class="consent-row" (click)="toggleMarketing()">
+        <span class="consent-box" [class.checked]="form().marketingEmailsOptIn"><span class="checkmark"></span></span>
+        <span class="consent-text">Send me trainer tips, team suggestions, and app updates by email.</span>
+      </button>
+      <div class="helper-text">You can update your preferences later from your profile.</div>
     </div>
 
     @if (submitError()) {
@@ -140,10 +206,13 @@
     }
 
     <div class="submit-block">
-      <button type="button" class="submit-btn" [disabled]="!canSubmit() || submitting()" (click)="submitProfile()">
-        {{ submitting() ? 'Saving…' : "Let's go!" }}
+      <button type="button" class="submit-btn" [disabled]="submitting()" (click)="submitProfile()">
+        {{ submitting() ? 'Creating your profile…' : 'Create My Trainer Profile' }}
       </button>
-      <p class="required-note">* Required fields</p>
     </div>
   </div>
+
+  @if (openPolicyModal(); as t) {
+    <app-policy-modal [type]="t" (closed)="closePolicy()" />
+  }
 </div>

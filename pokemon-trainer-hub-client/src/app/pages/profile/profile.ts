@@ -12,8 +12,10 @@ import { PokemonService, PokemonDetail } from '../../core/pokemon';
 import { PROFILE_ICON_POKEMON_IDS } from '../../shared/profile-icons';
 import { getTeamPower, getTeamTier } from '../../shared/team-power';
 import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
+import { calculateAgeRange } from '../../shared/age-range';
 import { ThemeService } from '../../shared/theme';
 import { LoadingScreen } from '../../shared/loading-screen/loading-screen';
+import { PolicyModal, PolicyType } from '../../shared/policy-modal/policy-modal';
 
 interface ProfileDraft {
   trainerName: string;
@@ -25,6 +27,10 @@ interface ProfileDraft {
   country: string;
   avatarPokemonId: number | null;
   teamName: string;
+  acceptedPolicy: boolean;
+  acceptedPolicyAt: string | null;
+  policyVersion: string | null;
+  marketingEmailsOptIn: boolean;
 }
 
 type Mode = 'view' | 'edit';
@@ -40,7 +46,7 @@ type ProfileFetchStatus = 'ok' | 'missing' | 'error';
 // they were replaced with instead of being faked.
 @Component({
   selector: 'app-profile',
-  imports: [FormsModule, RouterLink, LoadingScreen],
+  imports: [FormsModule, RouterLink, LoadingScreen, PolicyModal],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
@@ -94,6 +100,7 @@ export class Profile {
   protected readonly saving = signal(false);
   protected readonly saveError = signal<string | null>(null);
   protected readonly showSavedToast = signal(false);
+  protected readonly openPolicyModal = signal<PolicyType | null>(null);
 
   protected readonly team = toSignal(this.teamService.getTeam(), { initialValue: [] });
   protected readonly favorites = toSignal(this.favoritesService.getFavorites(), { initialValue: [] });
@@ -147,13 +154,41 @@ export class Profile {
           country: profile.country,
           avatarPokemonId: profile.avatarPokemonId,
           teamName: profile.teamName ?? '',
+          acceptedPolicy: profile.acceptedPolicy,
+          acceptedPolicyAt: profile.acceptedPolicyAt ?? null,
+          policyVersion: profile.policyVersion ?? null,
+          marketingEmailsOptIn: profile.marketingEmailsOptIn,
         });
       }
     });
   }
 
+  protected readonly ageRange = computed(() => {
+    const dob = this.draft()?.dateOfBirth;
+    return dob ? calculateAgeRange(dob.toISOString()) : null;
+  });
+
+  protected readonly formattedAcceptedPolicyAt = computed(() => {
+    const at = this.saved()?.acceptedPolicyAt;
+    if (!at) return null;
+    return new Date(at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  });
+
   typeColor(type: string): string {
     return TYPE_COLORS[type.toLowerCase() as PokemonTypeName] ?? TYPE_COLORS['normal'];
+  }
+
+  showPolicy(type: PolicyType): void {
+    this.openPolicyModal.set(type);
+  }
+
+  closePolicy(): void {
+    this.openPolicyModal.set(null);
+  }
+
+  toggleMarketing(): void {
+    const d = this.draft();
+    if (d) this.draft.set({ ...d, marketingEmailsOptIn: !d.marketingEmailsOptIn });
   }
 
   formattedDob(): string {
@@ -229,6 +264,12 @@ export class Profile {
       country: d.country,
       avatarPokemonId: d.avatarPokemonId,
       teamName: d.teamName.trim() || null,
+      // The server ignores/overwrites acceptedPolicy on an update with
+      // whatever's already on file for an existing profile (see
+      // routes/profile.js) — sending the already-known value here is just to
+      // satisfy the TrainerProfile shape, it changes nothing server-side.
+      acceptedPolicy: d.acceptedPolicy,
+      marketingEmailsOptIn: d.marketingEmailsOptIn,
     };
 
     this.profileService.saveProfile(payload).subscribe({
@@ -240,9 +281,13 @@ export class Profile {
         this.showSavedToast.set(true);
         setTimeout(() => this.showSavedToast.set(false), 2400);
       },
-      error: () => {
+      error: (err) => {
         this.saving.set(false);
-        this.saveError.set('Something went wrong saving your profile. Please try again.');
+        this.saveError.set(
+          err?.status === 400 && err?.error?.message
+            ? err.error.message
+            : 'Something went wrong saving your profile. Please try again.',
+        );
       },
     });
   }
