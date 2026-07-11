@@ -66,6 +66,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/starter-quiz/starter-quiz').then((m) => m.StarterQuiz),
   },
   {
+    path: 'settings',
+    canActivate: [authGuardFn],
+    loadComponent: () => import('./pages/settings/settings').then((m) => m.Settings),
+  },
+  {
     // Not auth-guarded on purpose — a mistyped URL shouldn't force a
     // logged-out visitor through Auth0 login just to see "page not found".
     path: '**',

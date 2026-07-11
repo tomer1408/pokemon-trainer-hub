@@ -12,9 +12,18 @@ import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
 import { ThemeService } from '../../shared/theme';
 import { PokemonDetailModal } from '../../shared/pokemon-detail-modal/pokemon-detail-modal';
 import { TeamSwapModal } from '../../shared/team-swap-modal/team-swap-modal';
+import { LoadingScreen } from '../../shared/loading-screen/loading-screen';
 import { dayOfYearPokemonId } from '../../shared/pokemon-of-the-day';
 
 const MAX_TEAM_SIZE = 5;
+
+// Matches Home Loading.dc.html's rotating tips.
+const HOME_LOADING_TIPS = [
+  'Warming up the arena…',
+  'Waking up your Pokémon…',
+  'Polishing your gym badges…',
+  'Counting your Dream Team…',
+];
 
 interface HowStep {
   num: string;
@@ -46,7 +55,7 @@ const ACTION_TILES: ActionTile[] = [
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, PokemonDetailModal, TeamSwapModal],
+  imports: [RouterLink, PokemonDetailModal, TeamSwapModal, LoadingScreen],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })
@@ -57,6 +66,8 @@ export class Home {
   private readonly favoritesService = inject(FavoritesService);
   private readonly pokemonService = inject(PokemonService);
   protected readonly theme = inject(ThemeService);
+
+  protected readonly loadingTips = HOME_LOADING_TIPS;
 
   private readonly authUser = toSignal(this.auth.user$, { initialValue: null });
 

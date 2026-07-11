@@ -1,0 +1,167 @@
+<div class="settings-page" [class.light]="theme.isLight()">
+  <div class="content">
+    @if (isLoading()) {
+      <app-loading-screen [isLight]="theme.isLight()" size="lg" />
+    } @else if (hasError()) {
+      <div class="error-state">
+        <p class="error-message">We couldn't load your settings right now.</p>
+        <p class="error-sub">Please check your connection and try again.</p>
+        <button type="button" class="error-retry-btn" (click)="retry()">Try again</button>
+      </div>
+    } @else if (hasNoProfile()) {
+      <div class="error-state">
+        <p class="error-message">You haven't set up your trainer profile yet.</p>
+        <p class="error-sub">Finish the one-time setup to unlock Settings.</p>
+        <a routerLink="/onboarding" class="error-retry-btn">Complete Setup</a>
+      </div>
+    } @else if (profile(); as p) {
+      <div class="header-block">
+        <h1 class="page-title">Settings</h1>
+        <p class="page-subtitle">Customize your Pok&eacute;mon Trainer Hub experience.</p>
+      </div>
+
+      <!-- ===== 1. App Preferences ===== -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">App Preferences</span>
+          <span class="card-helper">Adjust how the app looks and behaves for you.</span>
+        </div>
+
+        <!-- colorblind (highlighted) -->
+        <div class="cb-row">
+          <div class="setting-text">
+            <div class="setting-label-row">
+              <span class="setting-label">Colorblind Mode</span>
+              <span class="cb-tag">Accessibility</span>
+            </div>
+            <div class="setting-helper">Applies a colorblind-friendly filter to the whole app.</div>
+          </div>
+          <div class="seg-row">
+            @for (mode of colorblindModes; track mode.value) {
+              <button
+                type="button"
+                class="seg-btn"
+                [class.active]="colorblind.mode() === mode.value"
+                (click)="colorblind.setMode(mode.value)"
+              >{{ mode.label }}</button>
+            }
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- theme -->
+        <div class="setting-row">
+          <div class="setting-text">
+            <span class="setting-label">Theme</span>
+            <div class="setting-helper">Choose how Pok&eacute;mon Trainer Hub looks.</div>
+          </div>
+          <div class="seg-row">
+            <button type="button" class="seg-btn" [class.active]="!theme.isLight()" (click)="theme.setDark()">Dark</button>
+            <button type="button" class="seg-btn" [class.active]="theme.isLight()" (click)="theme.setLight()">Light</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- battle explanations -->
+        <div class="setting-row">
+          <div class="setting-text">
+            <span class="setting-label">Battle Explanations</span>
+            <div class="setting-helper">Show why each Pok&eacute;mon won by default when you start a new battle.</div>
+          </div>
+          <button
+            type="button"
+            class="switch"
+            [class.on]="appSettings.battleExplanationsDefault()"
+            (click)="appSettings.setBattleExplanationsDefault(!appSettings.battleExplanationsDefault())"
+          ><span class="switch-knob"></span></button>
+        </div>
+      </div>
+
+      <!-- ===== 2. Notifications ===== -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Notifications &amp; Emails</span>
+          <span class="card-helper">You can change your email preferences anytime.</span>
+        </div>
+        <button type="button" class="check-row" (click)="toggleMarketing()">
+          <span class="check-box" [class.checked]="draftMarketing()"><span class="check-mark"></span></span>
+          <span class="check-text">Send me trainer tips, team suggestions, and app updates by email.</span>
+        </button>
+      </div>
+
+      <!-- ===== 3. Trainer Profile ===== -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Trainer Profile</span>
+          <span class="card-helper">Manage your trainer profile and app preferences.</span>
+        </div>
+        <div class="profile-row">
+          <div class="profile-grid">
+            <div class="prof-item"><span class="prof-label">Trainer Name</span><span class="prof-value">{{ p.trainerName }}</span></div>
+            <div class="prof-item"><span class="prof-label">Team Name</span><span class="prof-value">{{ p.teamName || 'Your Dream Team' }}</span></div>
+            <div class="prof-item">
+              <span class="prof-label">Favorite Type</span>
+              <span class="fav-pill" [style.background]="typeColor(p.favoriteType) + '33'" [style.color]="typeColor(p.favoriteType)">
+                <span class="fav-glyph" [style.background]="typeColor(p.favoriteType)"></span>{{ p.favoriteType }}
+              </span>
+            </div>
+            <div class="prof-item"><span class="prof-label">Experience Level</span><span class="prof-value">{{ p.experienceLevel }}</span></div>
+          </div>
+          <a routerLink="/profile" class="edit-profile-btn">Edit Trainer Profile &rarr;</a>
+        </div>
+      </div>
+
+      <!-- ===== 4. Privacy & Consent ===== -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Privacy &amp; Consent</span>
+          <span class="card-helper">Your acceptance record &mdash; shown for your reference.</span>
+        </div>
+        <div class="privacy-row">
+          <span class="privacy-check"><span class="privacy-check-mark"></span></span>
+          <div class="setting-text">
+            <span class="setting-label">Terms of Use &amp; Privacy Policy accepted</span>
+            @if (p.policyVersion) {
+              <div class="setting-helper">Version {{ p.policyVersion }} &middot; accepted {{ formattedAcceptedPolicyAt() }}</div>
+            }
+          </div>
+        </div>
+        <div class="privacy-btn-row">
+          <button type="button" class="ghost-btn" (click)="showPolicy('terms')">View Terms of Use</button>
+          <button type="button" class="ghost-btn" (click)="showPolicy('privacy')">View Privacy Policy</button>
+        </div>
+      </div>
+
+      <!-- ===== 5. Account ===== -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Account</span>
+          <span class="card-helper">You're signed in as {{ p.trainerName }}.</span>
+        </div>
+        <button type="button" class="logout-btn" (click)="logOut()">Log Out</button>
+      </div>
+
+      <!-- ===== SAVE BAR ===== -->
+      <div class="save-bar">
+        @if (saveError(); as err) {
+          <div class="error-banner"><span class="error-dot"></span>{{ err }}</div>
+        } @else {
+          <span class="save-hint">Appearance and battle preferences apply immediately &mdash; email preferences need Save.</span>
+        }
+        <button type="button" class="save-btn" [disabled]="!isDirty() || saving()" (click)="saveSettings()">
+          {{ saving() ? 'Saving…' : 'Save Settings' }}
+        </button>
+      </div>
+    }
+  </div>
+
+  @if (showSavedToast()) {
+    <div class="toast"><span class="toast-dot"></span>Settings saved</div>
+  }
+
+  @if (openPolicyModal(); as t) {
+    <app-policy-modal [type]="t" [isLight]="theme.isLight()" (closed)="closePolicy()" />
+  }
+</div>

@@ -39,11 +39,14 @@ export class LoadingScreen implements OnInit, OnDestroy {
   readonly showProgress = input(true);
   readonly showWordmark = input(true);
   readonly message = input<string | null>(null);
+  // Lets a specific page rotate through its own flavor of tips (e.g. Home's
+  // "Warming up the arena…") instead of the generic default list below.
+  readonly messages = input<string[]>(MESSAGES);
 
   protected readonly messageIndex = signal(0);
 
   protected readonly sizeConfig = computed<SizeConfig>(() => SIZES[this.size()]);
-  protected readonly currentMessage = computed(() => this.message() || MESSAGES[this.messageIndex()]);
+  protected readonly currentMessage = computed(() => this.message() || this.messages()[this.messageIndex()]);
 
   protected readonly ballSize = computed(() => Math.round(this.sizeConfig().core * 0.9));
   protected readonly ballBandHeight = computed(() => Math.max(3, Math.round(this.ballSize() * 0.09)));
@@ -60,7 +63,7 @@ export class LoadingScreen implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.messageTimer = setInterval(() => {
-      this.messageIndex.update((i) => (i + 1) % MESSAGES.length);
+      this.messageIndex.update((i) => (i + 1) % this.messages().length);
     }, 1900);
   }
 

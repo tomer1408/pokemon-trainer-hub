@@ -1,15 +1,8 @@
 import { Component, HostListener, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '@auth0/auth0-angular';
-import { ColorblindService, ColorblindMode } from '../colorblind';
+import { ColorblindService, ColorblindMode, COLORBLIND_MODE_OPTIONS } from '../colorblind';
 import { clearStarterQuizSkip } from '../quiz/quiz-completion';
-
-const COLORBLIND_MODES: { value: ColorblindMode; label: string }[] = [
-  { value: 'off', label: 'Off' },
-  { value: 'protanopia', label: 'Protanopia' },
-  { value: 'deuteranopia', label: 'Deuteranopia' },
-  { value: 'tritanopia', label: 'Tritanopia' },
-];
 
 @Component({
   selector: 'app-account-menu',
@@ -25,7 +18,7 @@ export class AccountMenu {
   readonly email = input('');
   readonly isLight = input(false);
 
-  protected readonly colorblindModes = COLORBLIND_MODES;
+  protected readonly colorblindModes = COLORBLIND_MODE_OPTIONS;
   protected readonly initial = computed(() => this.trainerName().charAt(0).toUpperCase() || 'T');
 
   protected readonly open = signal(false);

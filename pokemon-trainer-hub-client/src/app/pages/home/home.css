@@ -12,7 +12,6 @@
   --overlay-05: rgba(255, 255, 255, 0.05);
   --overlay-08: rgba(255, 255, 255, 0.08);
   --overlay-10: rgba(94, 234, 212, 0.10);
-  --overlay-14: rgba(255, 255, 255, 0.14);
   --overlay-35: rgba(230, 225, 250, 0.35);
 
   display: block;
@@ -33,7 +32,6 @@
   --overlay-05: rgba(28, 21, 51, 0.05);
   --overlay-08: rgba(28, 21, 51, 0.08);
   --overlay-10: rgba(14, 148, 136, 0.10);
-  --overlay-14: rgba(28, 21, 51, 0.12);
   --overlay-35: rgba(28, 21, 51, 0.35);
 }
 
@@ -135,7 +133,6 @@
 }
 
 .avatar-hex,
-.skel-hex,
 .hex-badge {
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 }
@@ -361,7 +358,6 @@
 }
 
 .progress-stat,
-.skel-lines,
 .rec-text-col,
 .action-text-col,
 .footer-col {
@@ -406,41 +402,6 @@
 .fav-glyph {
   width: 12px;
   height: 12px;
-}
-
-.skel-hex {
-  width: 78px;
-  height: 70px;
-  flex-shrink: 0;
-  background: linear-gradient(90deg, var(--overlay-05) 0px, var(--overlay-14) 150px, var(--overlay-05) 300px);
-  background-size: 600px 100%;
-  animation: shimmer 1.6s linear infinite;
-}
-
-.skel-lines {
-  flex: 1;
-  gap: 12px;
-  min-width: 0;
-}
-
-.skel-line {
-  border-radius: 7px;
-  background: linear-gradient(90deg, var(--overlay-05) 0px, var(--overlay-14) 150px, var(--overlay-05) 300px);
-  background-size: 600px 100%;
-  animation: shimmer 1.6s linear infinite;
-}
-
-.skel-line-1 { width: 60%; height: 22px; }
-.skel-line-2 { width: 34%; height: 14px; }
-.skel-line-3 { width: 100%; height: 14px; }
-
-.skel-card {
-  height: 200px;
-  width: 100%;
-  border-radius: 22px;
-  background: linear-gradient(90deg, var(--overlay-05) 0px, var(--overlay-14) 150px, var(--overlay-05) 300px);
-  background-size: 600px 100%;
-  animation: shimmer 1.6s linear infinite;
 }
 
 .card-head {
@@ -1173,10 +1134,6 @@
   50% { transform: translateY(-4px); }
 }
 
-@keyframes shimmer {
-  0% { background-position: -300px 0; }
-  100% { background-position: 300px 0; }
-}
 
 @keyframes marqueeScroll {
   0% { transform: translateX(0); }

@@ -1,17 +1,7 @@
 <div class="home" [class.light]="theme.isLight()">
   <div class="content">
     @if (isLoading()) {
-      <div class="hero-outer">
-        <div class="hero-inner">
-          <div class="skel-hex"></div>
-          <div class="skel-lines">
-            <div class="skel-line skel-line-1"></div>
-            <div class="skel-line skel-line-2"></div>
-            <div class="skel-line skel-line-3"></div>
-          </div>
-        </div>
-      </div>
-      <div class="skel-card"></div>
+      <app-loading-screen [isLight]="theme.isLight()" [fullScreen]="true" size="lg" [messages]="loadingTips" />
     } @else if (hasError()) {
       <div class="error-state">
         <p class="error-message">We couldn't load your home page right now.</p>

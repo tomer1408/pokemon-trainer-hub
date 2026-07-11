@@ -5,6 +5,7 @@ import { TeamService } from '../../core/team';
 import { PokemonService, PokemonDetail, PokemonSummary } from '../../core/pokemon';
 import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
 import { ThemeService } from '../../shared/theme';
+import { AppSettingsService } from '../../shared/app-settings';
 import { LoadingScreen } from '../../shared/loading-screen/loading-screen';
 
 const MIN_TEAM_SIZE = 1;
@@ -25,8 +26,11 @@ export interface BattleSettings {
   showExplanations: boolean;
 }
 
-function buildDefaultSettings(): BattleSettings {
-  return { difficulty: 'medium', rounds: 3, opponentType: 'random', luckFactor: 'medium', showExplanations: true };
+// showExplanationsDefault seeds this from the Settings page's saved
+// preference — Battle's own settings panel can still override it for just
+// this session, same as every other field here.
+function buildDefaultSettings(showExplanationsDefault: boolean): BattleSettings {
+  return { difficulty: 'medium', rounds: 3, opponentType: 'random', luckFactor: 'medium', showExplanations: showExplanationsDefault };
 }
 
 // First side to win this many rounds takes the match — 1 Round needs just 1,
@@ -169,6 +173,7 @@ export class Battle implements OnDestroy {
   private readonly teamService = inject(TeamService);
   private readonly pokemonService = inject(PokemonService);
   protected readonly theme = inject(ThemeService);
+  private readonly appSettings = inject(AppSettingsService);
 
   protected readonly isLoading = signal(true);
   protected readonly hasError = signal(false);
@@ -178,7 +183,7 @@ export class Battle implements OnDestroy {
   protected readonly opponentName = signal('');
 
   // ---- Battle Settings (Prepare for Battle screen) ----
-  protected readonly settings = signal<BattleSettings>(buildDefaultSettings());
+  protected readonly settings = signal<BattleSettings>(buildDefaultSettings(this.appSettings.battleExplanationsDefault()));
 
   protected readonly difficultyOptions: { value: BattleDifficulty; label: string; helper: string }[] = [
     { value: 'easy', label: 'Easy', helper: 'Weaker opponents' },

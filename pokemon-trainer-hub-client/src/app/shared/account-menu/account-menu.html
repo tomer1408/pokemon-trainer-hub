@@ -26,8 +26,9 @@
 
       <div class="divider"></div>
 
-      <!-- Placeholders — no Settings/Support pages exist yet, these intentionally go nowhere. -->
-      <button type="button" class="item"><span class="dot dot-violet"></span>Settings</button>
+      <a routerLink="/settings" class="item" (click)="close()"><span class="dot dot-violet"></span>Settings</a>
+
+      <!-- Placeholder — no Support page exists yet, intentionally goes nowhere. -->
       <button type="button" class="item"><span class="dot dot-cyan"></span>Support</button>
 
       <div class="divider"></div>
