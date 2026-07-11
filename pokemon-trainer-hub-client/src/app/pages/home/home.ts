@@ -7,8 +7,8 @@ import { ProfileService, TrainerProfile } from '../../core/profile';
 import { TeamService, DreamTeamMember } from '../../core/team';
 import { FavoritesService, FavoritePokemon } from '../../core/favorites';
 import { PokemonService, PokemonSummary } from '../../core/pokemon';
-import { getTeamPower, getTeamTier, getTypeSegments } from '../../shared/team-power';
-import { POKEMON_TYPES, TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
+import { getTeamPower, getTeamTier, getTypeSegments, getStrongestMember } from '../../shared/team-power';
+import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
 import { ThemeService } from '../../shared/theme';
 import { PokemonDetailModal } from '../../shared/pokemon-detail-modal/pokemon-detail-modal';
 import { TeamSwapModal } from '../../shared/team-swap-modal/team-swap-modal';
@@ -16,17 +16,33 @@ import { dayOfYearPokemonId } from '../../shared/pokemon-of-the-day';
 
 const MAX_TEAM_SIZE = 5;
 
-function relativeTime(atMs: number): string {
-  const diffMs = Date.now() - atMs;
-  const minutes = Math.round(diffMs / 60000);
-  if (minutes < 1) return 'Just now';
-  if (minutes < 60) return `${minutes} min${minutes === 1 ? '' : 's'} ago`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
-  const days = Math.round(hours / 24);
-  if (days === 1) return 'Yesterday';
-  return `${days} days ago`;
+interface HowStep {
+  num: string;
+  title: string;
+  desc: string;
+  type: PokemonTypeName;
 }
+
+const HOW_STEPS: HowStep[] = [
+  { num: '1', title: 'Explore', desc: 'Find Pokémon using real PokéAPI data', type: 'electric' },
+  { num: '2', title: 'Build', desc: 'Choose up to 5 Pokémon for your Dream Team', type: 'grass' },
+  { num: '3', title: 'Dream Team', desc: 'Manage, reorder, and improve your Dream Team', type: 'fire' },
+];
+
+interface ActionTile {
+  title: string;
+  desc: string;
+  href: string;
+  type: PokemonTypeName;
+}
+
+const ACTION_TILES: ActionTile[] = [
+  { title: 'Explore Pokémon', desc: 'Search by name, type, stats, and abilities', href: '/explorer', type: 'electric' },
+  { title: 'My Team', desc: 'Manage, reorder, and improve your Dream Team', href: '/my-team', type: 'grass' },
+  { title: 'Battle', desc: 'Test your team in a simplified battle simulation', href: '/battle', type: 'fire' },
+  { title: 'Starter Quiz', desc: 'Get Pokémon recommendations based on your trainer style', href: '/starter-quiz', type: 'water' },
+  { title: 'AI Trainer Assistant', desc: "Get suggestions about your team's strengths and weaknesses", href: '/ai-assistant', type: 'ice' },
+];
 
 @Component({
   selector: 'app-home',
@@ -112,40 +128,64 @@ export class Home {
   protected readonly teamPower = computed(() => getTeamPower(this.team() ?? []));
   protected readonly tier = computed(() => getTeamTier(this.teamCount()));
   protected readonly hasTeam = computed(() => this.teamCount() > 0);
-  protected readonly favoritesCount = computed(() => this.favorites().length);
 
-  // Real stand-in for the mockup's "win rate" ring — this app has no battle
-  // engine to generate a real win rate from, but type coverage is a genuine,
-  // already-tracked number that fits the same "ring + percentage" shape.
-  protected readonly typeCoveragePct = computed(() => {
-    const present = new Set(getTypeSegments(this.team() ?? []).map((s) => s.type));
-    return Math.round((present.size / POKEMON_TYPES.length) * 100);
+  // Most-represented type on the team, reusing the same dual-type-aware
+  // segment calculation as the Type Coverage ring (so this can't disagree
+  // with it). Ties are broken by the type of the single strongest Pokémon
+  // among the tied types, rather than picking an arbitrary one.
+  protected readonly topType = computed<string | null>(() => {
+    const team = this.team() ?? [];
+    if (team.length === 0) return null;
+    const segments = getTypeSegments(team);
+    const maxPct = Math.max(...segments.map((s) => s.pct));
+    const topTypes = segments.filter((s) => s.pct === maxPct).map((s) => s.type);
+    if (topTypes.length === 1) return topTypes[0];
+    const strongest = getStrongestMember(team.filter((m) => m.types.some((t) => topTypes.includes(t))));
+    return strongest?.types.find((t) => topTypes.includes(t)) ?? topTypes[0];
   });
-
-  protected readonly pips = computed(() =>
-    Array.from({ length: MAX_TEAM_SIZE }, (_, i) => i < this.teamCount()),
-  );
 
   protected readonly slots = computed(() => {
     const team = this.team() ?? [];
     return Array.from({ length: MAX_TEAM_SIZE }, (_, i) => team[i] ?? null);
   });
 
-  // Recent Activity, built from real addedAt timestamps (team joins +
-  // favorites) instead of a simulated event log this app doesn't have.
-  protected readonly recentActivity = computed(() => {
-    const teamEvents = (this.team() ?? []).map((m) => ({
-      title: `Added ${m.pokemonName} to your team`,
-      at: new Date(m.addedAt).getTime(),
-    }));
-    const favoriteEvents = this.favorites().map((f) => ({
-      title: `Favorited ${f.pokemonName}`,
-      at: new Date(f.addedAt).getTime(),
-    }));
-    return [...teamEvents, ...favoriteEvents]
-      .sort((a, b) => b.at - a.at)
-      .slice(0, 4)
-      .map((ev) => ({ title: ev.title, time: relativeTime(ev.at) }));
+  protected readonly howSteps = HOW_STEPS;
+  protected readonly actionTiles = ACTION_TILES;
+
+  // Drives the "Recommended next step" banner — same team-state logic used
+  // to decide the quiz nudge and the empty/growing/complete messaging
+  // elsewhere on this page, just consolidated into one CTA instead of
+  // several separate banners repeating similar advice.
+  protected readonly rec = computed(() => {
+    if (!this.hasTeam()) {
+      return {
+        title: 'Start by adding your first Pokémon',
+        subtitle: 'Browse the Explorer and pick a Pokémon that matches your style',
+        ctaLabel: 'Explore Pokémon',
+        ctaHref: '/explorer',
+        iconType: 'grass' as PokemonTypeName,
+        showQuiz: this.showQuizNudge(),
+      };
+    }
+    const remaining = MAX_TEAM_SIZE - this.teamCount();
+    if (remaining > 0) {
+      return {
+        title: 'Your team is growing — keep building',
+        subtitle: `Add ${remaining} more Pokémon to complete your Dream Team of 5`,
+        ctaLabel: 'Continue Building',
+        ctaHref: '/explorer',
+        iconType: 'electric' as PokemonTypeName,
+        showQuiz: this.showQuizNudge(),
+      };
+    }
+    return {
+      title: 'Your Dream Team is complete!',
+      subtitle: 'Five Pokémon locked in. Ready to test your strategy in battle?',
+      ctaLabel: 'Start Battle',
+      ctaHref: '/battle',
+      iconType: 'fire' as PokemonTypeName,
+      showQuiz: false,
+    };
   });
 
   protected readonly potd = toSignal(this.pokemonService.getById(dayOfYearPokemonId()), {

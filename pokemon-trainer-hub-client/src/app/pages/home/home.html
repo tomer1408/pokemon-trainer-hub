@@ -19,71 +19,73 @@
         <button type="button" class="retry-btn" (click)="retry()">Try again</button>
       </div>
     } @else {
-      <!-- ===== TRAINER HERO ===== -->
-      <div class="hero-outer">
-        <div class="hero-inner">
-          <div class="avatar-hex">
-            @if (avatarSprite(); as sprite) {
-              <img class="avatar-sprite" [src]="sprite" alt="Trainer avatar" />
-            } @else {
-              {{ trainerInitial() }}
-            }
-          </div>
+      <!-- ===== HERO + TRAINER PROGRESS ===== -->
+      <div class="hero-row">
+        <div class="hero-outer">
+          <div class="hero-inner">
+            <div class="avatar-hex">
+              @if (avatarSprite(); as sprite) {
+                <img class="avatar-sprite" [src]="sprite" alt="Trainer avatar" />
+              } @else {
+                {{ trainerInitial() }}
+              }
+            </div>
 
-          <div class="hero-copy">
-            <div class="hero-kicker">Welcome back, trainer</div>
-            <div class="hero-name-row">
+            <div class="hero-copy">
+              <div class="hero-kicker">Welcome back, trainer</div>
               <h1 class="hero-name">{{ trainerName() }}</h1>
-              <span class="tier-pill">{{ tier() }}</span>
-            </div>
+              <p class="hero-tagline">Catch. Train. Battle.<br />Your Dream Team is waiting to make history</p>
 
-            @if (!hasTeam()) {
-              <p class="sub-copy">Your team is waiting &mdash; go find your first Pok&eacute;mon.</p>
-            }
-
-            <div class="progress-row">
-              <div class="progress-pips">
-                @for (filled of pips(); track $index) {
-                  <div class="pip" [class.filled]="filled"></div>
-                }
+              <div class="hero-cta-row">
+                <a routerLink="/explorer" class="hero-primary"><span class="hero-bolt"></span>Explore Pok&eacute;mon</a>
+                <a routerLink="/my-team" class="hero-secondary">View My Team</a>
+                <a routerLink="/profile" class="hero-secondary">My Profile</a>
               </div>
-              <span class="progress-label">{{ teamCount() }}/5 on your team</span>
             </div>
           </div>
+        </div>
 
-          <div class="hero-stats">
-            <div class="stat-cell">
-              <div class="stat-value">{{ teamPower() }}</div>
-              <div class="stat-label">Team Power</div>
+        <div class="progress-card">
+          <div class="progress-head">
+            <span class="card-kicker">Trainer Progress</span>
+            <span class="tier-pill">{{ tier() }}</span>
+          </div>
+          <div class="progress-big-row">
+            <span class="progress-big">{{ teamCount() }}</span>
+            <span class="progress-out-of">/ 5 Pok&eacute;mon</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" [style.width.%]="(teamCount() / 5) * 100"></div></div>
+          <div class="progress-stats-row">
+            <div class="progress-stat">
+              <span class="progress-stat-value">{{ teamPower() }}</span>
+              <span class="progress-stat-label">Team Power</span>
             </div>
-            <div class="stat-cell">
-              <div class="stat-value">{{ favoritesCount() }}</div>
-              <div class="stat-label">Favorites</div>
-            </div>
-            <div class="stat-cell">
-              <div class="stat-value">{{ teamCount() }}/5</div>
-              <div class="stat-label">Team size</div>
+            <div class="progress-stat">
+              @if (topType(); as tt) {
+                <span class="fav-type-row">
+                  <span class="fav-glyph" [style.background]="typeColor(tt)"></span>
+                  <span class="progress-stat-value">{{ tt }}</span>
+                </span>
+              } @else {
+                <span class="progress-stat-value">&mdash;</span>
+              }
+              <span class="progress-stat-label">Top Type</span>
             </div>
           </div>
         </div>
       </div>
 
-      @if (showQuizNudge()) {
-        <a routerLink="/starter-quiz" class="explore-more-row">
-          <span class="explore-more-text">Haven't found your starter yet?</span>
-          <span class="explore-more-link">Take the Starter Quiz <span class="explore-more-arrow">&rarr;</span></span>
-        </a>
-      }
-
-      <!-- ===== BENTO ROW 1: TEAM + POWER ===== -->
-      <div class="bento-row-1">
-
-        <!-- Dream Team -->
-        <div class="team-card">
-          <div class="card-head">
+      <!-- ===== DREAM TEAM PREVIEW ===== -->
+      <div class="team-card">
+        <div class="card-head">
+          <div>
+            <span class="team-kicker">YOUR DREAM TEAM</span>
             <span class="card-title team-name-title">{{ profile()?.teamName || 'Your Dream Team' }}</span>
-            <a routerLink="/manage-team" class="manage-link">Manage Team <span class="link-arrow">&rarr;</span></a>
           </div>
+          <a routerLink="/manage-team" class="manage-link">Manage Team <span class="link-arrow">&rarr;</span></a>
+        </div>
+
+        @if (hasTeam()) {
           <div class="team-row">
             @for (member of slots(); track $index) {
               @if (member) {
@@ -109,48 +111,84 @@
               }
             }
           </div>
+        } @else {
+          <div class="team-empty">
+            <span class="empty-ball"><span class="empty-ball-band"></span><span class="empty-ball-center"></span></span>
+            <div class="empty-title">You haven't added any Pok&eacute;mon yet</div>
+            <div class="empty-sub">Your Dream Team holds up to 5 Pok&eacute;mon. Start with the one that fits your style.</div>
+            <a routerLink="/explorer" class="empty-cta">Find Your First Pok&eacute;mon &rarr;</a>
+          </div>
+        }
+      </div>
 
-          <a routerLink="/explorer" class="explore-more-row">
-            <span class="explore-more-text">Want a stronger line-up?</span>
-            <span class="explore-more-link">
-              Explore More Pok&eacute;mon <span class="explore-more-arrow">&rarr;</span>
-            </span>
-          </a>
+      <!-- ===== HOW IT WORKS ===== -->
+      <div class="how-band">
+        <div class="how-head">
+          <span class="card-title">How it works</span>
         </div>
-
-        <!-- Power / type-coverage cluster -->
-        <div class="power-card">
-          <div class="power-top">
-            <div class="power-label">Type Coverage</div>
-            <div class="power-number">{{ typeCoveragePct() }}%</div>
-          </div>
-          <div class="ring-wrap">
-            <div class="ring" [style.background]="'conic-gradient(var(--cyan) ' + (typeCoveragePct() * 3.6) + 'deg, var(--overlay-08) 0deg)'">
-              <div class="ring-hole">
-                <div class="ring-value">{{ typeCoveragePct() }}%</div>
-                <div class="ring-sub">coverage</div>
-              </div>
+        <div class="how-steps-row">
+          @for (h of howSteps; track h.num) {
+            <div class="how-step">
+              <span class="action-icon-wrap">
+                <span class="mini-ball" [style.border-color]="typeColor(h.type)">
+                  <span class="mini-ball-band" [style.background]="typeColor(h.type)"></span>
+                  <span class="mini-ball-center" [style.border-color]="typeColor(h.type)"></span>
+                </span>
+              </span>
+              <div class="how-title">{{ h.title }}</div>
+              <div class="how-desc">{{ h.desc }}</div>
             </div>
-          </div>
-          <div class="mini-stat-row">
-            <div class="mini-stat">
-              <span class="mini-value">{{ teamPower() }}</span>
-              <span class="mini-label">Team Power</span>
-            </div>
-            <div class="mini-stat">
-              <span class="mini-value">{{ teamCount() }}/5</span>
-              <span class="mini-label">Team Size</span>
-            </div>
-          </div>
-          <a routerLink="/battle" class="battle-btn">Start Battle Simulation <span class="link-arrow">&rarr;</span></a>
+          }
         </div>
       </div>
 
-      <!-- ===== BENTO ROW 2: POTD + ACTIONS + ACTIVITY ===== -->
-      @if (potd(); as p) {
-        <div class="bento-row-2">
+      <!-- ===== RECOMMENDED NEXT STEP ===== -->
+      <div class="rec-card">
+        <div class="rec-left">
+          <span class="rec-icon" [style.background]="typeColor(rec().iconType) + '33'">
+            <span class="mini-ball mini-ball-lg" [style.border-color]="typeColor(rec().iconType)">
+              <span class="mini-ball-band" [style.background]="typeColor(rec().iconType)"></span>
+              <span class="mini-ball-center" [style.border-color]="typeColor(rec().iconType)"></span>
+            </span>
+          </span>
+          <div class="rec-text-col">
+            <span class="rec-kicker">Recommended next step</span>
+            <span class="rec-title">{{ rec().title }}</span>
+            <span class="rec-sub">{{ rec().subtitle }}</span>
+            @if (rec().showQuiz) {
+              <a routerLink="/starter-quiz" class="rec-quiz-link">Not sure who to pick? Take the Starter Quiz &rarr;</a>
+            }
+          </div>
+        </div>
+        <a [routerLink]="rec().ctaHref" class="rec-cta">{{ rec().ctaLabel }} <span class="link-arrow">&rarr;</span></a>
+      </div>
 
-          <!-- Pokémon of the Day -->
+      <!-- ===== JUMP BACK IN ===== -->
+      <div class="section-head">
+        <span class="card-title">Jump back in</span>
+      </div>
+      <div class="actions-grid">
+        @for (a of actionTiles; track a.title) {
+          <a [routerLink]="a.href" class="action-row">
+            <span class="action-accent" [style.background]="typeColor(a.type)"></span>
+            <span class="action-icon-wrap" [style.background]="typeColor(a.type) + '33'">
+              <span class="mini-ball" [style.border-color]="typeColor(a.type)">
+                <span class="mini-ball-band" [style.background]="typeColor(a.type)"></span>
+                <span class="mini-ball-center" [style.border-color]="typeColor(a.type)"></span>
+              </span>
+            </span>
+            <div class="action-text-col">
+              <div class="action-title">{{ a.title }}</div>
+              <div class="action-desc">{{ a.desc }}</div>
+            </div>
+            <span class="action-go">&rarr;</span>
+          </a>
+        }
+      </div>
+
+      <!-- ===== POKEMON OF THE DAY + BATTLE PROMO ===== -->
+      @if (potd(); as p) {
+        <div class="feature-row">
           <div class="potd-card" (click)="openDetail(p.id)">
             <div class="potd-art" [style.background]="typeColor(p.types[0]) + '22'">
               <div class="potd-badge">Pok&eacute;mon of the Day</div>
@@ -172,56 +210,18 @@
             </div>
           </div>
 
-          <!-- Quick actions -->
-          <div class="actions-card">
-            <div class="card-title">Quick Actions</div>
-            <div class="actions-grid">
-              <a routerLink="/explorer" class="action-tile">
-                <span class="action-icon-wrap"><span class="action-icon"></span></span>
-                <span class="action-label">Explorer</span>
-              </a>
-              <a routerLink="/my-team" class="action-tile">
-                <span class="action-icon-wrap"><span class="action-icon"></span></span>
-                <span class="action-label">My Team</span>
-              </a>
-              <a routerLink="/manage-team" class="action-tile">
-                <span class="action-icon-wrap"><span class="action-icon"></span></span>
-                <span class="action-label">Manage Team</span>
-              </a>
-              <a routerLink="/ai-assistant" class="action-tile">
-                <span class="action-icon-wrap"><span class="action-icon"></span></span>
-                <span class="action-label">AI Assistant</span>
-              </a>
-            </div>
-          </div>
-
-          <!-- Recent activity -->
-          <div class="activity-card">
-            <div class="card-title">Recent Activity</div>
-            <div class="activity-list">
-              @for (ev of recentActivity(); track ev.title + ev.time) {
-                <div class="activity-row">
-                  <span class="activity-dot"></span>
-                  <div class="activity-text-wrap">
-                    <div class="activity-title">{{ ev.title }}</div>
-                    <div class="activity-time">{{ ev.time }}</div>
-                  </div>
-                </div>
-              }
-              @if (recentActivity().length === 0) {
-                <p class="activity-empty">
-                  No activity yet &mdash; add a Pok&eacute;mon to your team or favorites to see it here.
-                </p>
-              }
-            </div>
-          </div>
+          <a routerLink="/battle" class="battle-promo-card">
+            <span class="battle-promo-icon">&#9889;</span>
+            <div class="battle-promo-title">Ready to Battle?</div>
+            <div class="battle-promo-desc">Put your Dream Team to the test in a simplified battle simulation.</div>
+            <span class="battle-promo-cta">Start Battle <span class="link-arrow">&rarr;</span></span>
+          </a>
         </div>
       }
 
       <!-- ===== LIVE MARQUEE ===== -->
       <div class="marquee-card">
         <div class="marquee-header">
-          <span class="marquee-title">Fresh catches roll in daily</span>
           <span class="marquee-sub">{{ marqueeTiles().total }} Pok&eacute;mon in the Pok&eacute;dex</span>
         </div>
         <div class="marquee-mask">
