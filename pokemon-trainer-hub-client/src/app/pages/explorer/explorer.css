@@ -388,6 +388,30 @@
   color: var(--yellow);
 }
 
+.compare-toggle-btn {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 1;
+  border: none;
+  background: var(--overlay-08);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--overlay-40);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.compare-toggle-btn.active {
+  background: var(--cyan);
+  color: #1C1533;
+}
+
 .card-art {
   height: 160px;
   border-radius: 14px;

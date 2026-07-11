@@ -13,6 +13,7 @@ import { POKEMON_TYPES, TYPE_COLORS, PokemonTypeName } from '../../shared/pokemo
 import { ThemeService } from '../../shared/theme';
 import { PokemonDetailModal } from '../../shared/pokemon-detail-modal/pokemon-detail-modal';
 import { TeamSwapModal } from '../../shared/team-swap-modal/team-swap-modal';
+import { PokemonCompareModal } from '../../shared/pokemon-compare-modal/pokemon-compare-modal';
 import { PotdCard } from '../../shared/potd-card/potd-card';
 import { dayOfYearPokemonId } from '../../shared/pokemon-of-the-day';
 
@@ -37,7 +38,7 @@ function sortSummaries(list: PokemonSummary[], sort: SortBy): PokemonSummary[] {
 
 @Component({
   selector: 'app-explorer',
-  imports: [FormsModule, NgTemplateOutlet, RouterLink, PokemonDetailModal, TeamSwapModal, PotdCard],
+  imports: [FormsModule, NgTemplateOutlet, RouterLink, PokemonDetailModal, TeamSwapModal, PokemonCompareModal, PotdCard],
   templateUrl: './explorer.html',
   styleUrl: './explorer.css',
 })
@@ -76,6 +77,13 @@ export class Explorer {
   // Separate from swapCandidate — this is the unforced "team has room"
   // compare flow (mode="compare"), never the full-team forced swap above.
   protected readonly compareCandidate = signal<PokemonSummary | null>(null);
+
+  // Explorer's own standalone "compare any two" tool — independent of the
+  // team-focused compareCandidate/swapCandidate above and of Manage My
+  // Team's own "⇄ Compare". Picking a first Pokémon stages it in
+  // compareSlotA; picking a second immediately opens the comparison modal.
+  protected readonly compareSlotA = signal<PokemonSummary | null>(null);
+  protected readonly compareSlotB = signal<PokemonSummary | null>(null);
 
   private readonly teamRefresh = signal(0);
   private readonly favoritesRefresh = signal(0);
@@ -181,6 +189,10 @@ export class Explorer {
     return this.favorites().some((f) => f.pokemonId === pokemonId);
   }
 
+  isComparing(pokemonId: number): boolean {
+    return this.compareSlotA()?.id === pokemonId || this.compareSlotB()?.id === pokemonId;
+  }
+
   selectType(type: PokemonTypeName | 'all'): void {
     this.typeFilter.set(this.typeFilter() === type ? 'all' : type);
   }
@@ -256,6 +268,36 @@ export class Explorer {
     this.teamRefresh.update((n) => n + 1);
     this.compareCandidate.set(null);
     this.closeDetail();
+  }
+
+  // Toggling the same Pokémon again clears its own slot; picking a second,
+  // different Pokémon while slot A is already filled opens the modal.
+  toggleCompareSlot(p: PokemonSummary): void {
+    const a = this.compareSlotA();
+    const b = this.compareSlotB();
+    if (a?.id === p.id) {
+      this.compareSlotA.set(null);
+      return;
+    }
+    if (b?.id === p.id) {
+      this.compareSlotB.set(null);
+      return;
+    }
+    if (!a) {
+      this.compareSlotA.set(p);
+    } else if (!b) {
+      this.compareSlotB.set(p);
+    }
+  }
+
+  cancelCompareSelection(): void {
+    this.compareSlotA.set(null);
+    this.compareSlotB.set(null);
+  }
+
+  closeCompareModal(): void {
+    this.compareSlotA.set(null);
+    this.compareSlotB.set(null);
   }
 
   requestRemove(member: DreamTeamMember): void {

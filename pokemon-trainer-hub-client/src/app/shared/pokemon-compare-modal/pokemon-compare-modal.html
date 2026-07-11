@@ -1,0 +1,94 @@
+<div class="dim-overlay" [class.light]="isLight" (click)="onCancel()">
+  <div class="modal-outer" (click)="$event.stopPropagation()">
+    <div class="modal-inner">
+      <div class="header">
+        <div class="kicker">Head-to-Head</div>
+        <div class="header-row">
+          <h1 class="title">{{ pokemonA.name }} vs {{ pokemonB.name }}</h1>
+          <button type="button" class="close-btn" (click)="onCancel()">&times;</button>
+        </div>
+      </div>
+
+      <div class="compare-scroll-body">
+        <div class="vs-row">
+          <div class="candidate-card">
+            <div class="card-art" [style.background]="typeColor(pokemonA.types[0]) + '22'">
+              @if (pokemonA.spriteUrl) {
+                <img [src]="pokemonA.spriteUrl" alt="{{ pokemonA.name }}" />
+              }
+            </div>
+            <div class="card-name">{{ pokemonA.name }}</div>
+            @if (pokemonA.types[0]; as type) {
+              <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
+              </span>
+            }
+            <div class="card-power-row">
+              <span class="card-power-label">PWR</span>
+              <span class="card-power-value">{{ pokemonA.baseExperience }}</span>
+            </div>
+          </div>
+
+          <div class="vs-badge">VS</div>
+
+          <div class="candidate-card">
+            <div class="card-art" [style.background]="typeColor(pokemonB.types[0]) + '22'">
+              @if (pokemonB.spriteUrl) {
+                <img [src]="pokemonB.spriteUrl" alt="{{ pokemonB.name }}" />
+              }
+            </div>
+            <div class="card-name">{{ pokemonB.name }}</div>
+            @if (pokemonB.types[0]; as type) {
+              <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
+              </span>
+            }
+            <div class="card-power-row">
+              <span class="card-power-label">PWR</span>
+              <span class="card-power-value">{{ pokemonB.baseExperience }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-section">
+          @for (st of statRows(); track st.label) {
+            <div class="stat-row">
+              <span class="stat-value-left" [class.wins]="st.aWins">
+                {{ st.aValue }}
+                @if (st.aWins) {
+                  <span class="win-mark"> &#9652;</span>
+                }
+              </span>
+              <div class="stat-bars-wrap">
+                <div class="stat-track">
+                  <div class="stat-fill left" [class.wins]="st.aWins" [style.width.%]="statFillPct(st.aValue)"></div>
+                </div>
+                <span class="stat-label-chip">{{ st.label }}</span>
+                <div class="stat-track">
+                  <div class="stat-fill right" [class.wins]="st.bWins" [style.width.%]="statFillPct(st.bValue)"></div>
+                </div>
+              </div>
+              <span class="stat-value-right" [class.wins]="st.bWins">
+                @if (st.bWins) {
+                  <span class="win-mark">&#9652; </span>
+                }
+                {{ st.bValue }}
+              </span>
+            </div>
+          }
+        </div>
+
+        <div class="diff-row">
+          <span class="diff-label">Total Power Difference</span>
+          <span class="diff-badge" [class.better]="powerDiff > 0">
+            {{ powerDiff > 0 ? '+' : '' }}{{ powerDiff }} PWR
+          </span>
+        </div>
+      </div>
+
+      <div class="actions-row">
+        <button type="button" class="close-action-btn" (click)="onCancel()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
