@@ -30,14 +30,19 @@
 }
 
 .potd-outer.light {
-  --surface: #ffffff;
-  --border-soft: rgba(76, 29, 149, 0.12);
-  --text-body: #1c1533;
-  --text-muted: rgba(28, 21, 51, 0.55);
-  --violet-deep: #6d28d9;
-  --cyan: #0e9488;
-  --yellow: #b45309;
-  --overlay-08: rgba(28, 21, 51, 0.04);
+  --surface: #FFFFFF;
+  --border-soft: #DCE3EC;
+  --text-body: #172033;
+  --text-muted: #5F6B7A;
+  --violet: #4F46E5;
+  --violet-deep: #3730A3;
+  --cyan: #0F9F94;
+  --yellow: #F4B740;
+  --overlay-08: rgba(23, 32, 51, 0.04);
+}
+
+.potd-outer.light {
+  box-shadow: 0 16px 36px rgba(35, 48, 68, 0.14);
 }
 
 .potd-inner {

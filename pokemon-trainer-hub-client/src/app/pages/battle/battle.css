@@ -19,19 +19,20 @@
 }
 
 .battle-page.light {
-  --bg: #F5F3FF;
+  --bg: #F6F8FC;
   --surface: #FFFFFF;
-  --surface-raised: #EFEBFC;
-  --border-soft: rgba(76, 29, 149, 0.12);
-  --text-body: #1C1533;
-  --text-muted: rgba(28, 21, 51, 0.55);
-  --violet-deep: #6D28D9;
-  --cyan: #0E9488;
-  --yellow: #B45309;
-  --good: #0E9488;
+  --surface-raised: #F7F9FC;
+  --border-soft: #DCE3EC;
+  --text-body: #172033;
+  --text-muted: #5F6B7A;
+  --violet: #4F46E5;
+  --violet-deep: #3730A3;
+  --cyan: #0F9F94;
+  --yellow: #F4B740;
+  --good: #0F9F94;
   --bad: #DC2626;
-  --overlay-05: rgba(28, 21, 51, 0.05);
-  --overlay-08: rgba(28, 21, 51, 0.08);
+  --overlay-05: rgba(23, 32, 51, 0.05);
+  --overlay-08: rgba(23, 32, 51, 0.08);
 }
 
 .battle-page {
@@ -40,6 +41,61 @@
   box-sizing: border-box;
   background: radial-gradient(ellipse 900px 500px at 50% 0%, rgba(124, 58, 237, 0.16), transparent 60%), var(--bg);
   font-family: 'Manrope', sans-serif;
+}
+
+.battle-page.light {
+  background:
+    radial-gradient(ellipse 900px 500px at 50% 0%, rgba(79, 70, 229, 0.06), transparent 62%),
+    radial-gradient(ellipse 600px 420px at 90% 15%, rgba(15, 159, 148, 0.05), transparent 65%),
+    var(--bg);
+}
+
+.battle-page.light .difficulty-card.selected,
+.battle-page.light .settings-pill.selected {
+  background: #E6F7F5;
+  border-color: #0F9F94;
+}
+
+.battle-page.light .pick-card:hover:not(.used) {
+  box-shadow: 0 16px 34px rgba(15, 159, 148, 0.24);
+}
+
+.battle-page.light .pick-card.selected {
+  background: #E6F7F5;
+}
+
+.battle-page.light .faceoff-card.winner-card {
+  background: linear-gradient(160deg, rgba(244, 183, 64, 0.12), var(--surface));
+  box-shadow: 0 0 32px rgba(244, 183, 64, 0.35), inset 0 0 22px rgba(244, 183, 64, 0.12);
+}
+
+.battle-page.light .winner-badge {
+  background: radial-gradient(circle at 50% 38%, #F4B740, rgba(244, 183, 64, 0.3));
+  box-shadow: 0 4px 14px rgba(244, 183, 64, 0.45);
+}
+
+.battle-page.light .result-badge.good {
+  box-shadow: 0 16px 34px rgba(15, 159, 148, 0.30);
+}
+
+.battle-page.light .result-badge.bad {
+  box-shadow: 0 16px 34px rgba(220, 38, 38, 0.30);
+}
+
+/* --cyan/--good/--yellow stay bright above (matches badge/pill/glow fills
+   on this page); plain text set directly in those colors needs the darker,
+   readable variants instead to keep contrast on a white surface. */
+.battle-page.light .eyebrow,
+.battle-page.light .summary-ready,
+.battle-page.light .faceoff-power,
+.battle-page.light .detail-adv,
+.battle-page.light .result-text.good,
+.battle-page.light .history-outcome.good {
+  color: #0D827A;
+}
+
+.battle-page.light .score-num.gold {
+  color: #9A6700;
 }
 
 .content {

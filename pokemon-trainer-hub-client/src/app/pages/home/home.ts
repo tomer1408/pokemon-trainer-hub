@@ -212,8 +212,6 @@ export class Home {
     initialValue: { results: [] as PokemonSummary[], page: 1, pageSize: 20, total: 0 },
   });
 
-  protected readonly cookieChoice = signal<'accepted' | 'declined' | null>(null);
-
   // Real, server-side flag (not client storage) — stays visible on every
   // Home visit until the trainer actually completes the quiz, skipping only
   // defers the redirect guard, not this nudge.
@@ -305,13 +303,5 @@ export class Home {
   retry(): void {
     this.profileRefresh.update((n) => n + 1);
     this.teamRefresh.update((n) => n + 1);
-  }
-
-  acceptCookies(): void {
-    this.cookieChoice.set('accepted');
-  }
-
-  declineCookies(): void {
-    this.cookieChoice.set('declined');
   }
 }

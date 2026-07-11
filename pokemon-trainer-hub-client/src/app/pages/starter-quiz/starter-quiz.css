@@ -19,18 +19,20 @@
 }
 
 .quiz-page.light {
-  --bg: #F5F3FF;
+  --bg: #F6F8FC;
   --surface: #FFFFFF;
-  --surface-raised: #EFEBFC;
-  --border-soft: rgba(76, 29, 149, 0.12);
-  --text-body: #1C1533;
-  --text-muted: rgba(28, 21, 51, 0.55);
-  --violet-deep: #6D28D9;
-  --cyan: #0E9488;
-  --yellow: #B45309;
-  --overlay-05: rgba(28, 21, 51, 0.05);
-  --overlay-06: rgba(28, 21, 51, 0.06);
-  --overlay-08: rgba(28, 21, 51, 0.08);
+  --surface-raised: #F7F9FC;
+  --border-soft: #DCE3EC;
+  --text-body: #172033;
+  --text-muted: #5F6B7A;
+  --violet: #4F46E5;
+  --violet-deep: #3730A3;
+  --cyan: #0F9F94;
+  --yellow: #F4B740;
+  --danger: #DC2626;
+  --overlay-05: rgba(23, 32, 51, 0.05);
+  --overlay-06: rgba(23, 32, 51, 0.06);
+  --overlay-08: rgba(23, 32, 51, 0.08);
 }
 
 .quiz-page {
@@ -42,6 +44,49 @@
   justify-content: center;
   background: radial-gradient(ellipse 900px 620px at 50% 6%, rgba(124, 58, 237, 0.18), transparent 60%), var(--bg);
   font-family: 'Manrope', sans-serif;
+}
+
+.quiz-page.light {
+  background:
+    radial-gradient(ellipse 900px 620px at 50% 6%, rgba(79, 70, 229, 0.07), transparent 62%),
+    radial-gradient(ellipse 600px 420px at 90% 20%, rgba(15, 159, 148, 0.05), transparent 65%),
+    var(--bg);
+}
+
+.quiz-page.light .quiz-card {
+  box-shadow: 0 24px 64px rgba(23, 32, 51, 0.16);
+}
+
+.quiz-page.light .rec-card-outer {
+  box-shadow: 0 18px 40px rgba(35, 48, 68, 0.14);
+}
+
+.quiz-page.light .rec-card-outer.top-pick {
+  box-shadow: 0 24px 54px rgba(244, 183, 64, 0.35);
+}
+
+.quiz-page.light .rank-badge {
+  color: #FFFFFF;
+  box-shadow: 0 6px 14px rgba(35, 48, 68, 0.16);
+}
+
+.quiz-page.light .rank-badge.gold {
+  color: #172033;
+}
+
+/* --cyan/--yellow stay bright above (matches badge/pill/gradient fills on
+   this page); plain text set directly in those colors needs the darker,
+   readable variants instead to keep contrast on a white surface. */
+.quiz-page.light .results-kicker,
+.quiz-page.light .results-title-accent,
+.quiz-page.light .match-percent-num {
+  color: #0D827A;
+}
+
+.quiz-page.light .rec-action-btn.outline,
+.quiz-page.light .rec-action-btn.primary.compare {
+  color: #0D827A;
+  border-color: #0D827A;
 }
 
 .content {

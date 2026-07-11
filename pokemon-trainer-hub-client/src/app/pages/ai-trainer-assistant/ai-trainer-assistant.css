@@ -28,16 +28,28 @@
 }
 
 .page.light {
-  --bg: #F5F3FF;
+  --bg: #F6F8FC;
   --surface: #FFFFFF;
-  --surface-raised: #EFEBFC;
-  --border-soft: rgba(76, 29, 149, 0.12);
-  --text-body: #1C1533;
-  --text-muted: rgba(28, 21, 51, 0.55);
-  --violet-deep: #6D28D9;
-  --cyan: #0E9488;
-  --yellow: #B45309;
-  --overlay-05: rgba(28, 21, 51, 0.05);
+  --surface-raised: #F7F9FC;
+  --border-soft: #DCE3EC;
+  --text-body: #172033;
+  --text-muted: #5F6B7A;
+  --violet: #4F46E5;
+  --violet-deep: #3730A3;
+  --cyan: #0F9F94;
+  --yellow: #F4B740;
+  --overlay-05: rgba(23, 32, 51, 0.05);
+}
+
+.page.light .stat-value {
+  color: #9A6700;
+}
+
+.page.light {
+  background:
+    radial-gradient(ellipse 850px 480px at 15% 0%, rgba(79, 70, 229, 0.07), transparent 62%),
+    radial-gradient(ellipse 600px 420px at 85% 10%, rgba(15, 159, 148, 0.06), transparent 65%),
+    var(--bg);
 }
 
 .back-link {

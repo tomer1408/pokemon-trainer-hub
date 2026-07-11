@@ -266,18 +266,6 @@
       Pok&eacute;mon Trainer Hub is an independent educational fan project and is not affiliated with Nintendo, Game
       Freak, Creatures, or The Pok&eacute;mon Company. Pok&eacute;mon data is provided by PokéAPI.
     </div>
-
-    @if (cookieChoice() === null) {
-      <div class="cookie-bar">
-        <div class="cookie-text">
-          We use essential cookies to keep you signed in and remember your preferences.
-        </div>
-        <div class="cookie-btn-row">
-          <button type="button" class="cookie-decline" (click)="declineCookies()">Decline</button>
-          <button type="button" class="cookie-accept" (click)="acceptCookies()">Accept</button>
-        </div>
-      </div>
-    }
   </footer>
 
   @if (selectedPokemonId(); as id) {

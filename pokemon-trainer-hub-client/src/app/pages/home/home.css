@@ -19,20 +19,20 @@
 }
 
 .home.light {
-  --bg: #F5F3FF;
+  --bg: #F6F8FC;
   --surface: #FFFFFF;
-  --surface-raised: #EFEBFC;
-  --border-soft: rgba(76, 29, 149, 0.12);
-  --text-body: #1C1533;
-  --text-muted: rgba(28, 21, 51, 0.55);
-  --violet: #A78BFA;
-  --violet-deep: #6D28D9;
-  --cyan: #0E9488;
-  --yellow: #B45309;
-  --overlay-05: rgba(28, 21, 51, 0.05);
-  --overlay-08: rgba(28, 21, 51, 0.08);
-  --overlay-10: rgba(14, 148, 136, 0.10);
-  --overlay-35: rgba(28, 21, 51, 0.35);
+  --surface-raised: #F7F9FC;
+  --border-soft: #DCE3EC;
+  --text-body: #172033;
+  --text-muted: #5F6B7A;
+  --violet: #4F46E5;
+  --violet-deep: #3730A3;
+  --cyan: #0F9F94;
+  --yellow: #F4B740;
+  --overlay-05: rgba(23, 32, 51, 0.05);
+  --overlay-08: rgba(23, 32, 51, 0.08);
+  --overlay-10: rgba(15, 159, 148, 0.10);
+  --overlay-35: rgba(23, 32, 51, 0.35);
 }
 
 .home {
@@ -41,6 +41,55 @@
   box-sizing: border-box;
   background: radial-gradient(ellipse 900px 500px at 15% 0%, rgba(124, 58, 237, 0.16), transparent 60%), var(--bg);
   font-family: 'Manrope', sans-serif;
+}
+
+.home.light {
+  background:
+    radial-gradient(ellipse 850px 480px at 15% 0%, rgba(79, 70, 229, 0.07), transparent 62%),
+    radial-gradient(ellipse 600px 420px at 85% 10%, rgba(15, 159, 148, 0.06), transparent 65%),
+    var(--bg);
+}
+
+.home.light .hero-outer {
+  box-shadow: 0 20px 44px rgba(35, 48, 68, 0.16);
+}
+
+.home.light .error-message {
+  color: #DC2626;
+}
+
+/* Intentional exception: the Battle CTA stays a dark "arena" card even in
+   Light Mode, rather than becoming another white card. */
+.home.light .battle-promo-card {
+  background: linear-gradient(150deg, #172033, #312E81 50%, #0F766E);
+  border-color: transparent;
+}
+
+.home.light .battle-promo-title {
+  color: #FFFFFF;
+}
+
+.home.light .battle-promo-desc {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.home.light .battle-promo-cta {
+  color: #F4B740;
+}
+
+/* --cyan/--yellow stay at the brighter spec accent/energy values above (for
+   badge fills and gradients), but plain text set directly in those colors
+   needs the darker, readable variants to keep contrast on a white surface. */
+.home.light .team-kicker,
+.home.light .rec-kicker,
+.home.light .rec-quiz-link,
+.home.light .potd-cta,
+.home.light .battle-promo-cta {
+  color: #0D827A;
+}
+
+.home.light .progress-big {
+  color: #9A6700;
 }
 
 .content {
@@ -433,9 +482,7 @@
 .rec-cta,
 .tier-pill,
 .type-pill,
-.potd-badge,
-.cookie-decline,
-.cookie-accept {
+.potd-badge {
   border-radius: 100px;
 }
 
@@ -1076,59 +1123,6 @@
   color: var(--overlay-35);
 }
 
-.cookie-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  background: var(--surface-raised);
-  border-top: 1px solid var(--border-soft);
-  padding: 10px 32px;
-  box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.3);
-}
-
-.cookie-text {
-  font-size: 14px;
-  color: var(--text-muted);
-  line-height: 1.4;
-  max-width: 560px;
-}
-
-.cookie-btn-row {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.cookie-decline,
-.cookie-accept {
-  font-family: 'Manrope', sans-serif;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.cookie-decline {
-  border: 1px solid var(--border-soft);
-  background: transparent;
-  color: var(--text-muted);
-  font-weight: 600;
-  padding: 6px 14px;
-}
-
-.cookie-accept {
-  border: none;
-  background: linear-gradient(120deg, var(--cyan), var(--violet));
-  color: #0D0A1E;
-  font-weight: 800;
-  padding: 6px 16px;
-}
-
 @keyframes floatBadge {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-4px); }
@@ -1164,9 +1158,5 @@
   .fine-print {
     padding-left: 20px;
     padding-right: 20px;
-  }
-
-  .cookie-bar {
-    padding: 18px 20px;
   }
 }

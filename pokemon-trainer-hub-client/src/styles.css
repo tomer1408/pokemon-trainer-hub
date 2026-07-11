@@ -1,5 +1,66 @@
 /* You can add global styles to this file, and also import other style files */
 
+/* Reusable Light Mode design tokens — single source of truth for the
+   indigo/teal/energy-yellow palette. Every component's own `.light`
+   CSS-variable overrides (:host.light / .page.light etc.) should assign
+   their local token names (--violet-deep, --cyan, --bg, --text-body, ...)
+   from these values rather than hardcoding hex, so the whole app stays in
+   sync from one place. Dark Mode is untouched — components keep their own
+   dark values in their default (non-.light) :host block. */
+:root {
+  --background-page: #F6F8FC;
+
+  --surface-primary: #FFFFFF;
+  --surface-secondary: #EEF3F8;
+  --surface-tertiary: #E6ECF4;
+
+  --text-primary: #172033;
+  --text-secondary: #5F6B7A;
+  --text-muted: #8792A2;
+  --text-inverse: #FFFFFF;
+
+  --primary: #4F46E5;
+  --primary-hover: #4338CA;
+  --primary-active: #3730A3;
+  --primary-soft: #EEF2FF;
+  --primary-border: #C7D2FE;
+
+  --accent: #0F9F94;
+  --accent-hover: #0D827A;
+  --accent-soft: #E6F7F5;
+  --accent-border: #9ADBD5;
+
+  --energy: #F4B740;
+  --energy-dark: #9A6700;
+  --energy-soft: #FFF7DB;
+
+  --success: #15803D;
+  --success-soft: #EAF7EE;
+  --success-border: #86C89A;
+
+  --error: #DC2626;
+  --error-soft: #FDECEC;
+  --error-border: #F0A3A3;
+
+  --warning: #B76E00;
+  --warning-soft: #FFF4D6;
+  --warning-border: #E8C06C;
+
+  --info: #2563EB;
+  --info-soft: #EAF2FF;
+  --info-border: #AFC8FA;
+
+  --border-default: #DCE3EC;
+  --border-strong: #C6D0DD;
+  --border-focus: #4F46E5;
+
+  --shadow-card: 0 8px 24px rgba(35, 48, 68, 0.07);
+  --shadow-card-hover: 0 14px 34px rgba(35, 48, 68, 0.12);
+  --shadow-modal: 0 24px 64px rgba(23, 32, 51, 0.20);
+  --shadow-primary: 0 10px 24px rgba(79, 70, 229, 0.24);
+  --shadow-accent: 0 10px 24px rgba(15, 159, 148, 0.20);
+}
+
 /* Matches the dark-theme --bg used across pages/navbar, so there's no white
    flash before Angular finishes rendering a page's own themed background. */
 body {

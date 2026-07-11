@@ -16,14 +16,23 @@
 
 .wrap.light {
   --surface: #FFFFFF;
-  --border-soft: rgba(76, 29, 149, 0.12);
-  --text-body: #1C1533;
-  --text-muted: rgba(28, 21, 51, 0.55);
-  --violet-deep: #6D28D9;
-  --cyan: #0E9488;
-  --yellow: #B45309;
+  --border-soft: #DCE3EC;
+  --text-body: #172033;
+  --text-muted: #5F6B7A;
+  --violet: #4F46E5;
+  --violet-deep: #3730A3;
+  --cyan: #0D827A;
+  --yellow: #9A6700;
   --bad: #DC2626;
-  --overlay-hover: rgba(28, 21, 51, 0.05);
+  --overlay-hover: rgba(23, 32, 51, 0.05);
+}
+
+.wrap.light .panel {
+  box-shadow: 0 24px 64px rgba(23, 32, 51, 0.20);
+}
+
+.wrap.light .item-profile:hover {
+  background: rgba(15, 159, 148, 0.14);
 }
 
 .avatar-btn {

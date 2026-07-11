@@ -26,20 +26,23 @@
   flex-wrap: wrap;
   gap: 14px;
   padding: 24px 40px;
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .navbar.light {
-  --bg: #F5F3FF;
+  --bg: #FFFFFF;
   --surface: #FFFFFF;
-  --border-soft: rgba(76, 29, 149, 0.12);
-  --text-body: #1C1533;
-  --text-muted: rgba(28, 21, 51, 0.55);
-  --violet-deep: #6D28D9;
-  --cyan: #0E9488;
+  --border-soft: #DCE3EC;
+  --text-body: #172033;
+  --text-muted: #5F6B7A;
+  --violet: #4F46E5;
+  --violet-deep: #4F46E5;
+  --cyan: #0F9F94;
   --bad: #DC2626;
-  --overlay-05: rgba(28, 21, 51, 0.05);
+  --overlay-05: rgba(23, 32, 51, 0.05);
+
+  border-bottom: 1px solid var(--border-soft);
 }
 
 .navbar-left {
@@ -47,6 +50,7 @@
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  margin-right: auto;
 }
 
 .logo {
@@ -82,6 +86,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-left: auto;
 }
 
 .theme-switch {

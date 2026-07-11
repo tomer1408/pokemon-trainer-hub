@@ -20,20 +20,53 @@
 }
 
 .explorer.light {
-  --bg: #F5F3FF;
+  --bg: #F6F8FC;
   --surface: #FFFFFF;
-  --border-soft: rgba(76, 29, 149, 0.12);
-  --text-body: #1C1533;
-  --text-muted: rgba(28, 21, 51, 0.55);
-  --violet: #A78BFA;
-  --violet-deep: #6D28D9;
-  --cyan: #0E9488;
-  --yellow: #B45309;
-  --overlay-05: rgba(28, 21, 51, 0.05);
-  --overlay-06: rgba(28, 21, 51, 0.06);
-  --overlay-08: rgba(28, 21, 51, 0.08);
-  --overlay-12: rgba(28, 21, 51, 0.10);
-  --overlay-40: rgba(28, 21, 51, 0.45);
+  --border-soft: #DCE3EC;
+  --text-body: #172033;
+  --text-muted: #5F6B7A;
+  --violet: #4F46E5;
+  --violet-deep: #3730A3;
+  --cyan: #0F9F94;
+  --yellow: #F4B740;
+  --overlay-05: rgba(23, 32, 51, 0.05);
+  --overlay-06: rgba(23, 32, 51, 0.06);
+  --overlay-08: rgba(23, 32, 51, 0.08);
+  --overlay-12: rgba(23, 32, 51, 0.08);
+  --overlay-40: rgba(23, 32, 51, 0.45);
+}
+
+.explorer.light .search-banner {
+  box-shadow: 0 12px 28px rgba(35, 48, 68, 0.10);
+}
+
+.explorer.light .pokemon-card:hover {
+  box-shadow: 0 14px 30px rgba(35, 48, 68, 0.16);
+}
+
+.explorer.light .confirm-card {
+  box-shadow: 0 24px 64px rgba(23, 32, 51, 0.20);
+}
+
+.explorer.light .mobile-bar {
+  box-shadow: 0 -8px 24px rgba(35, 48, 68, 0.18);
+}
+
+/* --yellow stays bright (matches the surprise-btn/border fills above);
+   plain text set directly in that color needs the darker, readable variant
+   instead to keep contrast on a white surface. */
+.explorer.light .fav-btn.active,
+.explorer.light .sidebar-power-value {
+  color: #9A6700;
+}
+
+.explorer.light .card-action.compare {
+  color: #0D827A;
+  border-color: #0D827A;
+}
+
+.explorer.light .card-action.on-team {
+  background: #DC2626;
 }
 
 .explorer {
@@ -497,7 +530,7 @@
 }
 
 .card-action {
-  margin-top: 6px;
+  margin-top: auto;
   border: none;
   border-radius: 12px;
   padding: 12px 14px;

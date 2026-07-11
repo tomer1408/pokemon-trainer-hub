@@ -17,17 +17,18 @@
 }
 
 .settings-page.light {
-  --bg: #F5F3FF;
+  --bg: #F6F8FC;
   --surface: #FFFFFF;
-  --surface-raised: #EFEBFC;
-  --border-soft: rgba(76, 29, 149, 0.12);
-  --text-body: #1C1533;
-  --text-muted: rgba(28, 21, 51, 0.55);
-  --violet: #A78BFA;
-  --violet-deep: #6D28D9;
-  --cyan: #0E9488;
-  --overlay-05: rgba(28, 21, 51, 0.05);
-  --overlay-08: rgba(28, 21, 51, 0.08);
+  --surface-raised: #F7F9FC;
+  --border-soft: #DCE3EC;
+  --text-body: #172033;
+  --text-muted: #5F6B7A;
+  --violet: #4F46E5;
+  --violet-deep: #3730A3;
+  --cyan: #0F9F94;
+  --overlay-05: rgba(23, 32, 51, 0.05);
+  --overlay-08: rgba(23, 32, 51, 0.08);
+  --danger: #DC2626;
 }
 
 .settings-page {
@@ -36,6 +37,31 @@
   box-sizing: border-box;
   background: radial-gradient(ellipse 800px 460px at 50% 0%, rgba(124, 58, 237, 0.14), transparent 60%), var(--bg);
   font-family: 'Manrope', sans-serif;
+}
+
+.settings-page.light {
+  background:
+    radial-gradient(ellipse 800px 460px at 50% 0%, rgba(79, 70, 229, 0.06), transparent 62%),
+    radial-gradient(ellipse 600px 420px at 90% 20%, rgba(15, 159, 148, 0.05), transparent 65%),
+    var(--bg);
+}
+
+.settings-page.light .cb-row {
+  background: #E6F7F5;
+  border-color: #9ADBD5;
+}
+
+.settings-page.light .switch-knob {
+  box-shadow: 0 2px 5px rgba(35, 48, 68, 0.20);
+}
+
+.settings-page.light .error-banner {
+  background: #FDECEC;
+  border-color: #F0A3A3;
+}
+
+.settings-page.light .toast {
+  box-shadow: 0 20px 40px rgba(23, 32, 51, 0.20);
 }
 
 .content {

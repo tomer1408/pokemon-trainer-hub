@@ -22,18 +22,71 @@
 }
 
 .manage-team.light {
-  --bg: #F5F3FF;
+  --bg: #F6F8FC;
   --surface: #FFFFFF;
-  --surface-raised: #EFEBFC;
-  --border-soft: rgba(76, 29, 149, 0.12);
-  --text-body: #1C1533;
-  --text-muted: rgba(28, 21, 51, 0.55);
-  --violet-deep: #6D28D9;
-  --cyan: #0E9488;
-  --yellow: #B45309;
-  --overlay-05: rgba(28, 21, 51, 0.05);
-  --overlay-06: rgba(28, 21, 51, 0.06);
-  --overlay-08: rgba(28, 21, 51, 0.08);
+  --surface-raised: #F7F9FC;
+  --border-soft: #DCE3EC;
+  --text-body: #172033;
+  --text-muted: #5F6B7A;
+  --violet: #4F46E5;
+  --violet-deep: #3730A3;
+  --cyan: #0F9F94;
+  --yellow: #F4B740;
+  --overlay-05: rgba(23, 32, 51, 0.05);
+  --overlay-06: rgba(23, 32, 51, 0.06);
+  --overlay-08: rgba(23, 32, 51, 0.08);
+}
+
+.manage-team.light {
+  background:
+    radial-gradient(ellipse 850px 480px at 15% 0%, rgba(79, 70, 229, 0.07), transparent 62%),
+    radial-gradient(ellipse 600px 420px at 85% 10%, rgba(15, 159, 148, 0.06), transparent 65%),
+    var(--bg);
+}
+
+.manage-team.light .unsaved-bar {
+  box-shadow: 0 -12px 30px rgba(35, 48, 68, 0.12);
+}
+
+.manage-team.light .heart-badge,
+.manage-team.light .order-badge {
+  box-shadow: 0 2px 8px rgba(35, 48, 68, 0.14);
+}
+
+.manage-team.light .slot-outer {
+  box-shadow: 0 14px 30px rgba(35, 48, 68, 0.16);
+}
+
+.manage-team.light .confirm-card {
+  box-shadow: 0 24px 64px rgba(23, 32, 51, 0.20);
+}
+
+.manage-team.light .toast {
+  box-shadow: 0 20px 40px rgba(23, 32, 51, 0.20);
+}
+
+.manage-team.light .confirm-delete {
+  background: #DC2626;
+}
+
+.manage-team.light .trash-zone.drag-over {
+  border-color: #DC2626;
+  background: #FDECEC;
+  color: #DC2626;
+}
+
+/* --yellow/--cyan stay bright (matches the badge/pill fills elsewhere on
+   this page); plain text set directly in those colors needs the darker,
+   readable variants instead to keep contrast on a white surface. */
+.manage-team.light .heart-badge {
+  color: #9A6700;
+}
+
+.manage-team.light .power-value,
+.manage-team.light .compare-btn:hover,
+.manage-team.light .slot-empty.drag-over .plus,
+.manage-team.light .pool-power-value {
+  color: #0D827A;
 }
 
 .manage-team {

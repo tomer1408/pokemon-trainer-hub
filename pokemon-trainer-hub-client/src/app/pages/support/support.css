@@ -17,18 +17,18 @@
 }
 
 .support-page.light {
-  --bg: #F4F5F9;
+  --bg: #F6F8FC;
   --surface: #FFFFFF;
-  --border-soft: rgba(23, 20, 38, 0.10);
-  --text-body: #171426;
-  --text-muted: #5C5872;
-  --violet: #7C3AED;
-  --violet-deep: #6D28D9;
-  --cyan: #0F766E;
+  --border-soft: #DCE3EC;
+  --text-body: #172033;
+  --text-muted: #5F6B7A;
+  --violet: #4F46E5;
+  --violet-deep: #3730A3;
+  --cyan: #0F9F94;
   --bad: #DC2626;
-  --overlay-05: rgba(23, 20, 38, 0.04);
-  --overlay-08: rgba(23, 20, 38, 0.07);
-  --input-bg: #FBFAFF;
+  --overlay-05: rgba(23, 32, 51, 0.05);
+  --overlay-08: rgba(23, 32, 51, 0.08);
+  --input-bg: #FFFFFF;
 }
 
 .support-page {
@@ -37,6 +37,33 @@
   box-sizing: border-box;
   background: radial-gradient(ellipse 820px 480px at 50% 0%, rgba(124, 58, 237, 0.14), transparent 60%), var(--bg);
   font-family: 'Manrope', sans-serif;
+}
+
+.support-page.light {
+  background:
+    radial-gradient(ellipse 820px 480px at 50% 0%, rgba(79, 70, 229, 0.06), transparent 62%),
+    radial-gradient(ellipse 600px 420px at 90% 20%, rgba(15, 159, 148, 0.05), transparent 65%),
+    var(--bg);
+}
+
+.support-page.light input:focus,
+.support-page.light textarea:focus {
+  border-color: #4F46E5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.16);
+}
+
+.support-page.light .topic-chip.active {
+  border-color: #0F9F94;
+  background: #E6F7F5;
+  color: #0D6F68;
+}
+
+.support-page.light .hero-badge {
+  background: linear-gradient(120deg, #4F46E5, #0F9F94);
+}
+
+.support-page.light .faq-item.open {
+  background: #F8FAFC;
 }
 
 .content {

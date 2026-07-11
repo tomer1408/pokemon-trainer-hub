@@ -19,19 +19,20 @@
 }
 
 .profile-page.light {
-  --bg: #F5F3FF;
+  --bg: #F6F8FC;
   --surface: #FFFFFF;
-  --surface-raised: #EFEBFC;
-  --border-soft: rgba(76, 29, 149, 0.12);
-  --text-body: #1C1533;
-  --text-muted: rgba(28, 21, 51, 0.55);
-  --violet: #A78BFA;
-  --violet-deep: #6D28D9;
-  --cyan: #0E9488;
-  --yellow: #B45309;
-  --overlay-05: rgba(28, 21, 51, 0.05);
-  --overlay-06: rgba(28, 21, 51, 0.06);
-  --overlay-08: rgba(28, 21, 51, 0.08);
+  --surface-raised: #F7F9FC;
+  --border-soft: #DCE3EC;
+  --text-body: #172033;
+  --text-muted: #5F6B7A;
+  --violet: #4F46E5;
+  --violet-deep: #3730A3;
+  --cyan: #0F9F94;
+  --yellow: #F4B740;
+  --overlay-05: rgba(23, 32, 51, 0.05);
+  --overlay-06: rgba(23, 32, 51, 0.06);
+  --overlay-08: rgba(23, 32, 51, 0.08);
+  --danger: #DC2626;
 }
 
 .profile-page {
@@ -40,6 +41,70 @@
   box-sizing: border-box;
   background: radial-gradient(ellipse 900px 500px at 15% 0%, rgba(124, 58, 237, 0.14), transparent 60%), var(--bg);
   font-family: 'Manrope', sans-serif;
+}
+
+.profile-page.light {
+  background:
+    radial-gradient(ellipse 850px 480px at 15% 0%, rgba(79, 70, 229, 0.07), transparent 62%),
+    radial-gradient(ellipse 600px 420px at 85% 10%, rgba(15, 159, 148, 0.06), transparent 65%),
+    var(--bg);
+}
+
+.profile-page.light .id-card-outer {
+  box-shadow: 0 20px 44px rgba(35, 48, 68, 0.16);
+}
+
+.profile-page.light .tier-chip {
+  box-shadow: 0 6px 16px rgba(35, 48, 68, 0.14);
+}
+
+.profile-page.light .banner {
+  background: linear-gradient(115deg, #4F46E5, #3730A3 50%, #0F9F94);
+}
+
+.profile-page.light .modal-card {
+  box-shadow: var(--shadow-modal, 0 24px 64px rgba(23, 32, 51, 0.20));
+}
+
+.profile-page.light .confirm-card {
+  box-shadow: 0 24px 64px rgba(23, 32, 51, 0.20);
+}
+
+.profile-page.light .toast {
+  box-shadow: 0 20px 40px rgba(23, 32, 51, 0.20);
+}
+
+.profile-page.light .stat-icon-wrap.icon-violet {
+  background: rgba(79, 70, 229, 0.12);
+}
+
+.profile-page.light .stat-icon-wrap.icon-yellow {
+  background: rgba(244, 183, 64, 0.18);
+}
+
+.profile-page.light .badge-card.earned {
+  background: linear-gradient(160deg, rgba(15, 159, 148, 0.08), var(--surface));
+  border-color: rgba(15, 159, 148, 0.4);
+}
+
+.profile-page.light .badge-card.earned .medal {
+  background: radial-gradient(circle at 50% 40%, #0F9F94, rgba(15, 159, 148, 0.25));
+  box-shadow: 0 0 18px rgba(15, 159, 148, 0.35);
+}
+
+/* --yellow/--cyan stay bright above (matches badge/pill/icon fills); plain
+   text set directly in those colors needs the darker, readable variants
+   instead to keep contrast on a white surface. */
+.profile-page.light .stat-value,
+.profile-page.light .stat-link.accent {
+  color: #9A6700;
+}
+
+.profile-page.light .stat-value-tier,
+.profile-page.light .stat-link,
+.profile-page.light .ach-count,
+.profile-page.light .badge-card.earned .badge-status {
+  color: #0D827A;
 }
 
 .content {

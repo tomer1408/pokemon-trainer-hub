@@ -9,11 +9,15 @@
 
 .dim-overlay.light {
   --surface: #FFFFFF;
-  --border-soft: rgba(76, 29, 149, 0.12);
-  --text-body: #1C1533;
-  --text-muted: rgba(28, 21, 51, 0.55);
-  --violet-deep: #6D28D9;
-  --cyan: #0E9488;
+  --border-soft: #DCE3EC;
+  --text-body: #172033;
+  --text-muted: #5F6B7A;
+  --violet-deep: #4F46E5;
+  --cyan: #0F9F94;
+}
+
+.dim-overlay.light .modal-card {
+  box-shadow: 0 24px 64px rgba(23, 32, 51, 0.20);
 }
 
 .dim-overlay {
