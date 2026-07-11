@@ -628,10 +628,23 @@
   color: #fff;
 }
 
-.add-team-btn.on-team {
-  background: var(--overlay-08);
-  color: var(--text-muted);
-  cursor: default;
+.remove-team-btn {
+  background: #f4562b;
+}
+
+.compare-team-btn {
+  display: block;
+  width: calc(100% - 56px);
+  box-sizing: border-box;
+  margin: -10px 28px 22px;
+  border: none;
+  background: transparent;
+  color: var(--cyan);
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 12.5px;
+  text-align: center;
+  cursor: pointer;
 }
 
 @keyframes holoShift {

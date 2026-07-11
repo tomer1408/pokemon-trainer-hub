@@ -37,7 +37,11 @@ export interface ComparablePokemon {
 //   it against their Favorites — `selectedPokemonId` IS on the team,
 //   `comparisonCandidates` is the favorites pool; picking a candidate adds
 //   IT and removes the anchor team member.
-export type SwapMode = 'overflow' | 'favorite-vs-team' | 'team-vs-favorites';
+// 'compare': the team has room — show the same head-to-head comparison UI,
+// but the only action is a plain, non-destructive Add to Team (no removal
+// picked/forced), unlike the other three modes which always trade one
+// member for another.
+export type SwapMode = 'overflow' | 'favorite-vs-team' | 'team-vs-favorites' | 'compare';
 
 const STAT_LABELS: Record<string, string> = {
   hp: 'HP',
@@ -74,6 +78,9 @@ export class TeamSwapModal implements OnChanges {
 
   @Output() closed = new EventEmitter<void>();
   @Output() swapped = new EventEmitter<{ removedPokemonId: number; addedPokemonId: number }>();
+  // Only emitted by 'compare' mode's confirmAdd() — distinct from `swapped`
+  // since nothing was removed.
+  @Output() added = new EventEmitter<{ addedPokemonId: number }>();
 
   private readonly pokemonService = inject(PokemonService);
   private readonly teamService = inject(TeamService);
@@ -82,6 +89,7 @@ export class TeamSwapModal implements OnChanges {
   protected readonly anchorLoadFailed = signal(false);
   protected readonly pickedId = signal<number | null>(null);
   protected readonly isSwapping = signal(false);
+  protected readonly isAdding = signal(false);
   protected readonly swapError = signal<string | null>(null);
   protected readonly confirmingSwap = signal(false);
 
@@ -159,12 +167,15 @@ export class TeamSwapModal implements OnChanges {
 
   // ---- mode-aware copy ----
   protected readonly headerKicker = computed(() => {
+    if (this.mode === 'compare') return 'Compare & decide';
     if (this.mode === 'overflow') return "Team's full — 5/5";
     return 'Compare & swap';
   });
 
   protected readonly headerTitle = computed(() => {
     switch (this.mode) {
+      case 'compare':
+        return 'See how this Pokémon compares to your team';
       case 'team-vs-favorites':
         return 'Compare this team member with your favorites';
       case 'favorite-vs-team':
@@ -264,6 +275,27 @@ export class TeamSwapModal implements OnChanges {
       this.isSwapping.set(false);
       if (result.ok) {
         this.swapped.emit({ removedPokemonId, addedPokemonId });
+      } else {
+        this.swapError.set(result.message);
+      }
+    });
+  }
+
+  // 'compare' mode only — never removes anyone, just grows the real team via
+  // the exact same endpoint Explorer/Home/Starter Quiz already use for a
+  // plain Add to Team. DUPLICATE/TEAM_FULL/other errors all surface through
+  // the same swapError slot the swap flows already use for their own errors.
+  confirmAdd(): void {
+    const c = this.anchor();
+    if (!c || this.isAdding()) return;
+
+    this.isAdding.set(true);
+    this.swapError.set(null);
+
+    this.teamService.addToTeam(c.id).subscribe((result) => {
+      this.isAdding.set(false);
+      if (result.ok) {
+        this.added.emit({ addedPokemonId: c.id });
       } else {
         this.swapError.set(result.message);
       }

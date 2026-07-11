@@ -114,7 +114,6 @@
                 class="card-action"
                 [class.on-team]="isOnTeam(p.id)"
                 [class.compare]="!isOnTeam(p.id) && teamFull()"
-                [disabled]="isOnTeam(p.id)"
                 (click)="$event.stopPropagation(); onAction(p)"
               >
                 {{ actionLabel(p) }}
@@ -229,10 +228,13 @@
       [isFavorite]="isFavorite(sp.id)"
       [isOnTeam]="isOnTeam(sp.id)"
       [teamFull]="teamFull()"
+      [hasTeam]="hasTeam()"
       [isLight]="theme.isLight()"
       (closed)="closeDetail()"
       (toggleFavorite)="toggleFavorite(sp)"
       (addToTeam)="onAction(sp)"
+      (compare)="onCompareWithTeam(sp)"
+      (removeFromTeam)="removeFromTeamModal(sp.id)"
     />
   }
 
@@ -245,6 +247,18 @@
       [isLight]="theme.isLight()"
       (closed)="closeSwap()"
       (swapped)="onSwapped()"
+    />
+  }
+
+  <!-- Compare with My Team (team has room — never forces a swap) -->
+  @if (compareCandidate(); as candidate) {
+    <app-team-swap-modal
+      [selectedPokemonId]="candidate.id"
+      [comparisonCandidates]="team()"
+      mode="compare"
+      [isLight]="theme.isLight()"
+      (closed)="closeCompareWithTeam()"
+      (added)="onCompareAdded()"
     />
   }
 </div>

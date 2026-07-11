@@ -73,6 +73,9 @@ export class Explorer {
   protected readonly swapNotice = signal<string | null>(null);
   protected readonly selectedPokemon = signal<PokemonSummary | null>(null);
   protected readonly swapCandidate = signal<PokemonSummary | null>(null);
+  // Separate from swapCandidate — this is the unforced "team has room"
+  // compare flow (mode="compare"), never the full-team forced swap above.
+  protected readonly compareCandidate = signal<PokemonSummary | null>(null);
 
   private readonly teamRefresh = signal(0);
   private readonly favoritesRefresh = signal(0);
@@ -155,6 +158,7 @@ export class Explorer {
 
   protected readonly teamPower = computed(() => getTeamPower(this.team()));
   protected readonly teamFull = computed(() => this.team().length >= MAX_TEAM_SIZE);
+  protected readonly hasTeam = computed(() => this.team().length > 0);
   protected readonly teamCoverage = computed(() => {
     const types = new Set<string>();
     this.team().forEach((m) => m.types.forEach((t) => types.add(t)));
@@ -193,13 +197,20 @@ export class Explorer {
   }
 
   actionLabel(p: PokemonSummary): string {
-    if (this.isOnTeam(p.id)) return 'On Team';
+    if (this.isOnTeam(p.id)) return 'Remove';
     if (this.teamFull()) return 'Compare';
     return 'Add to Team';
   }
 
   onAction(p: PokemonSummary): void {
-    if (this.isOnTeam(p.id)) return;
+    if (this.isOnTeam(p.id)) {
+      // Reuses the same confirm dialog/flow the team sidebar's × button
+      // already uses — pendingRemove just needs {id, name}, not a full
+      // DreamTeamMember, so it's set directly here instead of via
+      // requestRemove().
+      this.pendingRemove.set({ id: p.id, name: p.name });
+      return;
+    }
 
     if (this.teamFull()) {
       this.swapCandidate.set(p);
@@ -231,6 +242,22 @@ export class Explorer {
     this.swapCandidate.set(null);
   }
 
+  // 'compare' mode — team has room, so this never forces a swap; the swap
+  // modal's own confirmAdd() is what actually calls teamService.addToTeam().
+  onCompareWithTeam(p: PokemonSummary): void {
+    this.compareCandidate.set(p);
+  }
+
+  closeCompareWithTeam(): void {
+    this.compareCandidate.set(null);
+  }
+
+  onCompareAdded(): void {
+    this.teamRefresh.update((n) => n + 1);
+    this.compareCandidate.set(null);
+    this.closeDetail();
+  }
+
   requestRemove(member: DreamTeamMember): void {
     this.pendingRemove.set({ id: member.pokemonId, name: member.pokemonName });
   }
@@ -241,6 +268,14 @@ export class Explorer {
     this.teamService.removeFromTeam(target.id).subscribe(() => {
       this.teamRefresh.update((n) => n + 1);
       this.pendingRemove.set(null);
+    });
+  }
+
+  // Modal already confirmed with the user before emitting this.
+  removeFromTeamModal(pokemonId: number): void {
+    this.teamService.removeFromTeam(pokemonId).subscribe(() => {
+      this.teamRefresh.update((n) => n + 1);
+      this.closeDetail();
     });
   }
 

@@ -346,6 +346,18 @@ export class ManageTeam implements AfterViewInit {
     this.selectedPokemonId.set(null);
   }
 
+  // Modal already confirmed with the user before emitting this — same real
+  // DELETE /api/team/:id endpoint the drag-to-trash flow above uses, applied
+  // directly to both teamDraft and savedTeam since this page's team state
+  // isn't refetched from the server like the other pages.
+  removeFromTeamModal(pokemonId: number): void {
+    this.teamService.removeFromTeam(pokemonId).subscribe(() => {
+      this.teamDraft.update((list) => list.filter((m) => m.pokemonId !== pokemonId));
+      this.savedTeam.update((list) => list.filter((m) => m.pokemonId !== pokemonId));
+      this.closeDetail();
+    });
+  }
+
   toggleFavoriteFromModal(pokemonId: number): void {
     const obs = this.isFavorite(pokemonId)
       ? this.favoritesService.removeFavorite(pokemonId)

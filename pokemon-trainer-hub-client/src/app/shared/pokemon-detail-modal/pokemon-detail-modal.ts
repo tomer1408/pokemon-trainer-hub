@@ -21,11 +21,25 @@ export class PokemonDetailModal implements OnChanges {
   @Input() isFavorite = false;
   @Input() isOnTeam = false;
   @Input() teamFull = false;
+  // Whether the trainer has at least 1 Pokémon on their Dream Team — used
+  // only to decide whether "Compare with My Team" makes sense; there's
+  // nothing to compare against on a 0-member team.
+  @Input() hasTeam = false;
   @Input() isLight = false;
 
   @Output() closed = new EventEmitter<void>();
   @Output() toggleFavorite = new EventEmitter<void>();
   @Output() addToTeam = new EventEmitter<void>();
+  // Opens a non-destructive head-to-head comparison against the real team —
+  // only relevant while the team has room (once full, the existing
+  // addToTeam output's "Compare" label already routes into the forced
+  // swap flow instead).
+  @Output() compare = new EventEmitter<void>();
+  // Only emitted after the user confirms via this modal's own confirm
+  // dialog (reusing the same one already used for deleting a note) — the
+  // host page owns the actual teamService.removeFromTeam() call and team
+  // state refresh, same as every other mutation this component emits.
+  @Output() removeFromTeam = new EventEmitter<void>();
 
   private readonly pokemonService = inject(PokemonService);
   private readonly notesService = inject(NotesService);
@@ -39,6 +53,7 @@ export class PokemonDetailModal implements OnChanges {
   protected readonly newNoteText = signal('');
   protected readonly addingNote = signal(false);
   protected readonly pendingDeleteNoteId = signal<number | null>(null);
+  protected readonly showRemoveConfirm = signal(false);
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['pokemonId']) {
@@ -49,6 +64,7 @@ export class PokemonDetailModal implements OnChanges {
       this.notes.set([]);
       this.newNoteText.set('');
       this.pendingDeleteNoteId.set(null);
+      this.showRemoveConfirm.set(false);
       this.pokemonService.getById(this.pokemonId).subscribe((p) => {
         this.pokemon.set(p);
         this.isLoading.set(false);
@@ -87,6 +103,19 @@ export class PokemonDetailModal implements OnChanges {
       if (ok) this.notes.update((list) => list.filter((n) => n.id !== noteId));
       this.pendingDeleteNoteId.set(null);
     });
+  }
+
+  requestRemoveFromTeam(): void {
+    this.showRemoveConfirm.set(true);
+  }
+
+  cancelRemoveFromTeam(): void {
+    this.showRemoveConfirm.set(false);
+  }
+
+  confirmRemoveFromTeam(): void {
+    this.showRemoveConfirm.set(false);
+    this.removeFromTeam.emit();
   }
 
   setTab(tab: Tab): void {

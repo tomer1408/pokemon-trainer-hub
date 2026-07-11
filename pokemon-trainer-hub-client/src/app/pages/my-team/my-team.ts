@@ -132,6 +132,15 @@ export class MyTeam implements AfterViewInit {
     this.selectedPokemonId.set(null);
   }
 
+  // Modal already confirmed with the user before emitting this — same
+  // real DELETE /api/team/:id endpoint Explorer/Manage Team already use.
+  removeFromTeamModal(pokemonId: number): void {
+    this.teamService.removeFromTeam(pokemonId).subscribe(() => {
+      this.teamRefresh.update((n) => n + 1);
+      this.closeDetail();
+    });
+  }
+
   retry(): void {
     this.teamRefresh.update((n) => n + 1);
   }

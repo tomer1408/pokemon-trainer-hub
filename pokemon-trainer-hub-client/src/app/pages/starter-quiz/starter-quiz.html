@@ -117,10 +117,13 @@
       [isFavorite]="isFavorite(id)"
       [isOnTeam]="isOnTeam(id)"
       [teamFull]="teamFull()"
+      [hasTeam]="hasTeam()"
       [isLight]="theme.isLight()"
       (closed)="closeDetail()"
       (toggleFavorite)="toggleFavoriteFromModal(id)"
       (addToTeam)="addToTeam(id)"
+      (compare)="onCompareWithTeam(id)"
+      (removeFromTeam)="removeFromTeamModal(id)"
     />
   }
 
@@ -132,6 +135,17 @@
       [isLight]="theme.isLight()"
       (closed)="closeSwap()"
       (swapped)="onSwapped()"
+    />
+  }
+
+  @if (compareCandidateId(); as candidateId) {
+    <app-team-swap-modal
+      [selectedPokemonId]="candidateId"
+      [comparisonCandidates]="team()"
+      mode="compare"
+      [isLight]="theme.isLight()"
+      (closed)="closeCompareWithTeam()"
+      (added)="onCompareAdded()"
     />
   }
 </div>

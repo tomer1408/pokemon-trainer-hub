@@ -486,9 +486,8 @@
 }
 
 .card-action.on-team {
-  background: var(--overlay-06);
-  color: var(--text-muted);
-  cursor: default;
+  background: #f4562b;
+  color: #fff;
 }
 
 .card-action.compare {

@@ -163,9 +163,15 @@
 
       <div class="actions-row">
         <button type="button" class="cancel-btn" (click)="onCancel()">Cancel</button>
-        <button type="button" class="swap-btn" [disabled]="!hasSelection() || isSwapping()" (click)="requestSwap()">
-          {{ isSwapping() ? 'Swapping…' : hasSelection() ? 'Swap in ' + addName() : 'Pick a ' + pickNoun() + ' first' }}
-        </button>
+        @if (mode === 'compare') {
+          <button type="button" class="swap-btn" [disabled]="isAdding()" (click)="confirmAdd()">
+            {{ isAdding() ? 'Adding…' : 'Add to Team' }}
+          </button>
+        } @else {
+          <button type="button" class="swap-btn" [disabled]="!hasSelection() || isSwapping()" (click)="requestSwap()">
+            {{ isSwapping() ? 'Swapping…' : hasSelection() ? 'Swap in ' + addName() : 'Pick a ' + pickNoun() + ' first' }}
+          </button>
+        }
       </div>
 
         @if (confirmingSwap()) {

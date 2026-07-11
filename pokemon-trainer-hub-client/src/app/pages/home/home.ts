@@ -95,6 +95,9 @@ export class Home {
 
   protected readonly selectedPokemonId = signal<number | null>(null);
   protected readonly swapCandidateId = signal<number | null>(null);
+  // Separate from swapCandidateId — this is the unforced "team has room"
+  // compare flow (mode="compare"), never the full-team forced swap above.
+  protected readonly compareCandidateId = signal<number | null>(null);
   private readonly teamRefresh = signal(0);
   private readonly favoritesRefresh = signal(0);
 
@@ -255,8 +258,32 @@ export class Home {
     this.selectedPokemonId.set(null);
   }
 
+  // Modal already confirmed with the user before emitting this.
+  removeFromTeamModal(pokemonId: number): void {
+    this.teamService.removeFromTeam(pokemonId).subscribe(() => {
+      this.teamRefresh.update((n) => n + 1);
+      this.closeDetail();
+    });
+  }
+
   closeSwap(): void {
     this.swapCandidateId.set(null);
+  }
+
+  // 'compare' mode — team has room, so this never forces a swap; the swap
+  // modal's own confirmAdd() is what actually calls teamService.addToTeam().
+  onCompareWithTeam(pokemonId: number): void {
+    this.compareCandidateId.set(pokemonId);
+  }
+
+  closeCompareWithTeam(): void {
+    this.compareCandidateId.set(null);
+  }
+
+  onCompareAdded(): void {
+    this.teamRefresh.update((n) => n + 1);
+    this.compareCandidateId.set(null);
+    this.closeDetail();
   }
 
   onSwapped(): void {

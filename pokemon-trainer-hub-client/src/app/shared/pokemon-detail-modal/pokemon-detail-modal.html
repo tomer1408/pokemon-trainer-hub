@@ -193,16 +193,22 @@
           <button type="button" class="fav-action-btn" [class.active]="isFavorite" (click)="toggleFavorite.emit()">
             {{ isFavorite ? '♥ Favorited' : '♡ Add to Favorites' }}
           </button>
-          <button
-            type="button"
-            class="add-team-btn"
-            [class.on-team]="isOnTeam"
-            [disabled]="isOnTeam"
-            (click)="addToTeam.emit()"
-          >
-            {{ isOnTeam ? 'On Team ✓' : (teamFull ? 'Compare' : 'Add to Team') }}
-          </button>
+          @if (isOnTeam) {
+            <button type="button" class="add-team-btn remove-team-btn" (click)="requestRemoveFromTeam()">
+              Remove from Team
+            </button>
+          } @else {
+            <button type="button" class="add-team-btn" (click)="addToTeam.emit()">
+              {{ teamFull ? 'Compare' : 'Add to Team' }}
+            </button>
+          }
         </div>
+
+        @if (!isOnTeam && !teamFull && hasTeam) {
+          <button type="button" class="compare-team-btn" (click)="compare.emit()">
+            Compare with My Team
+          </button>
+        }
       } @else {
         <div class="error-state">Couldn't load this Pok&eacute;mon. Please try again.</div>
       }
@@ -216,6 +222,18 @@
         <div class="confirm-actions">
           <button type="button" class="confirm-cancel" (click)="cancelDeleteNote()">Cancel</button>
           <button type="button" class="confirm-remove" (click)="confirmDeleteNote()">Delete</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showRemoveConfirm()) {
+    <div class="confirm-overlay" (click)="cancelRemoveFromTeam(); $event.stopPropagation()">
+      <div class="confirm-card" (click)="$event.stopPropagation()">
+        <h2 class="confirm-title">Remove this Pok&eacute;mon from your Dream Team?</h2>
+        <div class="confirm-actions">
+          <button type="button" class="confirm-cancel" (click)="cancelRemoveFromTeam()">Cancel</button>
+          <button type="button" class="confirm-remove" (click)="confirmRemoveFromTeam()">Remove</button>
         </div>
       </div>
     </div>
