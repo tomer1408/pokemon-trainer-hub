@@ -37,30 +37,37 @@
           <div class="avatar-dot">AI</div>
           <div class="assistant-bubble">
             <p class="bubble-text">{{ analysisIntro }}</p>
-            <p class="bubble-text">{{ analysisStrength() }}</p>
-            @if (analysisGap()) {
-              <p class="bubble-text">{{ analysisGap() }}</p>
-            }
-            @if (suggestionType(); as recType) {
+
+            @if (analysisLoading()) {
+              <div class="typing-bubble">
+                <span class="typing-dot" [style.animation-delay.s]="0"></span>
+                <span class="typing-dot" [style.animation-delay.s]="0.15"></span>
+                <span class="typing-dot" [style.animation-delay.s]="0.3"></span>
+              </div>
+            } @else if (analysisFailed()) {
+              <p class="bubble-text">I couldn't analyze your team just now — try Refresh Analysis in a moment.</p>
+            } @else if (analysisResult(); as result) {
               <div class="rec-card">
                 <div class="rec-kicker">Recommended catch</div>
                 <div class="rec-row">
-                  <span class="rec-pill" [style.background]="typeColors[recType] + '33'" [style.color]="typeColors[recType]">
-                    <span class="rec-glyph" [style.background]="typeColors[recType]"></span>{{ recType }}
+                  <span class="rec-pill" [style.background]="typeColors[result.type] + '33'" [style.color]="typeColors[result.type]">
+                    <span class="rec-glyph" [style.background]="typeColors[result.type]"></span>{{ result.type }}
                   </span>
-                  @if (suggestion(); as s) {
-                    <span class="rec-name">{{ s.name }}</span>
+                  @if (result.pokemon) {
+                    <span class="rec-name">{{ result.pokemon.name }}</span>
                   } @else {
                     <span class="rec-name">Looking…</span>
                   }
                 </div>
-                <p class="rec-why">{{ recommendationReasons[recType] }}</p>
+                <p class="rec-why">{{ result.reasoning }}</p>
               </div>
             }
           </div>
         </div>
       </div>
-      <button type="button" class="secondary-btn" (click)="onRerollAnalysis()">Refresh Analysis</button>
+      <button type="button" class="secondary-btn" [disabled]="analysisLoading()" (click)="onRerollAnalysis()">
+        {{ analysisLoading() ? 'Analyzing…' : 'Refresh Analysis' }}
+      </button>
     }
 
     @if (isFindTab()) {
@@ -91,7 +98,7 @@
                       </span>
                       <span class="rec-name">{{ m.recPokemon.name }}</span>
                     </div>
-                    <p class="rec-why">{{ recommendationReasons[m.recType] }}</p>
+                    <p class="rec-why">{{ m.recReasoning }}</p>
                   </div>
                 }
               </div>
