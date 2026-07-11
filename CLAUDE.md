@@ -3,30 +3,39 @@
 ## What this project is
 A web app where users register as "Pokémon Trainers," explore Pokémon data
 (from PokeAPI), and build/manage a personal Dream Team of up to 5 creatures
-that persists across sessions. This is a 3-day take-home assignment for a job
+that persists across sessions. This is a take-home assignment for a job
 interview at Ness, given by Assaf.
 
 ## Tech Stack (decided, do not change without asking)
-- **Client:** Angular (standalone components, routing)
+- **Client:** Angular (standalone components, signals, routing)
 - **Server:** Node.js + Express (JavaScript) — NOT ASP.NET Core / C#.
   We started with ASP.NET Core and explicitly switched to Node.js because
   the developer doesn't write C#. Everything should be JavaScript/TypeScript
   end to end.
-- **Database:** SQL Server, running locally via Docker (container name:
-  `pokemon-sql`, port 1433, SA password: `Pokemon2026!`)
+- **Database:** SQL Server. Local dev via Docker (container name:
+  `pokemon-sql`, port 1433); production uses **Azure SQL Database** with the
+  same Prisma schema and provider — no code differences between the two.
 - **ORM:** Prisma (`prisma` + `@prisma/client`) — chosen as the JS-native
   equivalent of Entity Framework Core.
-- **Auth:** Auth0 (Universal Login) — NOT a custom-built auth system.
-  - Auth0 tenant already created.
-  - An Auth0 "Application" (SPA type) already created for the Angular client,
-    with Callback/Logout/Web Origin URLs set to `http://localhost:4200`.
-  - An Auth0 "API" (audience) still needs to be created for the Express
-    server to validate tokens against.
-  - Client uses `@auth0/auth0-angular` (already installed).
-  - Server will use `express-oauth2-jwt-bearer` (already installed) to
-    validate incoming JWTs.
-- **AI (optional/nice-to-have only):** LangGraph, for a combined "AI Trainer
-  Assistant" feature (team analysis + free-text Pokémon search). Not core.
+- **Auth:** Auth0 (Universal Login) — NOT a custom-built auth system. Fully
+  wired end to end in both environments: the Auth0 tenant, SPA Application,
+  and API (audience) all exist and are configured; the client obtains an
+  access token via `@auth0/auth0-angular`, and every server route (except
+  `/api/health`) validates it via `express-oauth2-jwt-bearer`. See the
+  README's "Auth0 configuration" section for the exact setup steps if this
+  ever needs to be redone (e.g. a new tenant).
+- **AI Trainer Assistant:** Implemented as a **rule-based/deterministic
+  simulation**, not a real LLM or LangGraph call — there is no AI API
+  integration anywhere in this project. "Analyze My Team" computes real
+  team stats (shared `getTeamPower`/`getStrongestMember` helpers) and fills
+  in canned sentence templates; "Find by Description" does simple keyword
+  matching (`TYPE_KEYWORDS` substring search) against free text, then looks
+  up a real strongest-Pokémon-of-that-type via the existing PokeAPI-backed
+  endpoint. A short artificial delay + typing-dots animation is the only
+  thing simulating "thinking." LangGraph was the original aspirational plan
+  (still true of the PRD text below) but was never actually built — be
+  ready to say so honestly if asked in the interview, and don't assume
+  LangGraph is wired up anywhere in the codebase.
 
 ## Project structure
 ```
@@ -34,23 +43,18 @@ pokemon-trainer-hub/
 ├── pokemon-trainer-hub-client/     ← Angular app
 └── pokemon-trainer-hub-server/     ← Node.js/Express app
 ```
+See the README's "Project Structure" section for the full file layout
+(pages, shared components, server routes/services). Current pages: landing,
+callback, onboarding, home, explorer, my-team, manage-team, profile,
+settings, ai-trainer-assistant, battle, starter-quiz, not-found.
 
-## Current status (as of end of Day 1 setup)
-- [x] Angular project created, `@auth0/auth0-angular` installed
-- [x] Node.js/Express project created (`pokemon-trainer-hub-server`),
-      with `express`, `cors`, `dotenv`, `express-oauth2-jwt-bearer`,
-      `prisma`, `@prisma/client` installed
-- [x] Basic `server.js` with a `/api/health` route, confirmed working
-      (`node server.js` → listens on port 3000)
-- [x] SQL Server running in Docker (`pokemon-sql` container, port 1433)
-- [x] Auth0 tenant + SPA Application created and configured
-- [x] Git repo cleaned to a single initial commit, pushed to GitHub
-      (https://github.com/tomer1408/pokemon-trainer-hub)
-- [ ] Prisma not yet initialized / connected to the DB — this is the next
-      immediate step
-- [ ] Auth0 API (audience) not yet created
-- [ ] Auth0 wiring not yet done in either client or server code
-- [ ] No PokeAPI calls made yet from the server
+## Current status
+Core build is complete and deployed to production (Vercel + Render + Azure
+SQL — see README's "Deployment" section for live URLs and setup). Every
+screen is backed by real data (PokeAPI and/or the user's own SQL Server
+rows) — no mock/hardcoded data anywhere. Auth0 is fully wired in both
+environments. Work at this stage is screen-by-screen QA, bug fixes, and
+nice-to-have polish, not new-feature scaffolding from scratch.
 
 ## Git workflow — please follow this
 We use a feature-branch workflow. For each task:
@@ -66,23 +70,10 @@ git push
 git branch -d feature/<short-task-name>
 git push origin --delete feature/<short-task-name>
 ```
-We are currently on branch `feature/db-setup`, about to run `npx prisma init`.
-
-## Day 1 remaining tasks (in order)
-1. `npx prisma init` in `pokemon-trainer-hub-server`, configure `.env` with
-   the SQL Server connection string (using the Docker container above)
-2. Define Prisma schema: `DreamTeamMember` model (id, auth0UserId,
-   pokemonId, pokemonName, spriteUrl, addedAt)
-3. Run first migration (`npx prisma migrate dev`)
-4. Create the Auth0 API (Applications → APIs → Create API) to get an
-   audience identifier
-5. Wire Auth0 into Angular (`provideAuth0()` in `app.config.ts`) and
-   Express (`express-oauth2-jwt-bearer` middleware in `server.js`)
-6. Smoke test: login → Auth0 redirect → callback → valid token received
-   and validated by the Express server. Must work before Day 2 starts.
-7. Test a single call to PokeAPI (`GET /pokemon/pikachu`) to confirm data
-   shape (stats, types, sprites, base_experience, cries)
-8. Basic server-side caching for PokeAPI responses (e.g. `node-cache`)
+Only commit/push when the user explicitly asks — don't auto-commit or
+auto-push after finishing a task; let the user test locally first
+(`ng serve` / `node server.js`, both run manually with no auto-reload on
+the server side — restart `node server.js` after any backend edit).
 
 ## Product spec reference
 The full PRD (18 sections: problem, personas, user stories, functional/
@@ -92,9 +83,22 @@ plan, prioritization table, risks) exists as a separate Word document
 need deep detail on a specific screen or requirement — don't assume detail
 that isn't in this file.
 
+Individual screens are also frequently spec'd via exported mockup files
+(`*.dc.html`) that the user pastes in directly — treat a freshly pasted
+mockup as the authoritative, current spec for that page, even if it
+contradicts an earlier plan or an older mockup version of the same screen.
+When about to build/redesign a specific page, ask the user to (re-)paste
+that page's own mockup rather than relying on a general description or
+stale context from earlier in the conversation.
+
 ## Key product decisions worth remembering
 - Team is capped at 5 Pokémon; a head-to-head comparison modal appears when
-  trying to add a 6th.
+  trying to add a 6th (the "overflow" swap flow). A separate, unforced
+  "Compare with My Team" entry point also exists whenever the team has room
+  (1-4 members) — it never forces a swap, just a plain Add to Team.
+- The Pokémon Detail Modal's "On Team" state is an active red "Remove from
+  Team" button (with a confirm dialog) once a Pokémon is already on the
+  team, not a disabled label.
 - Type-distribution bar on My Team: dual-type Pokémon count toward BOTH
   types, normalized so the bar sums to 100%.
 - Team Power is shown on both Home (glance-level: number + tier label)
@@ -102,10 +106,33 @@ that isn't in this file.
   calculation, not duplicated logic.
 - Pokémon Detail page includes a cry-sound play button, sourced from
   PokeAPI's `cries.latest` field (fallback to `cries.legacy`).
+- Manage My Team has its own separate, already-unforced "⇄ Compare" flow
+  (per team-slot / favorite / bench card) — deliberately distinct from the
+  Explorer/Home/Starter Quiz "Compare with My Team" entry point above; don't
+  merge the two. Its compare-swap only hits the real backend endpoint when
+  the anchor being compared is an actual, already-saved team/favorite state
+  — an item that's only sitting in the local unsaved drag draft (e.g. just
+  dragged onto the Bench, not yet Saved) gets the swap applied locally
+  instead, since the server doesn't know about the local change yet.
+- Trainer Profile edits are scoped to team/trainer-identity fields only
+  (Trainer Name, Favorite Type, Experience Level, Team Name, Avatar) — first/
+  last name, date of birth, and country are set once at onboarding and shown
+  read-only afterward; policy acceptance is likewise permanent. Editing
+  happens in an overlay modal with Save/Discard confirmations, not inline.
+- The Settings page owns account-wide preferences that used to live (or
+  were considered for) the Profile edit form: marketing email opt-in,
+  viewing the Terms/Privacy acceptance record, Colorblind Mode, Theme, and
+  a default for Battle's "show round explanations" toggle. Theme/Colorblind/
+  Battle-default apply instantly (consistent with the Navbar/Account Menu
+  controls they share real services with) — only the marketing checkbox is
+  gated behind the Save bar, since it's the only one with a real API call
+  that can fail.
 - Nice-to-have backlog (build only 2-3, don't try all): Surprise Me button,
   simplified Battle Simulation (vs. a randomly generated opponent team, no
   turns/moves/HP — just a power comparison), Team Cover Image, Favorites
-  list, Starter Style Quiz, AI Trainer Assistant.
+  list, Starter Style Quiz, AI Trainer Assistant. Battle, Favorites, Starter
+  Quiz, and AI Trainer Assistant are all built; Team Cover Image and
+  Surprise Me are the remaining unbuilt items as of this writing.
 - Explicitly OUT of scope: a full battle engine (moves, turns, HP,
   accuracy/crits, status effects), social features, native mobile app.
 
@@ -113,7 +140,16 @@ that isn't in this file.
 - Explain what each step does AND why, in plain language — the user wants
   to be able to explain every part of the code in a follow-up interview,
   not just have it work.
+- The user communicates in rapid-fire Hebrew (with typos) for quick
+  follow-up tweaks, and switches to detailed English when giving a full
+  spec or pasting a mockup. Narrate what you're about to do and why in
+  Hebrew before each step, not just in English.
 - Follow the feature-branch git workflow above for every task, don't commit
-  directly to `main`.
+  directly to `main`. Don't push to production unless explicitly asked.
 - Don't reintroduce ASP.NET Core / C# / EF Core — the stack decision to use
   Node.js/Express/Prisma is final for this project.
+- No mock/hardcoded data, ever — every screen must be backed by real PokeAPI
+  data and/or the user's own database rows. If a mockup shows something
+  with no real data behind it (e.g. a fabricated XP/Level system, a fake
+  Trainer ID number), say so and propose a real-data alternative rather
+  than faking it silently.

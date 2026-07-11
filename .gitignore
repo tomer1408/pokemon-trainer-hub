@@ -1,1 +1,10 @@
 docs/
+
+# Secrets — real per-subproject .env files already ignored by their own
+# .gitignore; this just covers a stray one at the repo root too.
+.env
+.env.local
+
+# OS/editor cruft
+.DS_Store
+*.log

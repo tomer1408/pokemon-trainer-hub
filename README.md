@@ -2,7 +2,7 @@
 
 A web app for registering as a "Pokémon Trainer," exploring Pokémon (via [PokeAPI](https://pokeapi.co/)), and building a personal Dream Team of up to 5 creatures that persists across sessions.
 
-Beyond the core Dream Team, the app includes: an Explorer with search/type filter/sort, a Favorites list, drag-and-drop team management with a Head-to-Head comparison modal, a Trainer Profile, a Team Card, a rule-based AI Trainer Assistant, a Battle Simulation against a randomly-generated opponent, and a Starter Quiz that recommends Pokémon based on your answers. None of these use mock or hardcoded data — every screen is backed by real PokeAPI data and/or the user's own rows in SQL Server.
+Beyond the core Dream Team, the app includes: an Explorer with search/type filter/sort, a Favorites list, drag-and-drop team management (Manage My Team) with a Head-to-Head comparison modal, a Trainer Profile, a Settings page (theme, colorblind mode, email preferences, privacy/consent record, account), a rule-based AI Trainer Assistant, a Battle Simulation against a randomly-generated opponent, and a Starter Quiz that recommends Pokémon based on your answers. None of these use mock or hardcoded data — every screen is backed by real PokeAPI data and/or the user's own rows in SQL Server.
 
 ## Tech Stack
 
@@ -33,10 +33,11 @@ The client never talks to PokeAPI or the database directly — everything goes t
 ```
 pokemon-trainer-hub-client/
   src/app/pages/                 landing, callback, onboarding, home, explorer,
-                                  my-team, manage-team, profile, ai-trainer-assistant,
-                                  battle, starter-quiz, not-found
+                                  my-team, manage-team, profile, settings,
+                                  ai-trainer-assistant, battle, starter-quiz, not-found
   src/app/shared/                navbar, account-menu, pokemon-detail-modal,
-                                  team-swap-modal, quiz/, guards, etc.
+                                  team-swap-modal, policy-modal, colorblind,
+                                  app-settings, quiz/, guards, etc.
   src/app/core/                  HTTP services (team, favorites, profile, pokemon)
 
 pokemon-trainer-hub-server/
@@ -218,11 +219,13 @@ Same shape as Team, but **no size limit**.
 
 ### Trainer Profile
 
-**`GET /api/profile`** — the current user's profile. `404` if not created yet. Only safe, user-facing fields are ever returned — never the internal row id or the Auth0 subject/user id.
+**`GET /api/profile`** — the current user's profile. `404` if not created yet. Only safe, user-facing fields are ever returned — never the internal row id or the Auth0 subject/user id. The response also includes a server-derived `ageRange` (e.g. `"18-24"`), computed fresh from `dateOfBirth` on every request — never stored, never sent by the client.
 
 **`POST /api/profile`** — creates or updates (upsert) the profile.
 Body (all required unless noted): `trainerName, favoriteType, experienceLevel, firstName, lastName, dateOfBirth, country`, plus optional `avatarPokemonId` (a real Pokédex id used as a profile icon) and `teamName` (custom Dream Team name).
-`400` if any required field is missing.
+`400` if any required field is missing, if `dateOfBirth` doesn't parse, is in the future, or is under the minimum age (13).
+
+Consent fields: `acceptedPolicy` (boolean) is **required to be `true`** the first time a profile is created (`400` otherwise) — on every later update it's ignored from the request body and just carries forward whatever was already on file; a profile can never re-demand or overwrite its original acceptance. `acceptedPolicyAt`/`policyVersion` are set server-side only on first creation, never trusted from the client. `marketingEmailsOptIn` (boolean) is the one consent-related field that stays freely editable after creation — sending it updates the stored value; omitting it on an update leaves the existing value untouched (never silently reset to `false`).
 
 **`PATCH /api/profile/starter-quiz`** — marks the current user's Starter Quiz as completed (`hasCompletedStarterQuiz: true`). Real, server-side, tied to the JWT-identified user — not client-side storage, so it survives across devices/browsers. `404` if the trainer has no profile row yet.
 
