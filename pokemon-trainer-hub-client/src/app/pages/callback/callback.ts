@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from '@auth0/auth0-angular';
+import { from } from 'rxjs';
+import { AuthService, Auth0ClientService, AuthState } from '@auth0/auth0-angular';
 import { ProfileService } from '../../core/profile';
 import { ThemeService } from '../../shared/theme';
 
@@ -10,6 +11,15 @@ type CallbackState = 'checking' | 'error-auth' | 'error-profile';
 // this page — not the SDK's own default post-login navigation — is the sole owner
 // of "where does the user go after login". The decision is based on whether a real
 // TrainerProfile row exists in our DB, not on Auth0's appState.
+//
+// We deliberately do NOT call AuthService.handleRedirectCallback() — its own
+// implementation (see @auth0/auth0-angular's fesm2022 bundle) unconditionally runs
+// `this.navigator.navigateByUrl(appState?.target ?? '/')` as a side effect before our
+// code even sees the result. Since login is triggered with no appState.target, that
+// races our own home-vs-onboarding navigation below and intermittently strands the
+// user back on Landing. Calling the raw Auth0Client directly does the same code
+// exchange without that built-in navigation; AuthState.refresh() then updates
+// isAuthenticated$/user$ the same way the wrapper would have.
 @Component({
   selector: 'app-callback',
   templateUrl: './callback.html',
@@ -17,6 +27,8 @@ type CallbackState = 'checking' | 'error-auth' | 'error-profile';
 })
 export class Callback {
   private readonly auth = inject(AuthService);
+  private readonly auth0Client = inject(Auth0ClientService);
+  private readonly authState = inject(AuthState);
   private readonly profileService = inject(ProfileService);
   private readonly router = inject(Router);
   protected readonly theme = inject(ThemeService);
@@ -29,8 +41,11 @@ export class Callback {
 
   private exchangeCode(): void {
     this.state.set('checking');
-    this.auth.handleRedirectCallback().subscribe({
-      next: () => this.checkProfile(),
+    from(this.auth0Client.handleRedirectCallback()).subscribe({
+      next: () => {
+        this.authState.refresh();
+        this.checkProfile();
+      },
       error: () => this.state.set('error-auth'),
     });
   }

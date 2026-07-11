@@ -283,12 +283,15 @@ export class ManageTeam implements AfterViewInit {
   // Adding straight from the Detail Modal stages the change the same way a
   // drag onto the team section would — still requires Save Changes.
   addToTeamFromModal(pokemonId: number): void {
+    // Full/duplicate/not-found all return early here without closing the
+    // modal — only a real staged add (below) closes it.
     if (this.isOnTeam(pokemonId) || this.teamDraft().length >= MAX_TEAM_SIZE) return;
     const member = this.allFavorites().find((f) => f.pokemonId === pokemonId)
       ?? this.benchDraft().find((m) => m.pokemonId === pokemonId);
     if (!member) return;
     this.benchDraft.update((list) => list.filter((m) => m.pokemonId !== pokemonId));
     this.teamDraft.update((list) => [...list, member]);
+    this.closeDetail();
   }
 
   // ---- Save Changes ----

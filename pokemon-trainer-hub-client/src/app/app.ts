@@ -5,7 +5,7 @@ import { filter, map } from 'rxjs';
 import { AuthService } from '@auth0/auth0-angular';
 import { Navbar } from './shared/navbar/navbar';
 
-const NAVBAR_HIDDEN_ON = ['/', '/callback', '/onboarding'];
+const NAVBAR_HIDDEN_ON = ['/', '/callback', '/onboarding', '/starter-quiz'];
 
 @Component({
   selector: 'app-root',

@@ -43,53 +43,112 @@
         </div>
       }
 
-      <!-- ===== 1. PREVIEW ===== -->
+      <!-- ===== 1. PREPARE FOR BATTLE (settings) ===== -->
       @if (phase() === 'preview') {
         <div class="header-block">
-          <h1 class="page-title">Battle Simulation</h1>
-          <p class="page-subtitle">
-            Your Dream Team faces a randomly generated opponent. Each round is decided by real type
-            advantage and Power &mdash; ties are broken with a coin flip.
-          </p>
+          <div class="eyebrow">ARENA &middot; PRE-BATTLE</div>
+          <h1 class="page-title">Prepare for Battle</h1>
+          <p class="page-subtitle">Choose your battle rules before entering the arena.</p>
         </div>
 
-        <div class="preview-layout">
-          <div class="preview-col">
-            <div class="preview-label">Your Team</div>
-            @for (p of yourTeam(); track p.pokemonId) {
-              <div class="preview-row">
-                <div class="preview-sprite" [style.background]="typeColor(p.types[0]) + '33'">
-                  @if (p.spriteUrl) { <img [src]="p.spriteUrl" alt="{{ p.name }}" /> }
-                </div>
-                <span class="type-pill" [style.background]="typeColor(p.types[0]) + '33'" [style.color]="typeColor(p.types[0])">
-                  <span class="type-glyph" [style.background]="typeColor(p.types[0])"></span>{{ p.types[0] }}
-                </span>
-                <span class="preview-name">{{ p.name }}</span>
-                <span class="preview-power">{{ p.power }}</span>
-              </div>
-            }
-          </div>
+        <div class="how-it-works-card">
+          <div class="how-it-works-title">How the battle works</div>
+          <ul class="how-it-works-list">
+            <li>Your Dream Team battles against a generated opponent team.</li>
+            <li>Each round compares Pok&eacute;mon power, stats, type advantage, and a small luck factor.</li>
+            <li>This is a simplified educational battle simulation, not the official Pok&eacute;mon battle formula.</li>
+            <li>The match is {{ settings().rounds }} round{{ settings().rounds > 1 ? 's' : '' }} max: the first side to win {{ requiredWins() }} round{{ requiredWins() > 1 ? 's' : '' }} wins the battle.</li>
+          </ul>
+        </div>
 
-          <div class="preview-vs-badge">VS</div>
+        <div class="settings-card">
+          <section class="settings-section">
+            <div class="settings-label-row"><span class="settings-num">01</span><span class="settings-title">Opponent Difficulty</span></div>
+            <div class="difficulty-grid">
+              @for (opt of difficultyOptions; track opt.value) {
+                <button
+                  type="button"
+                  class="difficulty-card"
+                  [class.selected]="settings().difficulty === opt.value"
+                  (click)="updateSetting('difficulty', opt.value)"
+                >
+                  <span class="difficulty-dot"></span>
+                  <span class="difficulty-name">{{ opt.label }}</span>
+                  <span class="settings-helper-text">{{ opt.helper }}</span>
+                </button>
+              }
+            </div>
+          </section>
 
-          <div class="preview-col">
-            <div class="preview-label">{{ opponentName() }}</div>
-            @for (p of opponentTeam(); track p.pokemonId) {
-              <div class="preview-row">
-                <div class="preview-sprite" [style.background]="typeColor(p.types[0]) + '33'">
-                  @if (p.spriteUrl) { <img [src]="p.spriteUrl" alt="{{ p.name }}" /> }
-                </div>
-                <span class="type-pill" [style.background]="typeColor(p.types[0]) + '33'" [style.color]="typeColor(p.types[0])">
-                  <span class="type-glyph" [style.background]="typeColor(p.types[0])"></span>{{ p.types[0] }}
-                </span>
-                <span class="preview-name">{{ p.name }}</span>
-                <span class="preview-power">{{ p.power }}</span>
+          <section class="settings-section">
+            <div class="settings-label-row"><span class="settings-num">02</span><span class="settings-title">Battle Length</span></div>
+            <div class="settings-pill-row">
+              @for (opt of lengthOptions; track opt.value) {
+                <button type="button" class="settings-pill" [class.selected]="settings().rounds === opt.value" (click)="updateSetting('rounds', opt.value)">
+                  {{ opt.label }}
+                </button>
+              }
+            </div>
+          </section>
+
+          <section class="settings-section">
+            <div class="settings-label-row"><span class="settings-num">03</span><span class="settings-title">Opponent Type</span></div>
+            <div class="settings-pill-row">
+              @for (opt of opponentTypeOptions; track opt.value) {
+                <button type="button" class="settings-pill" [class.selected]="settings().opponentType === opt.value" (click)="updateSetting('opponentType', opt.value)">
+                  @if (opt.color) { <span class="type-glyph" [style.background]="opt.color"></span> }
+                  {{ opt.label }}
+                </button>
+              }
+            </div>
+          </section>
+
+          <section class="settings-section">
+            <div class="settings-label-row"><span class="settings-num">04</span><span class="settings-title">Luck Factor</span></div>
+            <div class="settings-pill-row">
+              @for (opt of luckOptions; track opt.value) {
+                <button type="button" class="settings-pill" [class.selected]="settings().luckFactor === opt.value" (click)="updateSetting('luckFactor', opt.value)">
+                  {{ opt.label }}
+                </button>
+              }
+            </div>
+            <div class="settings-helper-text">{{ luckHelperText() }}</div>
+          </section>
+
+          <section class="settings-section">
+            <div class="settings-toggle-row">
+              <div class="settings-toggle-text-col">
+                <div class="settings-label-row"><span class="settings-num">05</span><span class="settings-title">Battle Explanations</span></div>
+                <div class="settings-helper-text">When enabled, each round explains why a Pok&eacute;mon won.</div>
               </div>
+              <button
+                type="button"
+                class="settings-switch"
+                [class.on]="settings().showExplanations"
+                aria-label="Toggle battle explanations"
+                (click)="toggleExplanations()"
+              >
+                <span class="settings-switch-knob"></span>
+              </button>
+            </div>
+          </section>
+        </div>
+
+        <div class="summary-bar">
+          <span class="summary-ready"><span class="summary-dot"></span>Ready to battle</span>
+          <div class="summary-chips">
+            @for (chip of summaryChips(); track chip) {
+              <span class="summary-chip">{{ chip }}</span>
             }
           </div>
         </div>
 
-        <button type="button" class="primary-btn" (click)="beginRound1()">Start Battle</button>
+        <div class="actions-row">
+          <a routerLink="/my-team" class="secondary-btn">&larr; Back to My Team</a>
+          <button type="button" class="primary-btn" (click)="beginRound1()">
+            &#9889; Start Battle
+          </button>
+        </div>
       }
 
       <!-- ===== 2. ROUND PICK ===== -->
@@ -191,7 +250,10 @@
             <div class="result-text" [class.good]="last.winner === 'you'" [class.bad]="last.winner === 'opp'">
               {{ last.winner === 'you' ? 'You win this round!' : opponentName() + ' wins this round.' }}
             </div>
-            <span class="reason-chip">{{ last.reason }}</span>
+            @if (settings().showExplanations) {
+              <span class="reason-chip">{{ last.reason }}</span>
+              <p class="explanation-text">{{ last.explanation }}</p>
+            }
           </div>
 
           <div class="faceoff-card" [class.winner-card]="last.winner === 'opp'">
@@ -215,7 +277,7 @@
         </div>
 
         <button type="button" class="primary-btn" (click)="continueAfterReveal()">
-          {{ roundHistory().length >= totalRounds() ? 'See Result' : 'Next Round' }}
+          {{ matchDecided() ? 'See Result' : 'Next Round' }}
         </button>
       }
 
@@ -237,7 +299,9 @@
               <div class="history-row">
                 <span class="history-round">R{{ h.round }}</span>
                 <span class="history-matchup">{{ h.yourMon.name }} ({{ h.yourMon.power }}) vs {{ h.oppMon.name }} ({{ h.oppMon.power }})</span>
-                <span class="history-reason">{{ h.reason }}</span>
+                @if (settings().showExplanations) {
+                  <span class="history-reason">{{ h.reason }}</span>
+                }
                 <span class="history-outcome" [class.good]="h.winner === 'you'" [class.bad]="h.winner === 'opp'">
                   {{ h.winner === 'you' ? 'Win' : 'Loss' }}
                 </span>
@@ -253,4 +317,16 @@
       }
     }
   </div>
+
+  @if (entering()) {
+    <div class="enter-overlay" (click)="cancelEnter()">
+      @if (countPhase() === 'count') {
+        <div class="enter-count">{{ countValue() }}</div>
+      } @else {
+        <div class="enter-go">Entering the Arena!</div>
+      }
+      <div class="enter-settings-line">Ready to battle &middot; {{ summaryChips().join(' &middot; ') }}</div>
+      <div class="enter-hint">Click anywhere to cancel</div>
+    </div>
+  }
 </div>

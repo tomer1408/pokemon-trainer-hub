@@ -23,3 +23,14 @@ export function markStarterQuizSkipped(): void {
     // Safe failure mode — worst case the guard redirects to the quiz again.
   }
 }
+
+// sessionStorage outlives logout within the same browser tab, so without this
+// a "Skip for now" from one account would silently carry over and hide the
+// quiz for the next account logged into in that same tab. Called on logout.
+export function clearStarterQuizSkip(): void {
+  try {
+    sessionStorage.removeItem(SKIPPED_KEY);
+  } catch {
+    // Safe failure mode — worst case the guard just redirects to the quiz again.
+  }
+}

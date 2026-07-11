@@ -210,6 +210,10 @@ export class Explorer {
       if (result.ok) {
         this.teamRefresh.update((n) => n + 1);
         this.swapNotice.set(null);
+        // Only close on a real success — TEAM_FULL/duplicate/error below all
+        // leave the modal open so the user can see the message or continue
+        // into the swap flow.
+        this.closeDetail();
       } else if (result.reason === 'TEAM_FULL') {
         this.swapCandidate.set(p);
       } else {

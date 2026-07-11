@@ -146,6 +146,10 @@ export class StarterQuiz {
     this.teamService.addToTeam(pokemonId).subscribe((result) => {
       if (result.ok) {
         this.teamRefresh.update((n) => n + 1);
+        // Only close on a real success — TEAM_FULL/error below leave the
+        // modal open so the user can see the message or continue into the
+        // swap flow.
+        this.closeDetail();
       } else if (result.reason === 'TEAM_FULL') {
         this.swapCandidateId.set(pokemonId);
       } else {

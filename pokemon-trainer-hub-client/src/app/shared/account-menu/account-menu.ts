@@ -2,6 +2,7 @@ import { Component, HostListener, computed, inject, input, signal } from '@angul
 import { RouterLink } from '@angular/router';
 import { AuthService } from '@auth0/auth0-angular';
 import { ColorblindService, ColorblindMode } from '../colorblind';
+import { clearStarterQuizSkip } from '../quiz/quiz-completion';
 
 const COLORBLIND_MODES: { value: ColorblindMode; label: string }[] = [
   { value: 'off', label: 'Off' },
@@ -50,6 +51,7 @@ export class AccountMenu {
   }
 
   logout(): void {
+    clearStarterQuizSkip();
     this.auth.logout({ logoutParams: { returnTo: window.location.origin } }).subscribe();
   }
 }

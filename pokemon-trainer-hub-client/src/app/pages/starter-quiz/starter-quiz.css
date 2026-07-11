@@ -566,12 +566,30 @@
   cursor: pointer;
 }
 
+/* Reused on <a> tags in .results-actions (primary-btn/retake-btn were only
+   ever <button>s before) — needs explicit centering/no-underline that a
+   plain anchor doesn't get by default. */
+.results-action-link {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0;
+}
+
+/* Also now used on a <button> ("Retake Quiz"), not just the <a> it was
+   originally written for — needs the browser's default button chrome
+   stripped out to still look like a plain text link. */
 .skip-link {
+  border: none;
+  background: transparent;
+  padding: 0;
   font-family: 'Manrope', sans-serif;
   font-weight: 600;
   font-size: 13px;
   color: var(--text-muted);
   text-decoration: underline;
+  cursor: pointer;
 }
 
 @media (max-width: 640px) {

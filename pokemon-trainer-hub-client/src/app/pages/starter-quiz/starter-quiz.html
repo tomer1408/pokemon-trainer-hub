@@ -101,8 +101,9 @@
         </div>
 
         <div class="results-actions">
-          <button type="button" class="retake-btn" (click)="retakeQuiz()">&#8635; Retake Quiz</button>
-          <a routerLink="/home" class="skip-link">Back to Home</a>
+          <a routerLink="/explorer" class="primary-btn results-action-link">Go to Explorer</a>
+          <a routerLink="/home" class="retake-btn results-action-link">Back to Home</a>
+          <button type="button" class="skip-link" (click)="retakeQuiz()">&#8635; Retake Quiz</button>
         </div>
       </div>
     }
