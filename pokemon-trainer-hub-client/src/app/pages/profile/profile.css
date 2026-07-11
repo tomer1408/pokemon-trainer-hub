@@ -332,7 +332,6 @@
   gap: 28px;
   flex-wrap: wrap;
   align-items: flex-start;
-  padding-top: 20px;
 }
 
 .edit-avatar-block {
@@ -344,9 +343,10 @@
 }
 
 .avatar-picker-label {
-  font-family: 'Space Mono', monospace;
-  font-size: 10px;
-  color: var(--text-muted);
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--text-body);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -398,9 +398,10 @@
 }
 
 .field-label {
-  font-family: 'Space Mono', monospace;
-  font-size: 10.5px;
-  color: var(--text-muted);
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--text-body);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -719,13 +720,6 @@ select:focus {
   color: #fff;
 }
 
-.edit-actions-row {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 4px;
-}
-
 .cancel-btn {
   border: 1px solid var(--border-soft);
   background: transparent;
@@ -755,127 +749,190 @@ select:focus {
   cursor: not-allowed;
 }
 
-/* ---- Age Range (Personal Details edit) ---- */
-.age-range-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 2px;
-}
-
-.age-range-label {
-  font-family: 'Space Mono', monospace;
-  font-size: 10px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.age-range-value {
-  font-family: 'Space Mono', monospace;
-  font-weight: 700;
-  font-size: 12.5px;
-  color: var(--text-muted);
-  background: var(--overlay-05);
-  border: 1px solid var(--border-soft);
-  padding: 3px 11px;
-  border-radius: 100px;
-}
-
-.age-range-value.filled {
-  color: var(--cyan);
-  background: rgba(94, 234, 212, 0.12);
-}
-
-/* ---- Consent & Preferences (edit mode) ---- */
-.policy-accepted-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.policy-check-icon {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: var(--cyan);
-  margin-top: 1px;
-  position: relative;
-}
-
-.policy-check-icon::after {
-  content: '';
-  position: absolute;
-  top: 45%;
-  left: 50%;
-  width: 8px;
-  height: 4px;
-  border-left: 2px solid #0D0A1E;
-  border-bottom: 2px solid #0D0A1E;
-  transform: translate(-50%, -50%) rotate(-45deg);
-}
-
-.policy-accepted-text {
-  font-size: 13px;
-  color: var(--text-body);
-  line-height: 1.5;
-}
-
-.consent-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  text-align: left;
-  background: transparent;
-  border: none;
-  padding: 10px 0 0;
-  cursor: pointer;
-  width: 100%;
-}
-
-.consent-box {
-  width: 22px;
-  height: 22px;
-  flex-shrink: 0;
-  border-radius: 7px;
-  border: 1.5px solid var(--border-soft);
-  background: var(--overlay-05);
+/* ---- Edit Profile modal ---- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 1px;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  padding: 24px;
+  background: rgba(6, 4, 16, 0.55);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  box-sizing: border-box;
 }
 
-.consent-box.checked {
-  background: linear-gradient(135deg, var(--violet-deep), var(--cyan));
-  border-color: transparent;
+.modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 760px;
+  max-height: 74vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 24px;
+  box-shadow: 0 40px 90px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
-.checkmark {
-  width: 11px;
-  height: 6px;
-  border-left: 2.5px solid #fff;
-  border-bottom: 2.5px solid #fff;
-  transform: rotate(-45deg) translateY(-1px);
-  opacity: 0;
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 26px 16px;
+  border-bottom: 1px solid var(--border-soft);
 }
 
-.consent-box.checked .checkmark {
-  opacity: 1;
-}
-
-.consent-text {
-  font-size: 13px;
+.modal-title {
+  font-family: 'Bungee', sans-serif;
+  font-size: 19px;
   color: var(--text-body);
-  line-height: 1.5;
 }
 
-.inline-link {
-  color: var(--cyan);
+.modal-sub {
+  font-family: 'Manrope', sans-serif;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.modal-body {
+  padding: 22px 26px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* The banner-overlap hex avatar look only makes sense sitting on the ID
+   card's banner — inside the modal there's no banner to overlap, so undo
+   the negative offset and the surface-colored ring. */
+.modal-body .avatar-hex {
+  margin-top: 0;
+  box-shadow: none;
+  animation: none;
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 26px;
+  border-top: 1px solid var(--border-soft);
+  background: var(--surface-raised);
+}
+
+/* ---- Confirm dialogs (save / discard) ---- */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(6, 4, 16, 0.6);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  box-sizing: border-box;
+}
+
+.confirm-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
+}
+
+.confirm-title {
+  font-family: 'Bungee', sans-serif;
+  font-size: 17px;
+  color: var(--text-body);
+  margin: 0;
+  text-align: center;
+}
+
+.confirm-body {
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.confirm-error {
+  font-size: 12.5px;
+  color: var(--danger);
+  margin: 0;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.confirm-cancel {
+  flex: 1;
+  border: 1px solid var(--border-soft);
+  background: transparent;
+  color: var(--text-body);
+  border-radius: 100px;
+  padding: 11px 14px;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
+  font-size: 13px;
   cursor: pointer;
+}
+
+/* Cyan — saving is a positive action, not destructive. */
+.confirm-save {
+  flex: 1;
+  border: none;
+  border-radius: 100px;
+  padding: 11px 14px;
+  cursor: pointer;
+  background: linear-gradient(120deg, var(--violet-deep), var(--cyan));
+  color: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.confirm-save:disabled,
+.confirm-cancel:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Neutral violet, not red — discarding edits isn't a destructive delete. */
+.confirm-revert {
+  flex: 1;
+  border: none;
+  border-radius: 100px;
+  padding: 11px 14px;
+  cursor: pointer;
+  background: var(--violet-deep);
+  color: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
 }
 
 /* ---- Success toast ---- */

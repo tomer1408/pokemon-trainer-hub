@@ -3,7 +3,6 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { catchError, forkJoin, map, of, switchMap } from 'rxjs';
-import { COUNTRIES } from '../../countries';
 import { EXPERIENCE_LEVELS, ExperienceLevel, POKEMON_TYPES, PokemonType } from '../../trainer-profile-options';
 import { ProfileService, TrainerProfile } from '../../core/profile';
 import { TeamService } from '../../core/team';
@@ -12,10 +11,8 @@ import { PokemonService, PokemonDetail } from '../../core/pokemon';
 import { PROFILE_ICON_POKEMON_IDS } from '../../shared/profile-icons';
 import { getTeamPower, getTeamTier } from '../../shared/team-power';
 import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
-import { calculateAgeRange } from '../../shared/age-range';
 import { ThemeService } from '../../shared/theme';
 import { LoadingScreen } from '../../shared/loading-screen/loading-screen';
-import { PolicyModal, PolicyType } from '../../shared/policy-modal/policy-modal';
 
 interface ProfileDraft {
   trainerName: string;
@@ -33,7 +30,6 @@ interface ProfileDraft {
   marketingEmailsOptIn: boolean;
 }
 
-type Mode = 'view' | 'edit';
 type ProfileFetchStatus = 'ok' | 'missing' | 'error';
 
 // Matches My Profile.dc.html. The "Profile Icon" picker uses real Pokémon
@@ -44,9 +40,14 @@ type ProfileFetchStatus = 'ok' | 'missing' | 'error';
 // this app (no battle system, no Pokédex-catch tracking) — see the
 // memberSince/teamCompletionPct/achievements computed signals below for what
 // they were replaced with instead of being faked.
+//
+// The Edit Profile modal only lets the trainer change team-identity fields
+// (Trainer Name, Favorite Type, Experience Level, Team Name, Avatar) — first/
+// last name, date of birth, and country are set once at onboarding and shown
+// read-only in Personal Details; policy acceptance is likewise permanent.
 @Component({
   selector: 'app-profile',
-  imports: [FormsModule, RouterLink, LoadingScreen, PolicyModal],
+  imports: [FormsModule, RouterLink, LoadingScreen],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
@@ -64,7 +65,6 @@ export class Profile {
     { initialValue: [] as PokemonDetail[] },
   );
 
-  protected readonly countries = COUNTRIES;
   protected readonly pokemonTypes = POKEMON_TYPES;
   protected readonly experienceLevels = EXPERIENCE_LEVELS;
 
@@ -93,14 +93,27 @@ export class Profile {
   protected readonly hasError = computed(() => this.profileResult()?.status === 'error');
   protected readonly hasNoProfile = computed(() => this.profileResult()?.status === 'missing');
 
-  protected readonly mode = signal<Mode>('view');
   protected readonly saved = signal<ProfileDraft | null>(null);
   protected readonly draft = signal<ProfileDraft | null>(null);
+
+  // Editing now happens in an overlay modal (My Profile.dc (2).html) instead
+  // of swapping the page's own content — showSaveConfirm/showDiscardConfirm
+  // follow the same request/cancel/confirm idiom already used for Manage My
+  // Team's save/revert/leave confirms.
+  protected readonly modalOpen = signal(false);
+  protected readonly showSaveConfirm = signal(false);
+  protected readonly showDiscardConfirm = signal(false);
 
   protected readonly saving = signal(false);
   protected readonly saveError = signal<string | null>(null);
   protected readonly showSavedToast = signal(false);
-  protected readonly openPolicyModal = signal<PolicyType | null>(null);
+
+  protected readonly isDirty = computed(() => {
+    const s = this.saved();
+    const d = this.draft();
+    if (!s || !d) return false;
+    return JSON.stringify(s) !== JSON.stringify(d);
+  });
 
   protected readonly team = toSignal(this.teamService.getTeam(), { initialValue: [] });
   protected readonly favorites = toSignal(this.favoritesService.getFavorites(), { initialValue: [] });
@@ -163,32 +176,8 @@ export class Profile {
     });
   }
 
-  protected readonly ageRange = computed(() => {
-    const dob = this.draft()?.dateOfBirth;
-    return dob ? calculateAgeRange(dob.toISOString()) : null;
-  });
-
-  protected readonly formattedAcceptedPolicyAt = computed(() => {
-    const at = this.saved()?.acceptedPolicyAt;
-    if (!at) return null;
-    return new Date(at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
-  });
-
   typeColor(type: string): string {
     return TYPE_COLORS[type.toLowerCase() as PokemonTypeName] ?? TYPE_COLORS['normal'];
-  }
-
-  showPolicy(type: PolicyType): void {
-    this.openPolicyModal.set(type);
-  }
-
-  closePolicy(): void {
-    this.openPolicyModal.set(null);
-  }
-
-  toggleMarketing(): void {
-    const d = this.draft();
-    if (d) this.draft.set({ ...d, marketingEmailsOptIn: !d.marketingEmailsOptIn });
   }
 
   formattedDob(): string {
@@ -209,16 +198,37 @@ export class Profile {
     if (!s) return;
     this.draft.set({ ...s });
     this.saveError.set(null);
-    this.mode.set('edit');
+    this.modalOpen.set(true);
   }
 
-  cancelEdit(): void {
-    this.mode.set('view');
+  // X button, overlay click, and the footer Cancel button all route through
+  // here (matching the mockup) — unsaved edits get a Discard confirmation
+  // instead of silently vanishing.
+  requestCloseModal(): void {
+    if (this.isDirty()) {
+      this.showDiscardConfirm.set(true);
+    } else {
+      this.closeModal();
+    }
+  }
+
+  private closeModal(): void {
+    this.modalOpen.set(false);
     this.draft.set(null);
     this.saveError.set(null);
+    this.showSaveConfirm.set(false);
+    this.showDiscardConfirm.set(false);
   }
 
-  updateDraft(field: 'trainerName' | 'firstName' | 'lastName' | 'country' | 'teamName', value: string): void {
+  cancelDiscard(): void {
+    this.showDiscardConfirm.set(false);
+  }
+
+  confirmDiscard(): void {
+    this.closeModal();
+  }
+
+  updateDraft(field: 'trainerName' | 'teamName', value: string): void {
     const d = this.draft();
     if (d) this.draft.set({ ...d, [field]: value });
   }
@@ -238,16 +248,18 @@ export class Profile {
     if (d) this.draft.set({ ...d, avatarPokemonId: pokemonId });
   }
 
-  get dobInputValue(): string {
-    return this.draft()?.dateOfBirth.toISOString().split('T')[0] ?? '';
+  requestSave(): void {
+    if (!this.isDirty() || this.saving()) return;
+    this.saveError.set(null);
+    this.showSaveConfirm.set(true);
   }
 
-  updateDob(value: string): void {
-    const d = this.draft();
-    if (d) this.draft.set({ ...d, dateOfBirth: new Date(value) });
+  cancelSaveConfirm(): void {
+    if (this.saving()) return;
+    this.showSaveConfirm.set(false);
   }
 
-  saveChanges(): void {
+  confirmSaveChanges(): void {
     const d = this.draft();
     if (!d) return;
 
@@ -276,13 +288,13 @@ export class Profile {
       next: () => {
         this.saving.set(false);
         this.saved.set(d);
-        this.mode.set('view');
-        this.draft.set(null);
         this.showSavedToast.set(true);
         setTimeout(() => this.showSavedToast.set(false), 2400);
+        this.closeModal();
       },
       error: (err) => {
         this.saving.set(false);
+        this.showSaveConfirm.set(false);
         this.saveError.set(
           err?.status === 400 && err?.error?.message
             ? err.error.message

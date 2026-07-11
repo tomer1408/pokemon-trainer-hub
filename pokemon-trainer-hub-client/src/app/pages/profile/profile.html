@@ -27,59 +27,36 @@
           </div>
 
           <div class="card-body">
-            @if (mode() === 'view') {
-              <div class="view-top-row">
-                <div class="avatar-hex">
-                  @if (avatarSprite(); as sprite) {
-                    <img class="avatar-sprite" [src]="sprite" alt="Trainer avatar" />
-                  } @else {
-                    <span class="avatar-glyph" [style.background]="typeColor(s.favoriteType)"></span>
-                  }
-                </div>
-
-                <div class="view-info">
-                  <h2 class="trainer-name">{{ s.trainerName }}</h2>
-                  <div class="badge-row">
-                    <span class="type-pill" [style.background]="typeColor(s.favoriteType) + '33'" [style.color]="typeColor(s.favoriteType)">
-                      <span class="type-glyph" [style.background]="typeColor(s.favoriteType)"></span>{{ s.favoriteType }}
-                    </span>
-                    <span class="exp-pill">{{ s.experienceLevel }}</span>
-                    <span class="country-chip"><span class="country-dot"></span>{{ s.country }}</span>
-                  </div>
-                </div>
-
-                <button type="button" class="edit-btn" (click)="startEdit()">Edit Profile</button>
+            <div class="view-top-row">
+              <div class="avatar-hex">
+                @if (avatarSprite(); as sprite) {
+                  <img class="avatar-sprite" [src]="sprite" alt="Trainer avatar" />
+                } @else {
+                  <span class="avatar-glyph" [style.background]="typeColor(s.favoriteType)"></span>
+                }
               </div>
 
-              <div class="progress-block">
-                <div class="progress-top-row">
-                  <span class="progress-title">Dream Team Progress</span>
-                  <span class="progress-value">{{ teamCount() }}/5 Pok&eacute;mon</span>
+              <div class="view-info">
+                <h2 class="trainer-name">{{ s.trainerName }}</h2>
+                <div class="badge-row">
+                  <span class="type-pill" [style.background]="typeColor(s.favoriteType) + '33'" [style.color]="typeColor(s.favoriteType)">
+                    <span class="type-glyph" [style.background]="typeColor(s.favoriteType)"></span>{{ s.favoriteType }}
+                  </span>
+                  <span class="exp-pill">{{ s.experienceLevel }}</span>
+                  <span class="country-chip"><span class="country-dot"></span>{{ s.country }}</span>
                 </div>
-                <div class="progress-track"><div class="progress-fill" [style.width.%]="teamCompletionPct()"></div></div>
               </div>
-            } @else if (draft(); as d) {
-              <div class="edit-row">
-                <div class="avatar-hex">
-                  @if (draftAvatarSprite(); as sprite) {
-                    <img class="avatar-sprite" [src]="sprite" alt="Trainer avatar" />
-                  } @else {
-                    <span class="avatar-glyph" [style.background]="typeColor(d.favoriteType)"></span>
-                  }
-                </div>
 
-                <label class="edit-name-block">
-                  <span class="field-label">Trainer Name</span>
-                  <input
-                    type="text"
-                    class="name-input"
-                    name="trainerName"
-                    [ngModel]="d.trainerName"
-                    (ngModelChange)="updateDraft('trainerName', $event)"
-                  />
-                </label>
+              <button type="button" class="edit-btn" (click)="startEdit()">Edit Profile</button>
+            </div>
+
+            <div class="progress-block">
+              <div class="progress-top-row">
+                <span class="progress-title">Dream Team Progress</span>
+                <span class="progress-value">{{ teamCount() }}/5 Pok&eacute;mon</span>
               </div>
-            }
+              <div class="progress-track"><div class="progress-fill" [style.width.%]="teamCompletionPct()"></div></div>
+            </div>
           </div>
         </div>
       </div>
@@ -129,121 +106,66 @@
         </div>
       </div>
 
-      <!-- Personal details -->
+      <!-- Personal details (read-only — set once at onboarding) -->
       <div class="details-card">
         <div class="details-header">Personal Details</div>
-
-        @if (mode() === 'view') {
-          <div class="details-grid">
-            <div class="detail-row">
-              <span class="detail-label">First Name</span>
-              <span class="detail-value">{{ s.firstName }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Last Name</span>
-              <span class="detail-value">{{ s.lastName }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Date of Birth</span>
-              <span class="detail-value">{{ formattedDob() }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Country</span>
-              <span class="detail-value">{{ s.country }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Favorite Type</span>
-              <span class="type-pill small" [style.background]="typeColor(s.favoriteType) + '33'" [style.color]="typeColor(s.favoriteType)">
-                <span class="type-glyph" [style.background]="typeColor(s.favoriteType)"></span>{{ s.favoriteType }}
-              </span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Experience Level</span>
-              <span class="detail-value">{{ s.experienceLevel }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Team Name</span>
-              <span class="detail-value">{{ s.teamName || 'Your Dream Team' }}</span>
-            </div>
+        <div class="details-grid">
+          <div class="detail-row">
+            <span class="detail-label">First Name</span>
+            <span class="detail-value">{{ s.firstName }}</span>
           </div>
-        } @else if (draft(); as d) {
-          <div class="edit-grid">
-            <label class="edit-field">
-              <span class="field-label">First Name</span>
-              <input type="text" name="firstName" [ngModel]="d.firstName" (ngModelChange)="updateDraft('firstName', $event)" />
-            </label>
-            <label class="edit-field">
-              <span class="field-label">Last Name</span>
-              <input type="text" name="lastName" [ngModel]="d.lastName" (ngModelChange)="updateDraft('lastName', $event)" />
-            </label>
-            <label class="edit-field">
-              <span class="field-label">Date of Birth</span>
-              <input type="date" name="dateOfBirth" [ngModel]="dobInputValue" (ngModelChange)="updateDob($event)" />
-              <div class="age-range-row">
-                <span class="age-range-label">Age Range</span>
-                <span class="age-range-value" [class.filled]="ageRange()">{{ ageRange() || '—' }}</span>
-              </div>
-            </label>
-            <label class="edit-field">
-              <span class="field-label">Country</span>
-              <select name="country" [ngModel]="d.country" (ngModelChange)="updateDraft('country', $event)">
-                @for (c of countries; track c) {
-                  <option [value]="c">{{ c }}</option>
-                }
-              </select>
-            </label>
-            <div class="edit-field-wide">
-              <label class="field-label">Favorite Type</label>
-              <div class="chip-row">
-                @for (t of pokemonTypes; track t) {
-                  <button
-                    type="button"
-                    class="type-chip"
-                    [class.active]="d.favoriteType === t"
-                    [style.background]="d.favoriteType === t ? typeColor(t) : typeColor(t) + '22'"
-                    [style.color]="d.favoriteType === t ? '#1C1533' : typeColor(t)"
-                    (click)="updateFavoriteType(t)"
-                  >
-                    <span class="type-glyph" [style.background]="typeColor(t)"></span>{{ t }}
-                  </button>
-                }
-              </div>
-            </div>
-            <div class="edit-field-wide">
-              <label class="field-label">Experience Level</label>
-              <div class="chip-row">
-                @for (level of experienceLevels; track level) {
-                  <button
-                    type="button"
-                    class="level-chip"
-                    [class.active]="d.experienceLevel === level"
-                    (click)="updateExperienceLevel(level)"
-                  >
-                    {{ level }}
-                  </button>
-                }
-              </div>
-            </div>
-            <label class="edit-field">
-              <span class="field-label">Team Name</span>
-              <input
-                type="text"
-                name="teamName"
-                placeholder="Name your Dream Team (optional)"
-                [ngModel]="d.teamName"
-                (ngModelChange)="updateDraft('teamName', $event)"
-              />
-            </label>
+          <div class="detail-row">
+            <span class="detail-label">Last Name</span>
+            <span class="detail-value">{{ s.lastName }}</span>
           </div>
-        }
+          <div class="detail-row">
+            <span class="detail-label">Date of Birth</span>
+            <span class="detail-value">{{ formattedDob() }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Country</span>
+            <span class="detail-value">{{ s.country }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Favorite Type</span>
+            <span class="type-pill small" [style.background]="typeColor(s.favoriteType) + '33'" [style.color]="typeColor(s.favoriteType)">
+              <span class="type-glyph" [style.background]="typeColor(s.favoriteType)"></span>{{ s.favoriteType }}
+            </span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Experience Level</span>
+            <span class="detail-value">{{ s.experienceLevel }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Team Name</span>
+            <span class="detail-value">{{ s.teamName || 'Your Dream Team' }}</span>
+          </div>
+        </div>
       </div>
+    }
+  </div>
 
-      @if (mode() === 'edit' && draft(); as d) {
-        <!-- Avatar / Logo -->
-        <div class="details-card">
-          <div class="details-header">Avatar / Logo</div>
+  <!-- ===== EDIT PROFILE MODAL ===== -->
+  @if (modalOpen() && draft(); as d) {
+    <div class="modal-overlay" (click)="requestCloseModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div>
+            <div class="modal-title">Edit Profile</div>
+            <div class="modal-sub">Update your trainer identity and team details.</div>
+          </div>
+        </div>
+
+        <div class="modal-body">
           <div class="edit-row">
             <div class="edit-avatar-block">
+              <div class="avatar-hex">
+                @if (draftAvatarSprite(); as sprite) {
+                  <img class="avatar-sprite" [src]="sprite" alt="Trainer avatar" />
+                } @else {
+                  <span class="avatar-glyph" [style.background]="typeColor(d.favoriteType)"></span>
+                }
+              </div>
               <div class="avatar-picker-label">Choose avatar</div>
               <div class="avatar-picker-grid">
                 <button
@@ -266,47 +188,115 @@
                 }
               </div>
             </div>
+
+            <label class="edit-name-block">
+              <span class="field-label">Trainer Name</span>
+              <input
+                type="text"
+                class="name-input"
+                name="trainerName"
+                [ngModel]="d.trainerName"
+                (ngModelChange)="updateDraft('trainerName', $event)"
+              />
+            </label>
           </div>
+
+          <div class="edit-grid">
+            <div class="edit-field-wide">
+              <label class="field-label">Favorite Type</label>
+              <div class="chip-row">
+                @for (t of pokemonTypes; track t) {
+                  <button
+                    type="button"
+                    class="type-chip"
+                    [class.active]="d.favoriteType === t"
+                    [style.background]="d.favoriteType === t ? typeColor(t) : typeColor(t) + '22'"
+                    [style.color]="d.favoriteType === t ? '#1C1533' : typeColor(t)"
+                    (click)="updateFavoriteType(t)"
+                  >
+                    <span class="type-glyph" [style.background]="typeColor(t)"></span>{{ t }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <div class="edit-field-wide">
+              <label class="field-label">Experience Level</label>
+              <div class="chip-row">
+                @for (level of experienceLevels; track level) {
+                  <button
+                    type="button"
+                    class="level-chip"
+                    [class.active]="d.experienceLevel === level"
+                    (click)="updateExperienceLevel(level)"
+                  >
+                    {{ level }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <label class="edit-field">
+              <span class="field-label">Team Name</span>
+              <input
+                type="text"
+                name="teamName"
+                placeholder="Name your Dream Team (optional)"
+                [ngModel]="d.teamName"
+                (ngModelChange)="updateDraft('teamName', $event)"
+              />
+            </label>
+          </div>
+
+          @if (saveError()) {
+            <p class="error-message-inline">{{ saveError() }}</p>
+          }
         </div>
 
-        <!-- Consent & Preferences -->
-        <div class="details-card">
-          <div class="details-header">Consent &amp; Preferences</div>
-          <div class="policy-accepted-row">
-            <span class="policy-check-icon"></span>
-            <span class="policy-accepted-text">
-              You accepted our
-              <a class="inline-link" (click)="showPolicy('terms')">Terms of Use</a>
-              and
-              <a class="inline-link" (click)="showPolicy('privacy')">Privacy Policy</a>
-              @if (formattedAcceptedPolicyAt(); as at) { on {{ at }}. } @else { . }
-            </span>
-          </div>
-          <button type="button" class="consent-row" (click)="toggleMarketing()">
-            <span class="consent-box" [class.checked]="d.marketingEmailsOptIn"><span class="checkmark"></span></span>
-            <span class="consent-text">Send me trainer tips, team suggestions, and app updates by email.</span>
-          </button>
-        </div>
-
-        @if (saveError()) {
-          <p class="error-message-inline">{{ saveError() }}</p>
-        }
-
-        <div class="edit-actions-row">
-          <button type="button" class="cancel-btn" (click)="cancelEdit()">Cancel</button>
-          <button type="button" class="save-btn" [disabled]="saving()" (click)="saveChanges()">
+        <div class="modal-footer">
+          <button type="button" class="cancel-btn" (click)="requestCloseModal()">Cancel</button>
+          <button type="button" class="save-btn" [disabled]="!isDirty() || saving()" (click)="requestSave()">
             {{ saving() ? 'Saving…' : 'Save Changes' }}
           </button>
         </div>
-      }
+
+        <!-- confirm save dialog -->
+        @if (showSaveConfirm()) {
+          <div class="confirm-overlay" (click)="cancelSaveConfirm()">
+            <div class="confirm-card" (click)="$event.stopPropagation()">
+              <h2 class="confirm-title">Save these changes?</h2>
+              <p class="confirm-body">Your trainer profile will be updated with your edits.</p>
+              @if (saveError()) {
+                <p class="confirm-error">{{ saveError() }}</p>
+              }
+              <div class="confirm-actions">
+                <button type="button" class="confirm-cancel" [disabled]="saving()" (click)="cancelSaveConfirm()">Keep Editing</button>
+                <button type="button" class="confirm-save" [disabled]="saving()" (click)="confirmSaveChanges()">
+                  {{ saving() ? 'Saving…' : 'Yes, Save' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- discard confirm dialog -->
+    @if (showDiscardConfirm()) {
+      <div class="confirm-overlay" (click)="cancelDiscard()">
+        <div class="confirm-card" (click)="$event.stopPropagation()">
+          <h2 class="confirm-title">Discard changes?</h2>
+          <p class="confirm-body">You have unsaved edits. If you leave now, they'll be lost.</p>
+          <div class="confirm-actions">
+            <button type="button" class="confirm-cancel" (click)="cancelDiscard()">Keep Editing</button>
+            <button type="button" class="confirm-revert" (click)="confirmDiscard()">Discard Changes</button>
+          </div>
+        </div>
+      </div>
     }
-  </div>
+  }
 
   @if (showSavedToast()) {
     <div class="toast"><span class="toast-dot"></span>Profile saved successfully.</div>
-  }
-
-  @if (openPolicyModal(); as t) {
-    <app-policy-modal [type]="t" [isLight]="theme.isLight()" (closed)="closePolicy()" />
   }
 </div>
