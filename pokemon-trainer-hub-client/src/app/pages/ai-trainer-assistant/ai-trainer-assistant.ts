@@ -1,11 +1,17 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
+import { switchMap } from 'rxjs';
 import { AssistantRecommendation, AssistantService } from '../../core/assistant';
 import { DreamTeamMember, TeamService } from '../../core/team';
+import { FavoritePokemon, FavoritesService } from '../../core/favorites';
 import { getStrongestMember, getTeamPower } from '../../shared/team-power';
 import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
 import { ThemeService } from '../../shared/theme';
+import { PokemonDetailModal } from '../../shared/pokemon-detail-modal/pokemon-detail-modal';
+import { TeamSwapModal } from '../../shared/team-swap-modal/team-swap-modal';
+
+const MAX_TEAM_SIZE = 5;
 
 type Tab = 'analyze' | 'find';
 
@@ -24,26 +30,43 @@ interface ChatMessage {
 // the model invented.
 @Component({
   selector: 'app-ai-trainer-assistant',
-  imports: [RouterLink],
+  imports: [RouterLink, PokemonDetailModal, TeamSwapModal],
   templateUrl: './ai-trainer-assistant.html',
   styleUrl: './ai-trainer-assistant.css',
 })
 export class AiTrainerAssistant {
   private readonly teamService = inject(TeamService);
+  private readonly favoritesService = inject(FavoritesService);
   private readonly assistantService = inject(AssistantService);
   protected readonly theme = inject(ThemeService);
 
   protected readonly tab = signal<Tab>('analyze');
 
-  protected readonly team = toSignal(this.teamService.getTeam(), {
-    initialValue: [] as DreamTeamMember[],
-  });
+  // Refreshable (not a one-shot toSignal) — recommending a Pokémon here can
+  // end with it added to the team or favorites via the same detail/swap
+  // modals every other page uses, so this page needs to reflect that too.
+  private readonly teamRefresh = signal(0);
+  private readonly favoritesRefresh = signal(0);
+  protected readonly team = toSignal(
+    toObservable(this.teamRefresh).pipe(switchMap(() => this.teamService.getTeam())),
+    { initialValue: [] as DreamTeamMember[] },
+  );
+  protected readonly favorites = toSignal(
+    toObservable(this.favoritesRefresh).pipe(switchMap(() => this.favoritesService.getFavorites())),
+    { initialValue: [] as FavoritePokemon[] },
+  );
 
   protected readonly isAnalyzeTab = computed(() => this.tab() === 'analyze');
   protected readonly isFindTab = computed(() => this.tab() === 'find');
 
   protected readonly totalPower = computed(() => getTeamPower(this.team()));
   protected readonly strongest = computed(() => getStrongestMember(this.team()));
+  protected readonly teamFull = computed(() => this.team().length >= MAX_TEAM_SIZE);
+  protected readonly hasTeam = computed(() => this.team().length > 0);
+
+  protected readonly selectedPokemonId = signal<number | null>(null);
+  protected readonly swapCandidateId = signal<number | null>(null);
+  protected readonly compareCandidateId = signal<number | null>(null);
 
   protected readonly analysisIntro = "Looking at your squad, here's what I'm seeing.";
   protected readonly analysisResult = signal<AssistantRecommendation | null>(null);
@@ -114,5 +137,88 @@ export class AiTrainerAssistant {
           : { role: 'assistant', text: result.message },
       ]);
     });
+  }
+
+  // ---- Detail modal + team/favorites actions, same pattern as every other
+  // page (Home, the global assistant-chat widget) that opens a recommended
+  // Pokémon's real detail modal. ----
+
+  isOnTeam(pokemonId: number): boolean {
+    return this.team().some((m) => m.pokemonId === pokemonId);
+  }
+
+  isFavorite(pokemonId: number): boolean {
+    return this.favorites().some((f) => f.pokemonId === pokemonId);
+  }
+
+  openDetail(pokemonId: number): void {
+    this.selectedPokemonId.set(pokemonId);
+  }
+
+  closeDetail(): void {
+    this.selectedPokemonId.set(null);
+  }
+
+  toggleFavorite(pokemonId: number): void {
+    const obs = this.isFavorite(pokemonId)
+      ? this.favoritesService.removeFavorite(pokemonId)
+      : this.favoritesService.addFavorite(pokemonId);
+    obs.subscribe((ok) => {
+      if (ok) this.favoritesRefresh.update((n) => n + 1);
+    });
+  }
+
+  // Only ever called for the "Add to Team" state — when already on the
+  // team, the modal shows "Remove from Team" instead, which emits
+  // (removeFromTeam) below (after its own internal confirm), not this.
+  addToTeam(pokemonId: number): void {
+    if (this.isOnTeam(pokemonId)) return;
+
+    if (this.teamFull()) {
+      this.swapCandidateId.set(pokemonId);
+      return;
+    }
+
+    this.teamService.addToTeam(pokemonId).subscribe((result) => {
+      if (result.ok) {
+        this.teamRefresh.update((n) => n + 1);
+        this.closeDetail();
+      } else if (result.reason === 'TEAM_FULL') {
+        this.swapCandidateId.set(pokemonId);
+      }
+    });
+  }
+
+  // Modal already confirmed with the user before emitting this.
+  removeFromTeamModal(pokemonId: number): void {
+    this.teamService.removeFromTeam(pokemonId).subscribe(() => {
+      this.teamRefresh.update((n) => n + 1);
+      this.closeDetail();
+    });
+  }
+
+  closeSwap(): void {
+    this.swapCandidateId.set(null);
+  }
+
+  onSwapped(): void {
+    this.teamRefresh.update((n) => n + 1);
+    this.swapCandidateId.set(null);
+  }
+
+  // 'compare' mode — team has room, so this never forces a swap; the swap
+  // modal's own confirmAdd() is what actually calls teamService.addToTeam().
+  onCompareWithTeam(pokemonId: number): void {
+    this.compareCandidateId.set(pokemonId);
+  }
+
+  closeCompareWithTeam(): void {
+    this.compareCandidateId.set(null);
+  }
+
+  onCompareAdded(): void {
+    this.teamRefresh.update((n) => n + 1);
+    this.compareCandidateId.set(null);
+    this.closeDetail();
   }
 }

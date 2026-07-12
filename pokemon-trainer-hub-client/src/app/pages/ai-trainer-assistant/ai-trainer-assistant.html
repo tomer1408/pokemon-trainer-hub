@@ -5,7 +5,7 @@
     <a routerLink="/my-team" class="back-link">← Back to My Team</a>
 
     <div class="header-block">
-      <h1 class="page-title">Let's figure out your next move.</h1>
+      <h1 class="page-title">Let's figure out your next move</h1>
     </div>
 
     <div class="tab-row">
@@ -53,8 +53,14 @@
                   <span class="rec-pill" [style.background]="typeColors[result.type] + '33'" [style.color]="typeColors[result.type]">
                     <span class="rec-glyph" [style.background]="typeColors[result.type]"></span>{{ result.type }}
                   </span>
-                  @if (result.pokemon) {
-                    <span class="rec-name">{{ result.pokemon.name }}</span>
+                  @if (result.pokemon; as p) {
+                    <button type="button" class="rec-pokemon-btn" (click)="openDetail(p.id)">
+                      @if (p.spriteUrl) {
+                        <img class="rec-sprite" [src]="p.spriteUrl" alt="{{ p.name }}" />
+                      }
+                      <span class="rec-name">{{ p.name }}</span>
+                      <span class="rec-arrow">&rarr;</span>
+                    </button>
                   } @else {
                     <span class="rec-name">Looking…</span>
                   }
@@ -65,9 +71,11 @@
           </div>
         </div>
       </div>
-      <button type="button" class="secondary-btn" [disabled]="analysisLoading()" (click)="onRerollAnalysis()">
-        Refresh Analysis
-      </button>
+      @if (analysisResult()) {
+        <button type="button" class="secondary-btn" [disabled]="analysisLoading()" (click)="onRerollAnalysis()">
+          Refresh Analysis
+        </button>
+      }
     }
 
     @if (isFindTab()) {
@@ -75,7 +83,7 @@
         <div class="assistant-bubble-row">
           <div class="avatar-dot">AI</div>
           <div class="assistant-bubble">
-            <p class="bubble-text">Tell me what kind of Pokémon you're after — something like "fast and electric" or "tough and defensive" — and I'll find a match.</p>
+            <p class="bubble-text">Describe the kind of Pokémon you're looking for, and I'll find a match.</p>
           </div>
         </div>
 
@@ -96,7 +104,13 @@
                       <span class="rec-pill" [style.background]="typeColors[m.recType] + '33'" [style.color]="typeColors[m.recType]">
                         <span class="rec-glyph" [style.background]="typeColors[m.recType]"></span>{{ m.recType }}
                       </span>
-                      <span class="rec-name">{{ m.recPokemon.name }}</span>
+                      <button type="button" class="rec-pokemon-btn" (click)="openDetail(m.recPokemon.id)">
+                        @if (m.recPokemon.spriteUrl) {
+                          <img class="rec-sprite" [src]="m.recPokemon.spriteUrl" alt="{{ m.recPokemon.name }}" />
+                        }
+                        <span class="rec-name">{{ m.recPokemon.name }}</span>
+                        <span class="rec-arrow">&rarr;</span>
+                      </button>
                     </div>
                     <p class="rec-why">{{ m.recReasoning }}</p>
                   </div>
@@ -110,9 +124,9 @@
           <div class="assistant-bubble-row">
             <div class="avatar-dot">AI</div>
             <div class="typing-bubble">
-              <span class="typing-dot" style="animation-delay: 0s"></span>
-              <span class="typing-dot" style="animation-delay: 0.15s"></span>
-              <span class="typing-dot" style="animation-delay: 0.3s"></span>
+              <span class="typing-dot" [style.animation-delay.s]="0"></span>
+              <span class="typing-dot" [style.animation-delay.s]="0.15"></span>
+              <span class="typing-dot" [style.animation-delay.s]="0.3"></span>
             </div>
           </div>
         }
@@ -132,4 +146,42 @@
     }
 
   </div>
+
+  @if (selectedPokemonId(); as id) {
+    <app-pokemon-detail-modal
+      [pokemonId]="id"
+      [isFavorite]="isFavorite(id)"
+      [isOnTeam]="isOnTeam(id)"
+      [teamFull]="teamFull()"
+      [hasTeam]="hasTeam()"
+      [isLight]="theme.isLight()"
+      (closed)="closeDetail()"
+      (toggleFavorite)="toggleFavorite(id)"
+      (addToTeam)="addToTeam(id)"
+      (compare)="onCompareWithTeam(id)"
+      (removeFromTeam)="removeFromTeamModal(id)"
+    />
+  }
+
+  @if (swapCandidateId(); as candidateId) {
+    <app-team-swap-modal
+      [selectedPokemonId]="candidateId"
+      [comparisonCandidates]="team()"
+      mode="overflow"
+      [isLight]="theme.isLight()"
+      (closed)="closeSwap()"
+      (swapped)="onSwapped()"
+    />
+  }
+
+  @if (compareCandidateId(); as candidateId) {
+    <app-team-swap-modal
+      [selectedPokemonId]="candidateId"
+      [comparisonCandidates]="team()"
+      mode="compare"
+      [isLight]="theme.isLight()"
+      (closed)="closeCompareWithTeam()"
+      (added)="onCompareAdded()"
+    />
+  }
 </div>
