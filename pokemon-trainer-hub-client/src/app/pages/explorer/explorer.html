@@ -190,6 +190,15 @@
               }
             </div>
             <span class="mini-name">{{ member.pokemonName }}</span>
+            <button
+              type="button"
+              class="mini-compare-btn"
+              [class.active]="isComparing(member.pokemonId)"
+              title="Compare with another Pokémon"
+              (click)="toggleCompareSlotFromTeam(member)"
+            >
+              &#8644;
+            </button>
             <button type="button" class="remove-btn" (click)="requestRemove(member)">&times;</button>
           </div>
         } @else {

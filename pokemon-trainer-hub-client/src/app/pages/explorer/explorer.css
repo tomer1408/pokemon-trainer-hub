@@ -694,6 +694,27 @@
   padding: 2px 4px;
 }
 
+.mini-compare-btn {
+  flex-shrink: 0;
+  border: none;
+  background: var(--overlay-08);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--overlay-40);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mini-compare-btn.active {
+  background: var(--cyan);
+  color: #1C1533;
+}
+
 .slot-row.empty {
   border: 1.5px dashed var(--border-soft);
   border-radius: 12px;

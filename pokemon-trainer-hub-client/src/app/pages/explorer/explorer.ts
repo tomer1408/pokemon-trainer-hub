@@ -290,6 +290,20 @@ export class Explorer {
     }
   }
 
+  // Lets a Dream Team member (shown in the sidebar, not the search grid) be
+  // picked into the same compareSlotA/B tool — same toggle logic, just fed
+  // from a DreamTeamMember's shape instead of a search result's.
+  toggleCompareSlotFromTeam(member: DreamTeamMember): void {
+    this.toggleCompareSlot({
+      id: member.pokemonId,
+      name: member.pokemonName,
+      baseExperience: member.baseExperience,
+      types: member.types,
+      spriteUrl: member.spriteUrl,
+      stats: member.stats,
+    });
+  }
+
   cancelCompareSelection(): void {
     this.compareSlotA.set(null);
     this.compareSlotB.set(null);
