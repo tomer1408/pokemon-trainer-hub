@@ -6,8 +6,33 @@ const PAGE_SIZE = 20;
 const router = express.Router();
 
 // GET /api/pokemon?search=&type=&sort=id|name|strongest&page=
+// GET /api/pokemon?ids=25,1,4 — a small fixed set of exact ids (e.g. the
+// avatar icon picker), returned unpaginated using the cheap detail shape.
+// Deliberately bypasses search/type/sort/page entirely and, more importantly,
+// bypasses fetchPokemonFullDetail — the icon picker only ever shows a sprite,
+// so paying for species flavor text, type matchups, ability descriptions and
+// move lookups (fetchPokemonFullDetail's job, ~10+ extra PokeAPI calls PER
+// Pokémon) for every icon was pure waste that only slowed the picker down.
 router.get('/', jwtCheck, async (req, res) => {
-  const { search = '', type = '', sort = 'id', page = '1' } = req.query;
+  const { search = '', type = '', sort = 'id', page = '1', ids = '' } = req.query;
+
+  if (ids) {
+    const idList = ids
+      .split(',')
+      .map((s) => parseInt(s.trim(), 10))
+      .filter((n) => !Number.isNaN(n));
+
+    let results;
+    try {
+      results = await Promise.all(idList.map((id) => fetchPokemonDetail(id)));
+    } catch (err) {
+      return res.status(502).json({ message: 'PokeAPI is unavailable. Please try again later.' });
+    }
+
+    results = results.filter(Boolean);
+    return res.json({ results, page: 1, pageSize: results.length, total: results.length });
+  }
+
   const pageNum = Math.max(1, parseInt(page, 10) || 1);
 
   let candidates;

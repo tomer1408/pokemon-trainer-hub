@@ -56,7 +56,10 @@ export class Callback {
       next: () => this.router.navigateByUrl('/home'),
       error: (err) => {
         if (err?.status === 404) {
-          this.router.navigateByUrl('/onboarding');
+          // Already just confirmed there's no profile — tell onboardingGuard
+          // via navigation state so it doesn't re-issue the exact same
+          // GET /api/profile a second time right behind this one.
+          this.router.navigateByUrl('/onboarding', { state: { profileConfirmedMissing: true } });
         } else if (err?.status === 401 || err?.status === 403) {
           // A bad/expired token can't be fixed by repeating the same GET —
           // route it through the same retry path as a failed code exchange

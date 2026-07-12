@@ -131,21 +131,6 @@
         </div>
       </div>
 
-      <div class="field-group">
-        <span class="field-label">Experience Level</span>
-        <div class="segment-row">
-          @for (level of experienceLevels; track level) {
-            <button
-              type="button"
-              class="segment-btn"
-              [class.active]="form().experienceLevel === level"
-              (click)="updateExperienceLevel(level)"
-            >
-              {{ level }}
-            </button>
-          }
-        </div>
-      </div>
     </div>
 
     <!-- ===== SECTION 3: AVATAR ===== -->

@@ -220,22 +220,6 @@
               </div>
             </div>
 
-            <div class="edit-field-wide">
-              <label class="field-label">Experience Level</label>
-              <div class="chip-row">
-                @for (level of experienceLevels; track level) {
-                  <button
-                    type="button"
-                    class="level-chip"
-                    [class.active]="d.experienceLevel === level"
-                    (click)="updateExperienceLevel(level)"
-                  >
-                    {{ level }}
-                  </button>
-                }
-              </div>
-            </div>
-
             <label class="edit-field">
               <span class="field-label">Team Name</span>
               <div class="input-with-ai">

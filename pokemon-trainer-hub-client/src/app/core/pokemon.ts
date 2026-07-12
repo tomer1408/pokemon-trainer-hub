@@ -92,4 +92,19 @@ export class PokemonService {
       .get<PokemonDetail>(`${API_BASE}/pokemon/${id}`)
       .pipe(catchError(() => of(null)));
   }
+
+  // Used by the avatar icon picker (Onboarding + Profile) — a single request
+  // for the whole fixed icon set, using the light detail shape (just the
+  // sprite is actually shown) instead of N separate getById() calls that
+  // would each pay for flavor text/matchups/abilities/moves nothing needs here.
+  getByIds(ids: number[]): Observable<PokemonSummary[]> {
+    if (ids.length === 0) return of([]);
+    const params = { ids: ids.join(',') };
+    return this.http
+      .get<PokemonListResponse>(`${API_BASE}/pokemon`, { params })
+      .pipe(
+        map((res) => res.results),
+        catchError(() => of([])),
+      );
+  }
 }

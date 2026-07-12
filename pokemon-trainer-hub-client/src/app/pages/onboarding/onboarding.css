@@ -303,30 +303,6 @@ select:focus {
   border-color: var(--violet);
 }
 
-.segment-row {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.segment-btn {
-  flex: 1 1 auto;
-  border: none;
-  border-radius: 10px;
-  padding: 10px 12px;
-  cursor: pointer;
-  font-family: 'Manrope', sans-serif;
-  font-weight: 700;
-  font-size: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-muted);
-}
-
-.segment-btn.active {
-  background: var(--violet-deep);
-  color: #fff;
-}
-
 .type-chip-row {
   display: flex;
   flex-wrap: wrap;

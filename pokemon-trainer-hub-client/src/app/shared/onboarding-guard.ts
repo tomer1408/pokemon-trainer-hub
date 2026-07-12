@@ -12,6 +12,16 @@ export const onboardingGuard: CanActivateFn = () => {
   const profileService = inject(ProfileService);
   const router = inject(Router);
 
+  // Callback just ran this exact same GET /api/profile check moments ago
+  // (that's the only real way to land here right after signup) and already
+  // confirmed there's no profile — trust that instead of firing the
+  // identical request again back-to-back. Anyone reaching /onboarding any
+  // other way (e.g. typing the URL directly) has no such state, so they
+  // still get the real check below.
+  if (router.getCurrentNavigation()?.extras.state?.['profileConfirmedMissing']) {
+    return true;
+  }
+
   return profileService.getProfileStrict().pipe(
     map(() => router.parseUrl('/home')),
     // 404 = genuinely no profile yet, the only case onboarding should be

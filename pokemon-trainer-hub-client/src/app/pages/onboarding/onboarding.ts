@@ -2,11 +2,10 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { forkJoin, map } from 'rxjs';
 import { COUNTRIES } from '../../countries';
 import { EXPERIENCE_LEVELS, ExperienceLevel, POKEMON_TYPES, PokemonType } from '../../trainer-profile-options';
 import { ProfileService, TrainerProfile } from '../../core/profile';
-import { PokemonService, PokemonDetail } from '../../core/pokemon';
+import { PokemonService, PokemonSummary } from '../../core/pokemon';
 import { PROFILE_ICON_POKEMON_IDS } from '../../shared/profile-icons';
 import { calculateAgeRange, isBelowMinAge, isFutureDate } from '../../shared/age-range';
 import { PolicyModal, PolicyType } from '../../shared/policy-modal/policy-modal';
@@ -26,13 +25,15 @@ interface OnboardingForm {
   marketingEmailsOptIn: boolean;
 }
 
-// Matches Additional Details.dc.html / Create Trainer Profile.dc.html. One
-// deliberate deviation: Experience Level and Favorite Type keep this
-// project's real value sets (3 levels, 4 types — already used by
-// Onboarding/Profile's shared /api/profile field) instead of the mockup's
-// own fictional labels/7-type list. The "Profile Icon" picker uses real
-// Pokémon (real sprites, real ids, saved to a real avatarPokemonId column)
-// instead of the mockup's colored placeholder circles.
+// Matches Additional Details.dc.html / Create Trainer Profile.dc.html. Two
+// deliberate deviations: Favorite Type keeps this project's real value set
+// (4 types — already used by Onboarding/Profile's shared /api/profile field)
+// instead of the mockup's own fictional 7-type list, and the "Profile Icon"
+// picker uses real Pokémon (real sprites, real ids, saved to a real
+// avatarPokemonId column) instead of the mockup's colored placeholder
+// circles. Experience Level isn't asked here at all — it's collected later
+// from the Profile page instead — but /api/profile still requires it, so
+// the form silently submits EXPERIENCE_LEVELS[0] ('Beginner') as a default.
 @Component({
   selector: 'app-onboarding',
   imports: [FormsModule, PolicyModal, TeamNameGeneratorModal],
@@ -46,7 +47,6 @@ export class Onboarding {
 
   protected readonly countries = COUNTRIES;
   protected readonly pokemonTypes = POKEMON_TYPES;
-  protected readonly experienceLevels = EXPERIENCE_LEVELS;
 
   protected readonly submitting = signal(false);
   protected readonly submitError = signal<string | null>(null);
@@ -74,12 +74,9 @@ export class Onboarding {
     marketingEmailsOptIn: false,
   });
 
-  protected readonly iconOptions = toSignal(
-    forkJoin(PROFILE_ICON_POKEMON_IDS.map((id) => this.pokemonService.getById(id))).pipe(
-      map((results) => results.filter((p): p is PokemonDetail => p !== null)),
-    ),
-    { initialValue: [] as PokemonDetail[] },
-  );
+  protected readonly iconOptions = toSignal(this.pokemonService.getByIds(PROFILE_ICON_POKEMON_IDS), {
+    initialValue: [] as PokemonSummary[],
+  });
 
   protected readonly ageRange = computed(() => calculateAgeRange(this.form().dateOfBirth));
   protected readonly isUnderMinAge = computed(() => isBelowMinAge(this.form().dateOfBirth));
@@ -116,10 +113,6 @@ export class Onboarding {
     value: string,
   ): void {
     this.form.set({ ...this.form(), [field]: value });
-  }
-
-  updateExperienceLevel(value: ExperienceLevel): void {
-    this.form.set({ ...this.form(), experienceLevel: value });
   }
 
   updateFavoriteType(value: PokemonType): void {

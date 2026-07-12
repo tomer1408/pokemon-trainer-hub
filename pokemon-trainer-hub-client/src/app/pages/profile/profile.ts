@@ -2,12 +2,12 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { catchError, forkJoin, map, of, switchMap } from 'rxjs';
-import { EXPERIENCE_LEVELS, ExperienceLevel, POKEMON_TYPES, PokemonType } from '../../trainer-profile-options';
+import { catchError, map, of, switchMap } from 'rxjs';
+import { ExperienceLevel, POKEMON_TYPES, PokemonType } from '../../trainer-profile-options';
 import { ProfileService, TrainerProfile } from '../../core/profile';
 import { TeamService } from '../../core/team';
 import { FavoritesService } from '../../core/favorites';
-import { PokemonService, PokemonDetail } from '../../core/pokemon';
+import { PokemonService, PokemonSummary } from '../../core/pokemon';
 import { PROFILE_ICON_POKEMON_IDS } from '../../shared/profile-icons';
 import { getTeamPower, getTeamTier } from '../../shared/team-power';
 import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
@@ -59,15 +59,11 @@ export class Profile {
   private readonly pokemonService = inject(PokemonService);
   protected readonly theme = inject(ThemeService);
 
-  protected readonly iconOptions = toSignal(
-    forkJoin(PROFILE_ICON_POKEMON_IDS.map((id) => this.pokemonService.getById(id))).pipe(
-      map((results) => results.filter((p): p is PokemonDetail => p !== null)),
-    ),
-    { initialValue: [] as PokemonDetail[] },
-  );
+  protected readonly iconOptions = toSignal(this.pokemonService.getByIds(PROFILE_ICON_POKEMON_IDS), {
+    initialValue: [] as PokemonSummary[],
+  });
 
   protected readonly pokemonTypes = POKEMON_TYPES;
-  protected readonly experienceLevels = EXPERIENCE_LEVELS;
 
   private readonly profileRefresh = signal(0);
   // Distinguishes a genuine fetch failure (real error state, retry-able)
@@ -257,11 +253,6 @@ export class Profile {
     if (d) this.draft.set({ ...d, favoriteType: value });
   }
 
-  updateExperienceLevel(value: ExperienceLevel): void {
-    const d = this.draft();
-    if (d) this.draft.set({ ...d, experienceLevel: value });
-  }
-
   selectIcon(pokemonId: number | null): void {
     const d = this.draft();
     if (d) this.draft.set({ ...d, avatarPokemonId: pokemonId });
@@ -288,6 +279,9 @@ export class Profile {
     const payload: TrainerProfile = {
       trainerName: d.trainerName,
       favoriteType: d.favoriteType,
+      // Not user-editable — the server always keeps whatever's already on
+      // file (or 'Beginner' for a brand-new profile) regardless of what's
+      // sent here. Included only to satisfy the TrainerProfile shape.
       experienceLevel: d.experienceLevel,
       firstName: d.firstName,
       lastName: d.lastName,

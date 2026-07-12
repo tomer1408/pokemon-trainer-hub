@@ -54,7 +54,6 @@ router.post('/', jwtCheck, async (req, res) => {
   const {
     trainerName,
     favoriteType,
-    experienceLevel,
     firstName,
     lastName,
     dateOfBirth,
@@ -65,18 +64,9 @@ router.post('/', jwtCheck, async (req, res) => {
     marketingEmailsOptIn,
   } = req.body;
 
-  if (
-    !trainerName ||
-    !favoriteType ||
-    !experienceLevel ||
-    !firstName ||
-    !lastName ||
-    !dateOfBirth ||
-    !country
-  ) {
+  if (!trainerName || !favoriteType || !firstName || !lastName || !dateOfBirth || !country) {
     return res.status(400).json({
-      message:
-        'trainerName, favoriteType, experienceLevel, firstName, lastName, dateOfBirth and country are all required.',
+      message: 'trainerName, favoriteType, firstName, lastName, dateOfBirth and country are all required.',
     });
   }
 
@@ -96,7 +86,13 @@ router.post('/', jwtCheck, async (req, res) => {
 
   const existing = await prisma.trainerProfile.findUnique({
     where: { auth0UserId: req.auth.payload.sub },
-    select: { acceptedPolicy: true, acceptedPolicyAt: true, policyVersion: true, marketingEmailsOptIn: true },
+    select: {
+      acceptedPolicy: true,
+      acceptedPolicyAt: true,
+      policyVersion: true,
+      marketingEmailsOptIn: true,
+      experienceLevel: true,
+    },
   });
 
   let consentData;
@@ -131,7 +127,11 @@ router.post('/', jwtCheck, async (req, res) => {
   const data = {
     trainerName,
     favoriteType,
-    experienceLevel,
+    // Not client-editable — every trainer starts at 'Beginner' and keeps
+    // whatever's already on file otherwise. A future levels-up feature
+    // should change this via its own dedicated endpoint (like
+    // /whos-that-streak below), not by trusting a client-sent value here.
+    experienceLevel: existing ? existing.experienceLevel : 'Beginner',
     firstName,
     lastName,
     dateOfBirth: dob,
