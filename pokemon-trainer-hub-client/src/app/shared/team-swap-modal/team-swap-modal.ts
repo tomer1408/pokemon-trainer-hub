@@ -38,9 +38,10 @@ export interface ComparablePokemon {
 //   `comparisonCandidates` is the favorites pool; picking a candidate adds
 //   IT and removes the anchor team member.
 // 'compare': the team has room — show the same head-to-head comparison UI,
-// but the only action is a plain, non-destructive Add to Team (no removal
-// picked/forced), unlike the other three modes which always trade one
-// member for another.
+// but a plain, non-destructive Add to Team is always available (unlike the
+// other three modes, which always trade one member for another). Swapping
+// in the picked teammate is offered too, once one is picked — optional
+// here, since there's room, not the only way to add like in 'overflow'.
 export type SwapMode = 'overflow' | 'favorite-vs-team' | 'team-vs-favorites' | 'compare';
 
 const STAT_LABELS: Record<string, string> = {

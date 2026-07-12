@@ -222,6 +222,14 @@ export class AssistantChat {
     this.closeDetail();
   }
 
+  // 'compare' mode also allows swapping in the picked teammate (team has
+  // room, so this is optional — unlike 'overflow', where it's the only way).
+  onCompareSwapped(): void {
+    this.teamRefresh.update((n) => n + 1);
+    this.compareCandidateId.set(null);
+    this.closeDetail();
+  }
+
   private scrollToBottom(): void {
     const el = this.scrollEl?.nativeElement;
     if (el) el.scrollTop = el.scrollHeight;

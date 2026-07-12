@@ -164,9 +164,17 @@
       <div class="actions-row">
         <button type="button" class="cancel-btn" (click)="onCancel()">Cancel</button>
         @if (mode === 'compare') {
-          <button type="button" class="swap-btn" [disabled]="isAdding()" (click)="confirmAdd()">
+          <!-- Team has room, so both a plain add and a (optional, only once a
+               teammate is picked to compare against) swap are valid — unlike
+               the other modes below, where swapping is the only way to add. -->
+          <button type="button" class="add-btn" [disabled]="isAdding()" (click)="confirmAdd()">
             {{ isAdding() ? 'Adding…' : 'Add to Team' }}
           </button>
+          @if (hasSelection()) {
+            <button type="button" class="swap-btn" [disabled]="isSwapping()" (click)="requestSwap()">
+              {{ isSwapping() ? 'Swapping…' : 'Swap in ' + addName() }}
+            </button>
+          }
         } @else {
           <button type="button" class="swap-btn" [disabled]="!hasSelection() || isSwapping()" (click)="requestSwap()">
             {{ isSwapping() ? 'Swapping…' : hasSelection() ? 'Swap in ' + addName() : 'Pick a ' + pickNoun() + ' first' }}

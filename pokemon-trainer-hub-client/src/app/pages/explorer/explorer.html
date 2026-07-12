@@ -277,7 +277,7 @@
     />
   }
 
-  <!-- Compare with My Team (team has room — never forces a swap) -->
+  <!-- Compare with My Team (team has room — swap is offered, never forced) -->
   @if (compareCandidate(); as candidate) {
     <app-team-swap-modal
       [selectedPokemonId]="candidate.id"
@@ -286,6 +286,7 @@
       [isLight]="theme.isLight()"
       (closed)="closeCompareWithTeam()"
       (added)="onCompareAdded()"
+      (swapped)="onCompareSwapped()"
     />
   }
 

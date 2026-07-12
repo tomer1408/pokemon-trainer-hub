@@ -270,6 +270,14 @@ export class Explorer {
     this.closeDetail();
   }
 
+  // 'compare' mode also allows swapping in the picked teammate (team has
+  // room, so this is optional — unlike 'overflow', where it's the only way).
+  onCompareSwapped(): void {
+    this.teamRefresh.update((n) => n + 1);
+    this.compareCandidate.set(null);
+    this.closeDetail();
+  }
+
   // Toggling the same Pokémon again clears its own slot; picking a second,
   // different Pokémon while slot A is already filled opens the modal.
   toggleCompareSlot(p: PokemonSummary): void {
