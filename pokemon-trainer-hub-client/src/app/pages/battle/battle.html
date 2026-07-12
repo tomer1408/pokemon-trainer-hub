@@ -212,6 +212,7 @@
       <!-- ===== 3. SUSPENSE ===== -->
       @if (phase() === 'suspense') {
         <div class="suspense-box">
+          <div class="suspense-sweep"></div>
           <div class="suspense-vs">VS</div>
           <div class="suspense-dots">
             <span class="dot dot-0"></span>
@@ -243,6 +244,11 @@
             </span>
             <div class="faceoff-name">{{ last.yourMon.name }}</div>
             <div class="faceoff-power">{{ last.yourMon.power }}</div>
+            <div class="power-compare">
+              <div class="power-bar-track">
+                <div class="power-bar-fill" [style.width.%]="(last.yourMon.power / (last.yourMon.power + last.oppMon.power)) * 100"></div>
+              </div>
+            </div>
           </div>
 
           <div class="faceoff-vs-col">
@@ -273,6 +279,11 @@
             </span>
             <div class="faceoff-name">{{ last.oppMon.name }}</div>
             <div class="faceoff-power">{{ last.oppMon.power }}</div>
+            <div class="power-compare">
+              <div class="power-bar-track">
+                <div class="power-bar-fill" [style.width.%]="(last.oppMon.power / (last.yourMon.power + last.oppMon.power)) * 100"></div>
+              </div>
+            </div>
           </div>
         </div>
 

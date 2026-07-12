@@ -721,6 +721,7 @@
   width: 64px;
   height: 64px;
   object-fit: contain;
+  animation: spriteBob 2.8s ease-in-out infinite;
 }
 
 .pick-name {
@@ -744,11 +745,22 @@
 
 /* ---- 3. Suspense ---- */
 .suspense-box {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
   padding: 50px 20px;
+}
+
+.suspense-sweep {
+  position: absolute;
+  inset: 0;
+  width: 30%;
+  background: linear-gradient(100deg, transparent, var(--overlay-08), transparent);
+  animation: arenaSweep 2.2s linear infinite;
+  pointer-events: none;
 }
 
 .suspense-vs {
@@ -871,6 +883,7 @@
 }
 
 .faceoff-sprite {
+  position: relative;
   width: 108px;
   height: 108px;
   border-radius: 50%;
@@ -884,6 +897,49 @@
   width: 90px;
   height: 90px;
   object-fit: contain;
+  animation: spriteBob 2.8s ease-in-out infinite;
+}
+
+/* Winner's sprite lunges forward once on reveal; the loser's shakes and
+   flashes white — same one-shot treatment each round, since Angular's @if
+   remounts this whole block fresh every time phase becomes 'revealed'. */
+.faceoff-card.winner-card .faceoff-sprite img {
+  animation: spriteLunge 0.5s ease-out;
+}
+
+.faceoff-card:not(.winner-card) .faceoff-sprite {
+  animation: spriteShake 0.45s ease-out;
+}
+
+.faceoff-card:not(.winner-card) .faceoff-sprite::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff, transparent 70%);
+  animation: spriteFlash 0.45s ease-out;
+  pointer-events: none;
+}
+
+.power-compare {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.power-bar-track {
+  height: 7px;
+  border-radius: 5px;
+  background: var(--overlay-08);
+  overflow: hidden;
+}
+
+.power-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--violet-deep), var(--cyan));
+  transition: width 0.5s ease;
 }
 
 .faceoff-name {
@@ -1056,6 +1112,35 @@
 @keyframes resultPop {
   0% { transform: scale(0.7); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes spriteBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes spriteLunge {
+  0%, 100% { transform: translateY(0) scale(1); }
+  45% { transform: translateY(-4px) scale(1.14); }
+}
+
+@keyframes spriteShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+
+@keyframes spriteFlash {
+  0% { opacity: 0; }
+  30% { opacity: 0.8; }
+  100% { opacity: 0; }
+}
+
+@keyframes arenaSweep {
+  0% { transform: translateX(-150%); }
+  60%, 100% { transform: translateX(400%); }
 }
 
 @media (max-width: 720px) {
