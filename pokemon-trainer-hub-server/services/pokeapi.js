@@ -83,9 +83,10 @@ async function fetchSpeciesFlavorText(idOrName) {
   }
 }
 
-// One type's raw weak-against / resistant-against lists — cached per type
-// (not per Pokémon), since every Pokémon sharing a type reuses the same data.
-// Degrades to an empty result on failure — same reasoning as fetchSpeciesFlavorText.
+// One type's raw weak-against / resistant-against / strong-against lists —
+// cached per type (not per Pokémon), since every Pokémon sharing a type
+// reuses the same data. Degrades to an empty result on failure — same
+// reasoning as fetchSpeciesFlavorText.
 async function fetchSingleTypeMatchup(typeName) {
   const key = typeName.toLowerCase();
   const cached = pokeCache.get(`typematchup:${key}`);
@@ -93,7 +94,7 @@ async function fetchSingleTypeMatchup(typeName) {
 
   try {
     const response = await fetch(`${POKEAPI_BASE}/type/${key}`);
-    if (!response.ok) return { weak: [], resist: [] };
+    if (!response.ok) return { weak: [], resist: [], strong: [] };
 
     const data = await response.json();
     const result = {
@@ -102,13 +103,32 @@ async function fetchSingleTypeMatchup(typeName) {
         ...data.damage_relations.half_damage_from.map((t) => t.name),
         ...data.damage_relations.no_damage_from.map((t) => t.name),
       ],
+      // Types this type deals double damage TO (an offense, not defense,
+      // list) — used by the My Team page's team-wide "Strong Against".
+      strong: data.damage_relations.double_damage_to.map((t) => t.name),
     };
 
     pokeCache.set(`typematchup:${key}`, result, 86400);
     return result;
   } catch {
-    return { weak: [], resist: [] };
+    return { weak: [], resist: [], strong: [] };
   }
+}
+
+// All 18 real Pokémon types' weak/resist/strong lists in one shape — powers
+// My Team's Battle Readiness / Matchup Analysis cards, which need real
+// team-wide type effectiveness, not per-Pokémon detail. Each type is cached
+// individually (see above), so this is only ever slow on a fully cold cache.
+const ALL_TYPE_NAMES = [
+  'normal', 'fire', 'water', 'electric', 'grass', 'ice', 'fighting', 'poison',
+  'ground', 'flying', 'psychic', 'bug', 'rock', 'ghost', 'dragon', 'dark',
+  'steel', 'fairy',
+];
+async function getTypeChart() {
+  const entries = await Promise.all(
+    ALL_TYPE_NAMES.map(async (name) => [name, await fetchSingleTypeMatchup(name)]),
+  );
+  return Object.fromEntries(entries);
 }
 
 // Merges weak/resist lists across a Pokémon's 1-2 types. Simplification: a
@@ -266,4 +286,4 @@ async function getListByType(type) {
   return list;
 }
 
-module.exports = { fetchPokemonDetail, fetchPokemonFullDetail, getMasterList, getListByType };
+module.exports = { fetchPokemonDetail, fetchPokemonFullDetail, getMasterList, getListByType, getTypeChart };

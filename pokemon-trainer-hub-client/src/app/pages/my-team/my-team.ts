@@ -5,8 +5,17 @@ import { catchError, map, of, switchMap } from 'rxjs';
 import { TeamService, DreamTeamMember } from '../../core/team';
 import { FavoritesService, FavoritePokemon } from '../../core/favorites';
 import { ProfileService } from '../../core/profile';
-import { getStrongestMember, getTeamPower, getTeamTier, getTypeSegments } from '../../shared/team-power';
-import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
+import { PokemonService, TypeChart } from '../../core/pokemon';
+import {
+  getStrongestMember,
+  getTeamPower,
+  getTeamTier,
+  getTypeSegments,
+  getMissingTypes,
+  getTypeCoverageInsight,
+} from '../../shared/team-power';
+import { getTeamMatchup, getBattleReadiness } from '../../shared/team-matchup';
+import { TYPE_COLORS, PokemonTypeName, POKEMON_TYPES } from '../../shared/pokemon-types';
 import { ThemeService } from '../../shared/theme';
 import { PokemonDetailModal } from '../../shared/pokemon-detail-modal/pokemon-detail-modal';
 import { LoadingScreen } from '../../shared/loading-screen/loading-screen';
@@ -24,8 +33,16 @@ export class MyTeam implements AfterViewInit {
   private readonly teamService = inject(TeamService);
   private readonly favoritesService = inject(FavoritesService);
   private readonly profileService = inject(ProfileService);
+  private readonly pokemonService = inject(PokemonService);
   private readonly elementRef = inject(ElementRef<HTMLElement>);
   protected readonly theme = inject(ThemeService);
+
+  // Real PokeAPI type-effectiveness data (weak/resist/strong per type) — a
+  // one-shot fetch, same cached chart regardless of which team is loaded, so
+  // no refresh signal is needed the way team()/favorites() have one.
+  private readonly typeChart = toSignal(this.pokemonService.getTypeChart(), {
+    initialValue: {} as TypeChart,
+  });
 
   private readonly profileRefresh = signal(0);
   private readonly profile = toSignal(
@@ -117,6 +134,41 @@ export class MyTeam implements AfterViewInit {
   // to 100% — per the product spec (not the mockup's fake single-type data).
   // Shared with Home's type-coverage card so both use the exact same calculation.
   protected readonly typeSegments = computed(() => getTypeSegments(this.team() ?? []));
+
+  protected readonly presentTypes = computed(() => this.typeSegments().map((s) => s.type));
+  protected readonly missingTypes = computed(() => getMissingTypes(POKEMON_TYPES, this.presentTypes()));
+  protected readonly typeCoverageInsight = computed(() =>
+    getTypeCoverageInsight(this.presentTypes(), this.missingTypes()),
+  );
+
+  // ---- Matchup Analysis + Battle Readiness — real PokeAPI type data, no
+  // invented type table, no fabricated "level" stat. ----
+  protected readonly teamMatchup = computed(() => getTeamMatchup(this.team() ?? [], this.typeChart()));
+  protected readonly battleReadiness = computed(() => getBattleReadiness(this.team() ?? [], this.typeChart()));
+  protected readonly gaugeBackground = computed(() => {
+    const score = this.battleReadiness().score;
+    const color = score >= 70 ? 'var(--good)' : score >= 45 ? 'var(--yellow)' : 'var(--bad)';
+    return `conic-gradient(${color} ${score * 3.6}deg, var(--overlay-08) 0deg)`;
+  });
+
+  // ---- Squad Milestones — every stat/badge here is computed from real team
+  // data; the mockup's "Total Level"/"Highest Level" stats had no real data
+  // behind them (Dream Team members have no level) and were dropped. ----
+  protected readonly tierProgressPct = computed(() => (this.teamCount() / MAX_TEAM_SIZE) * 100);
+  protected readonly nextTierText = computed(() =>
+    this.teamCount() >= MAX_TEAM_SIZE
+      ? 'Master tier reached — the top of the ladder.'
+      : `${MAX_TEAM_SIZE - this.teamCount()} more Pokémon to hit Master tier.`,
+  );
+  protected readonly badges = computed(() => {
+    const team = this.team() ?? [];
+    return [
+      { label: 'Squad of 3+', earned: this.teamCount() >= 3 },
+      { label: 'Power 300 Club', earned: team.some((m) => m.baseExperience >= 300) },
+      { label: 'Type Variety ×3', earned: this.presentTypes().length >= 3 },
+      { label: 'Full Roster', earned: this.teamCount() >= MAX_TEAM_SIZE },
+    ];
+  });
 
   typeColor(type: string): string {
     return TYPE_COLORS[type as PokemonTypeName] ?? TYPE_COLORS['normal'];

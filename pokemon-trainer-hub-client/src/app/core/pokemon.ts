@@ -57,6 +57,15 @@ export interface PokemonSearchParams {
   page?: number;
 }
 
+export interface TypeMatchup {
+  weak: string[];
+  resist: string[];
+  // Types this type deals double damage TO (offense, not defense).
+  strong: string[];
+}
+
+export type TypeChart = Record<string, TypeMatchup>;
+
 @Injectable({ providedIn: 'root' })
 export class PokemonService {
   private readonly http = inject(HttpClient);
@@ -106,5 +115,12 @@ export class PokemonService {
         map((res) => res.results),
         catchError(() => of([])),
       );
+  }
+
+  // Real weak/resist/strong lists for all 18 types — used by My Team's
+  // Battle Readiness / Matchup Analysis cards to compute team-wide type
+  // effectiveness from real PokeAPI data instead of an invented type table.
+  getTypeChart(): Observable<TypeChart> {
+    return this.http.get<TypeChart>(`${API_BASE}/pokemon/type-chart`).pipe(catchError(() => of({})));
   }
 }

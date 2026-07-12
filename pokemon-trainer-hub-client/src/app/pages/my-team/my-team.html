@@ -118,6 +118,81 @@
               </span>
             }
           </div>
+          <p class="insight-text">{{ typeCoverageInsight() }}</p>
+        </div>
+      </div>
+
+      <!-- Battle Readiness -->
+      <div class="readiness-card">
+        <div class="readiness-left">
+          <div class="gauge-ring" [style.background]="gaugeBackground()">
+            <div class="gauge-inner">
+              <div class="gauge-score">{{ battleReadiness().score }}</div>
+              <div class="gauge-max">/ 100</div>
+            </div>
+          </div>
+          <div class="readiness-label-block">
+            <div class="readiness-title">Battle Readiness</div>
+            <div class="readiness-verdict">{{ battleReadiness().verdict }}</div>
+          </div>
+        </div>
+        <div class="meters">
+          @for (m of [
+            { label: 'Offense', score: battleReadiness().offense },
+            { label: 'Type Coverage', score: battleReadiness().coverage },
+            { label: 'Balance & Synergy', score: battleReadiness().balance }
+          ]; track m.label) {
+            <div class="meter-row">
+              <div class="meter-top"><span class="meter-label">{{ m.label }}</span><span class="meter-val">{{ m.score }}</span></div>
+              <div class="meter-track"><div class="meter-fill" [style.width.%]="m.score"></div></div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Matchup Analysis + Squad Milestones -->
+      <div class="analytics-grid">
+        <div class="matchup-card">
+          <div class="matchup-title">Matchup Analysis</div>
+          <div class="matchup-grid">
+            <div class="matchup-col">
+              <div class="matchup-col-head"><span class="strong-dot"></span>Strong Against</div>
+              <div class="chip-wrap">
+                @for (t of teamMatchup().strongAgainst; track t) {
+                  <span class="type-pill" [style.background]="typeColor(t) + '33'" [style.color]="typeColor(t)">
+                    <span class="type-glyph" [style.background]="typeColor(t)"></span>{{ t }}
+                  </span>
+                } @empty {
+                  <span class="chip-empty">No clear edge yet</span>
+                }
+              </div>
+            </div>
+            <div class="matchup-col">
+              <div class="matchup-col-head"><span class="weak-dot"></span>Vulnerable To</div>
+              <div class="chip-wrap">
+                @for (v of teamMatchup().vulnerableTo; track v.type) {
+                  <span class="type-pill" [style.background]="typeColor(v.type) + '33'" [style.color]="typeColor(v.type)">
+                    <span class="type-glyph" [style.background]="typeColor(v.type)"></span>{{ v.type }}{{ v.count > 1 ? ' ×' + v.count : '' }}
+                  </span>
+                } @empty {
+                  <span class="chip-empty">No major weaknesses</span>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="milestone-card">
+          <div class="milestone-title">Squad Milestones</div>
+          <div>
+            <div class="tier-bar-top"><span class="tier-bar-label">Tier Progress</span><span class="tier-bar-hint">{{ nextTierText() }}</span></div>
+            <div class="tier-track"><div class="tier-fill" [style.width.%]="tierProgressPct()"></div></div>
+          </div>
+          <div class="badge-wrap">
+            @for (b of badges(); track b.label) {
+              <span class="badge" [class.earned]="b.earned">{{ b.earned ? '✓ ' + b.label : b.label }}</span>
+            }
+          </div>
         </div>
       </div>
     }

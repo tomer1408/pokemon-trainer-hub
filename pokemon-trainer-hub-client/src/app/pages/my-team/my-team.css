@@ -13,6 +13,8 @@
   --overlay-05: var(--overlay-05-night);
   --overlay-06: var(--overlay-06-night);
   --overlay-08: var(--overlay-08-night);
+  --good: var(--accent-night);
+  --bad: var(--error-night);
 
   /* No fixed height here — .my-team below gets its exact height set from
      JS (measured against the real, live navbar height instead of a guessed
@@ -35,6 +37,8 @@
   --overlay-05: var(--overlay-05);
   --overlay-06: var(--overlay-06);
   --overlay-08: var(--overlay-08);
+  --good: var(--accent);
+  --bad: var(--error);
 }
 
 .my-team.light .slot-outer {
@@ -586,6 +590,257 @@
   50% { transform: translateY(-4px); }
 }
 
+.insight-text {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ---- Battle Readiness ---- */
+.readiness-card {
+  background: linear-gradient(160deg, var(--surface-raised), var(--surface));
+  border: 1px solid var(--border-soft);
+  border-radius: 24px;
+  padding: 22px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 26px;
+}
+
+.readiness-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 0 0 auto;
+}
+
+.gauge-ring {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gauge-inner {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.gauge-score {
+  font-family: 'Bungee', sans-serif;
+  font-size: 26px;
+  color: var(--text-body);
+  line-height: 1;
+}
+
+.gauge-max {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.readiness-label-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 200px;
+}
+
+.readiness-title {
+  font-family: 'Bungee', sans-serif;
+  font-size: 15px;
+  color: var(--text-body);
+}
+
+.readiness-verdict {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.meters {
+  flex: 1 1 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 240px;
+}
+
+.meter-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.meter-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.meter-label {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--text-body);
+}
+
+.meter-val {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.meter-track,
+.tier-track {
+  height: 8px;
+  border-radius: 5px;
+  background: var(--overlay-08);
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--violet-deep), var(--cyan));
+  transition: width 0.5s ease;
+}
+
+/* ---- Matchup Analysis + Squad Milestones ---- */
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.matchup-card,
+.milestone-card {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.matchup-title,
+.milestone-title {
+  font-family: 'Bungee', sans-serif;
+  font-size: 14px;
+  color: var(--text-body);
+}
+
+.matchup-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.matchup-col {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.matchup-col-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.strong-dot,
+.weak-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.strong-dot { background: var(--good); }
+.weak-dot { background: var(--bad); }
+
+.chip-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip-empty {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.tier-bar-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.tier-bar-label {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--text-body);
+}
+
+.tier-bar-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.tier-fill {
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--violet-deep), var(--cyan));
+  transition: width 0.5s ease;
+}
+
+.badge-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 100px;
+  background: var(--overlay-05);
+  color: var(--text-muted);
+  border: 1px dashed var(--border-soft);
+  opacity: 0.7;
+}
+
+.badge.earned {
+  background: var(--overlay-08);
+  color: var(--good);
+  border: 1px solid var(--good);
+  opacity: 1;
+}
+
 @media (max-width: 860px) {
   .content {
     padding: 20px 20px 0;
@@ -594,5 +849,9 @@
   /* Stays 5-across (shrinking each column) rather than wrapping to more rows. */
   .slots-row {
     gap: 8px;
+  }
+
+  .matchup-grid {
+    grid-template-columns: 1fr;
   }
 }

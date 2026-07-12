@@ -1,6 +1,6 @@
 const express = require('express');
 const jwtCheck = require('../middleware/auth');
-const { fetchPokemonDetail, fetchPokemonFullDetail, getMasterList, getListByType } = require('../services/pokeapi');
+const { fetchPokemonDetail, fetchPokemonFullDetail, getMasterList, getListByType, getTypeChart } = require('../services/pokeapi');
 
 const PAGE_SIZE = 20;
 const router = express.Router();
@@ -81,6 +81,20 @@ router.get('/', jwtCheck, async (req, res) => {
   }
 
   res.json({ results: results.filter(Boolean), page: pageNum, pageSize: PAGE_SIZE, total });
+});
+
+// GET /api/pokemon/type-chart — real weak/resist/strong lists for all 18
+// types at once. Registered before /:id so Express doesn't treat
+// "type-chart" as a Pokémon id/name. Powers My Team's Battle Readiness and
+// Matchup Analysis cards, which need team-wide type effectiveness — real
+// PokeAPI damage relations, not an invented type table.
+router.get('/type-chart', jwtCheck, async (req, res) => {
+  try {
+    const chart = await getTypeChart();
+    res.json(chart);
+  } catch (err) {
+    res.status(502).json({ message: 'PokeAPI is unavailable. Please try again later.' });
+  }
 });
 
 // GET /api/pokemon/:id — id or name, both work since PokeAPI accepts either.
