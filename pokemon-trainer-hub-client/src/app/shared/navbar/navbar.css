@@ -1,14 +1,14 @@
 .navbar {
-  --bg: #0D0A1E;
-  --surface: #1A1533;
-  --border-soft: rgba(196, 181, 253, 0.16);
-  --text-body: #F1EEFB;
-  --text-muted: rgba(230, 225, 250, 0.6);
-  --violet: #A78BFA;
-  --violet-deep: #7C3AED;
-  --cyan: #5EEAD4;
-  --bad: #F4562B;
-  --overlay-05: rgba(255, 255, 255, 0.05);
+  --bg: var(--background-page-night);
+  --surface: var(--surface-primary-night);
+  --border-soft: var(--border-default-night);
+  --text-body: var(--text-primary-night);
+  --text-muted: var(--text-secondary-night);
+  --violet: var(--primary-night);
+  --violet-deep: var(--primary-active-night);
+  --cyan: var(--accent-night);
+  --bad: var(--error-night);
+  --overlay-05: var(--overlay-05-night);
 
   display: block;
   position: sticky;
@@ -31,16 +31,16 @@
 }
 
 .navbar.light {
-  --bg: #FFFFFF;
-  --surface: #FFFFFF;
-  --border-soft: #DCE3EC;
-  --text-body: #172033;
-  --text-muted: #5F6B7A;
-  --violet: #4F46E5;
-  --violet-deep: #4F46E5;
-  --cyan: #0F9F94;
-  --bad: #DC2626;
-  --overlay-05: rgba(23, 32, 51, 0.05);
+  --bg: var(--surface-primary);
+  --surface: var(--surface-primary);
+  --border-soft: var(--border-default);
+  --text-body: var(--text-primary);
+  --text-muted: var(--text-secondary);
+  --violet: var(--primary);
+  --violet-deep: var(--primary-active);
+  --cyan: var(--accent);
+  --bad: var(--error);
+  --overlay-05: var(--overlay-05);
 
   border-bottom: 1px solid var(--border-soft);
 }

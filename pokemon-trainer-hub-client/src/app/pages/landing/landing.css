@@ -2,15 +2,15 @@
    this page never switches to light mode, so tokens are hardcoded here
    instead of following the .light-class pattern used on authenticated pages. */
 :host {
-  --bg: #0d0a1e;
-  --surface: #1a1533;
-  --border-soft: rgba(196, 181, 253, 0.16);
-  --text-body: #f1eefb;
-  --text-muted: rgba(230, 225, 250, 0.6);
-  --violet: #a78bfa;
-  --violet-deep: #7c3aed;
-  --cyan: #5eead4;
-  --yellow: #fde68a;
+  --bg: var(--background-page-night);
+  --surface: var(--surface-primary-night);
+  --border-soft: var(--border-default-night);
+  --text-body: var(--text-primary-night);
+  --text-muted: var(--text-secondary-night);
+  --violet: var(--primary-night);
+  --violet-deep: var(--primary-active-night);
+  --cyan: var(--accent-night);
+  --yellow: var(--energy-night);
 
   display: block;
   min-height: 100vh;

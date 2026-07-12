@@ -1,36 +1,51 @@
 /* You can add global styles to this file, and also import other style files */
 
-/* Reusable Light Mode design tokens — single source of truth for the
-   indigo/teal/energy-yellow palette. Every component's own `.light`
-   CSS-variable overrides (:host.light / .page.light etc.) should assign
-   their local token names (--violet-deep, --cyan, --bg, --text-body, ...)
+/* Single source of truth for BOTH themes' indigo/teal/energy-yellow
+   palette. Every component's own theme-scoped CSS-variable block (the
+   default/dark :host or .page rule, and its .light override) should assign
+   its local token names (--violet-deep, --cyan, --bg, --text-body, ...)
    from these values rather than hardcoding hex, so the whole app stays in
-   sync from one place. Dark Mode is untouched — components keep their own
-   dark values in their default (non-.light) :host block. */
+   sync from one place. Light-mode tokens are unsuffixed; their Dark Mode
+   counterpart is the same name with a "-night" suffix (chosen to avoid
+   colliding with the existing "-hover"/"-active"/"-dark" *variant* suffixes
+   already used within the light palette itself, e.g. --energy-dark below is
+   a darker shade of energy yellow, not a dark-theme color). */
 :root {
   --background-page: #F6F8FC;
+  --background-page-night: #0D0A1E;
 
   --surface-primary: #FFFFFF;
+  --surface-primary-night: #1A1533;
   --surface-secondary: #EEF3F8;
   --surface-tertiary: #E6ECF4;
+  /* "Raised" surface (cards-on-cards) — distinct from surface-secondary/
+     tertiary above, which are slightly different light greys used elsewhere. */
+  --surface-raised: #F7F9FC;
+  --surface-raised-night: #221B45;
 
   --text-primary: #172033;
+  --text-primary-night: #F1EEFB;
   --text-secondary: #5F6B7A;
+  --text-secondary-night: rgba(230, 225, 250, 0.6);
   --text-muted: #8792A2;
   --text-inverse: #FFFFFF;
 
   --primary: #4F46E5;
+  --primary-night: #A78BFA;
   --primary-hover: #4338CA;
   --primary-active: #3730A3;
+  --primary-active-night: #7C3AED;
   --primary-soft: #EEF2FF;
   --primary-border: #C7D2FE;
 
   --accent: #0F9F94;
+  --accent-night: #5EEAD4;
   --accent-hover: #0D827A;
   --accent-soft: #E6F7F5;
   --accent-border: #9ADBD5;
 
   --energy: #F4B740;
+  --energy-night: #FDE68A;
   --energy-dark: #9A6700;
   --energy-soft: #FFF7DB;
 
@@ -39,6 +54,7 @@
   --success-border: #86C89A;
 
   --error: #DC2626;
+  --error-night: #F4562B;
   --error-soft: #FDECEC;
   --error-border: #F0A3A3;
 
@@ -51,8 +67,31 @@
   --info-border: #AFC8FA;
 
   --border-default: #DCE3EC;
+  --border-default-night: rgba(196, 181, 253, 0.16);
   --border-strong: #C6D0DD;
   --border-focus: #4F46E5;
+
+  /* Overlay scale — semi-transparent text-color tints used for hover/active
+     surfaces. Light overlays tint with --text-primary's RGB; dark overlays
+     tint with white, since dark surfaces need a lightening wash instead. */
+  --overlay-05: rgba(23, 32, 51, 0.05);
+  --overlay-05-night: rgba(255, 255, 255, 0.05);
+  --overlay-06: rgba(23, 32, 51, 0.06);
+  --overlay-06-night: rgba(255, 255, 255, 0.06);
+  --overlay-08: rgba(23, 32, 51, 0.08);
+  --overlay-08-night: rgba(255, 255, 255, 0.08);
+  --overlay-10: rgba(23, 32, 51, 0.10);
+  --overlay-10-night: rgba(255, 255, 255, 0.10);
+  --overlay-12: rgba(23, 32, 51, 0.12);
+  --overlay-12-night: rgba(255, 255, 255, 0.12);
+  --overlay-35: rgba(23, 32, 51, 0.35);
+  --overlay-35-night: rgba(230, 225, 250, 0.35);
+  --overlay-40: rgba(23, 32, 51, 0.40);
+  --overlay-40-night: rgba(255, 255, 255, 0.40);
+  /* Accent-tinted overlay (not a text-color tint) — a distinct token from
+     --overlay-10 above, used for a highlight glow rather than a hover wash. */
+  --overlay-accent-10: rgba(15, 159, 148, 0.10);
+  --overlay-accent-10-night: rgba(94, 234, 212, 0.10);
 
   --shadow-card: 0 8px 24px rgba(35, 48, 68, 0.07);
   --shadow-card-hover: 0 14px 34px rgba(35, 48, 68, 0.12);
@@ -65,7 +104,7 @@
    flash before Angular finishes rendering a page's own themed background. */
 body {
   margin: 0;
-  background: #0D0A1E;
+  background: var(--background-page-night);
 }
 
 /* Hidden host for the Colorblind Mode SVG filter defs in index.html — no

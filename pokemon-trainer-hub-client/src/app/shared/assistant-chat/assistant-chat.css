@@ -1,27 +1,27 @@
 :host {
-  --bg: #0D0A1E;
-  --surface: #1A1533;
-  --surface-raised: #221B45;
-  --border-soft: rgba(196, 181, 253, 0.16);
-  --text-body: #F1EEFB;
-  --text-muted: rgba(230, 225, 250, 0.6);
-  --violet-deep: #7C3AED;
-  --cyan: #5EEAD4;
-  --overlay-05: rgba(255, 255, 255, 0.05);
-  --overlay-08: rgba(255, 255, 255, 0.08);
+  --bg: var(--background-page-night);
+  --surface: var(--surface-primary-night);
+  --surface-raised: var(--surface-raised-night);
+  --border-soft: var(--border-default-night);
+  --text-body: var(--text-primary-night);
+  --text-muted: var(--text-secondary-night);
+  --violet-deep: var(--primary-active-night);
+  --cyan: var(--accent-night);
+  --overlay-05: var(--overlay-05-night);
+  --overlay-08: var(--overlay-08-night);
 }
 
 .chat-fab.light,
 .chat-panel.light {
-  --surface: #FFFFFF;
-  --surface-raised: #F7F9FC;
-  --border-soft: #DCE3EC;
-  --text-body: #172033;
-  --text-muted: #5F6B7A;
-  --violet-deep: #4F46E5;
-  --cyan: #0F9F94;
-  --overlay-05: rgba(23, 32, 51, 0.05);
-  --overlay-08: rgba(23, 32, 51, 0.08);
+  --surface: var(--surface-primary);
+  --surface-raised: var(--surface-raised);
+  --border-soft: var(--border-default);
+  --text-body: var(--text-primary);
+  --text-muted: var(--text-secondary);
+  --violet-deep: var(--primary-active);
+  --cyan: var(--accent);
+  --overlay-05: var(--overlay-05);
+  --overlay-08: var(--overlay-08);
 }
 
 .chat-fab.light {

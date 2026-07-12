@@ -1,13 +1,13 @@
 .potd-outer {
-  --surface: #1a1533;
-  --border-soft: rgba(196, 181, 253, 0.16);
-  --text-body: #f1eefb;
-  --text-muted: rgba(230, 225, 250, 0.6);
-  --violet: #a78bfa;
-  --violet-deep: #7c3aed;
-  --cyan: #5eead4;
-  --yellow: #fde68a;
-  --overlay-08: rgba(255, 255, 255, 0.08);
+  --surface: var(--surface-primary-night);
+  --border-soft: var(--border-default-night);
+  --text-body: var(--text-primary-night);
+  --text-muted: var(--text-secondary-night);
+  --violet: var(--primary-night);
+  --violet-deep: var(--primary-active-night);
+  --cyan: var(--accent-night);
+  --yellow: var(--energy-night);
+  --overlay-08: var(--overlay-08-night);
 
   position: relative;
   flex: 1 1 340px;
@@ -30,15 +30,15 @@
 }
 
 .potd-outer.light {
-  --surface: #FFFFFF;
-  --border-soft: #DCE3EC;
-  --text-body: #172033;
-  --text-muted: #5F6B7A;
-  --violet: #4F46E5;
-  --violet-deep: #3730A3;
-  --cyan: #0F9F94;
-  --yellow: #F4B740;
-  --overlay-08: rgba(23, 32, 51, 0.04);
+  --surface: var(--surface-primary);
+  --border-soft: var(--border-default);
+  --text-body: var(--text-primary);
+  --text-muted: var(--text-secondary);
+  --violet: var(--primary);
+  --violet-deep: var(--primary-active);
+  --cyan: var(--accent);
+  --yellow: var(--energy);
+  --overlay-08: var(--overlay-08);
 }
 
 .potd-outer.light {

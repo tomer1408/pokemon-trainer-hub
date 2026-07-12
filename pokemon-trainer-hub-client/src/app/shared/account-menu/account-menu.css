@@ -1,30 +1,30 @@
 .wrap {
-  --surface: #1A1533;
-  --border-soft: rgba(196, 181, 253, 0.16);
-  --text-body: #F1EEFB;
-  --text-muted: rgba(230, 225, 250, 0.6);
-  --violet: #A78BFA;
-  --violet-deep: #7C3AED;
-  --cyan: #5EEAD4;
-  --yellow: #FDE68A;
-  --bad: #F4562B;
-  --overlay-hover: rgba(255, 255, 255, 0.06);
+  --surface: var(--surface-primary-night);
+  --border-soft: var(--border-default-night);
+  --text-body: var(--text-primary-night);
+  --text-muted: var(--text-secondary-night);
+  --violet: var(--primary-night);
+  --violet-deep: var(--primary-active-night);
+  --cyan: var(--accent-night);
+  --yellow: var(--energy-night);
+  --bad: var(--error-night);
+  --overlay-hover: var(--overlay-06-night);
 
   position: relative;
   display: inline-flex;
 }
 
 .wrap.light {
-  --surface: #FFFFFF;
-  --border-soft: #DCE3EC;
-  --text-body: #172033;
-  --text-muted: #5F6B7A;
-  --violet: #4F46E5;
-  --violet-deep: #3730A3;
-  --cyan: #0D827A;
-  --yellow: #9A6700;
-  --bad: #DC2626;
-  --overlay-hover: rgba(23, 32, 51, 0.05);
+  --surface: var(--surface-primary);
+  --border-soft: var(--border-default);
+  --text-body: var(--text-primary);
+  --text-muted: var(--text-secondary);
+  --violet: var(--primary);
+  --violet-deep: var(--primary-active);
+  --cyan: var(--accent);
+  --yellow: var(--energy);
+  --bad: var(--error);
+  --overlay-hover: var(--overlay-05);
 }
 
 .wrap.light .panel {

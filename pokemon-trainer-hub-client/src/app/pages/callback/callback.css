@@ -1,23 +1,23 @@
 :host {
-  --bg: #0b0a14;
-  --surface-raised: #1e1b30;
-  --border-soft: #ffffff1a;
-  --text-body: #f4f2ff;
-  --text-muted: #a8a2c4;
-  --violet: #8b5cf6;
-  --violet-deep: #6d28d9;
-  --danger: #f87171;
+  --bg: var(--background-page-night);
+  --surface-raised: var(--surface-raised-night);
+  --border-soft: var(--border-default-night);
+  --text-body: var(--text-primary-night);
+  --text-muted: var(--text-secondary-night);
+  --violet: var(--primary-night);
+  --violet-deep: var(--primary-active-night);
+  --danger: var(--error-night);
 
   display: block;
   min-height: 100vh;
 }
 
 .callback.light {
-  --bg: #f5f4fb;
-  --surface-raised: #ffffff;
-  --border-soft: #00000014;
-  --text-body: #201c33;
-  --text-muted: #605a7d;
+  --bg: var(--background-page);
+  --surface-raised: var(--surface-raised);
+  --border-soft: var(--border-default);
+  --text-body: var(--text-primary);
+  --text-muted: var(--text-secondary);
 }
 
 .callback {

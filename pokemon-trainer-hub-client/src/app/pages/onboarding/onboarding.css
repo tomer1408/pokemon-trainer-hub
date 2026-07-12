@@ -1,16 +1,16 @@
 /* Exact tokens from Additional Details.dc.html — dark-only (no light-mode
    branch in the mockup's own script), same as Landing/Callback/404. */
 :host {
-  --bg: #0D0A1E;
-  --surface: #1A1533;
-  --border-soft: rgba(196, 181, 253, 0.16);
-  --text-body: #F1EEFB;
-  --text-muted: rgba(230, 225, 250, 0.6);
-  --violet: #A78BFA;
-  --violet-deep: #7C3AED;
-  --cyan: #5EEAD4;
-  --yellow: #FDE68A;
-  --danger: #f87171;
+  --bg: var(--background-page-night);
+  --surface: var(--surface-primary-night);
+  --border-soft: var(--border-default-night);
+  --text-body: var(--text-primary-night);
+  --text-muted: var(--text-secondary-night);
+  --violet: var(--primary-night);
+  --violet-deep: var(--primary-active-night);
+  --cyan: var(--accent-night);
+  --yellow: var(--energy-night);
+  --danger: var(--error-night);
 
   display: block;
 }

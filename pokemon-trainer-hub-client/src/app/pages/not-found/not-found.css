@@ -1,14 +1,14 @@
 /* Exact tokens from 404.dc.html — no light/dark toggle in the mockup, kept dark-only. */
 :host {
-  --bg: #0D0A1E;
-  --surface: #1A1533;
-  --border-soft: rgba(196, 181, 253, 0.16);
-  --text-body: #F1EEFB;
-  --text-muted: rgba(230, 225, 250, 0.6);
-  --violet: #A78BFA;
-  --violet-deep: #7C3AED;
-  --cyan: #5EEAD4;
-  --yellow: #FDE68A;
+  --bg: var(--background-page-night);
+  --surface: var(--surface-primary-night);
+  --border-soft: var(--border-default-night);
+  --text-body: var(--text-primary-night);
+  --text-muted: var(--text-secondary-night);
+  --violet: var(--primary-night);
+  --violet-deep: var(--primary-active-night);
+  --cyan: var(--accent-night);
+  --yellow: var(--energy-night);
 
   display: block;
 }

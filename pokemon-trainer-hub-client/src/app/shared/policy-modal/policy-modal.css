@@ -1,19 +1,19 @@
 :host {
-  --surface: #1A1533;
-  --border-soft: rgba(196, 181, 253, 0.16);
-  --text-body: #F1EEFB;
-  --text-muted: rgba(230, 225, 250, 0.6);
-  --violet-deep: #7C3AED;
-  --cyan: #5EEAD4;
+  --surface: var(--surface-primary-night);
+  --border-soft: var(--border-default-night);
+  --text-body: var(--text-primary-night);
+  --text-muted: var(--text-secondary-night);
+  --violet-deep: var(--primary-active-night);
+  --cyan: var(--accent-night);
 }
 
 .dim-overlay.light {
-  --surface: #FFFFFF;
-  --border-soft: #DCE3EC;
-  --text-body: #172033;
-  --text-muted: #5F6B7A;
-  --violet-deep: #4F46E5;
-  --cyan: #0F9F94;
+  --surface: var(--surface-primary);
+  --border-soft: var(--border-default);
+  --text-body: var(--text-primary);
+  --text-muted: var(--text-secondary);
+  --violet-deep: var(--primary);
+  --cyan: var(--accent);
 }
 
 .dim-overlay.light .modal-card {
