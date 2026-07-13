@@ -1,0 +1,33 @@
+name: Render keep-alive
+
+# Render's free tier spins the server down after ~15 minutes of no traffic;
+# the next request then pays a one-time ~30s cold start (measured directly:
+# a curl to /api/health took 31.5s cold vs 0.25s once warm). This workflow
+# pings the server every 10 minutes — comfortably inside that 15-minute
+# window, with margin for GitHub's own scheduler occasionally running a
+# few minutes late — so real visitors practically never hit a cold server.
+#
+# Runs on GitHub's infra, not the app's own — costs nothing on a public repo
+# (GitHub Actions minutes are unlimited for public repos) and needs no
+# changes to the app itself. It only takes effect once this file is on the
+# default branch: GitHub only fires `schedule` triggers for workflows that
+# exist on the repository's default branch.
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping API health
+        # --max-time 60: generous enough to ride out a genuine cold start
+        # (measured at ~31.5s) without the job itself timing out and
+        # reporting a false failure.
+        run: curl -sf --max-time 60 https://pokemon-trainer-hub-server.onrender.com/api/health
+
+      - name: Ping DB health
+        # Also exercises the real Prisma -> Azure SQL connection, not just
+        # the Node process, so the DB path stays warm too.
+        run: curl -sf --max-time 60 https://pokemon-trainer-hub-server.onrender.com/api/health/db
