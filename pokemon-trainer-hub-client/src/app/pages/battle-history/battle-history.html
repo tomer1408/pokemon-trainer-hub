@@ -1,0 +1,170 @@
+<div class="battle-history" [class.light]="theme.isLight()">
+  @if (isLoading()) {
+    <app-loading-screen [isLight]="theme.isLight()" [fullScreen]="true" size="lg" />
+  } @else {
+    <div class="content">
+
+      <div class="header-block">
+        <div class="eyebrow">BATTLE HISTORY</div>
+        <h1 class="page-title">Your Record So Far</h1>
+        <p class="page-sub">Every match you've fought, read back to you — spot your streaks, your go-to Pok&eacute;mon, and the type matchups that decide your battles.</p>
+      </div>
+
+      @if (!hasData()) {
+        <div class="empty-card">
+          <div class="empty-bolt"></div>
+          <div class="empty-title">No battles yet</div>
+          <div class="empty-text">Win or lose, every match lands here with the stats to match. Step into Battle Simulation to log your first.</div>
+          <a routerLink="/battle" class="empty-btn">Start your first battle</a>
+        </div>
+      } @else {
+
+        <!-- Overview -->
+        <div class="overview-card">
+          <div class="donut-block">
+            <div class="donut-wrap">
+              <div class="donut-ring" [style.background]="'conic-gradient(var(--good) ' + winRate() + '%, var(--overlay-08) ' + winRate() + '% 100%)'"></div>
+              <div class="donut-center">
+                <div class="donut-pct">{{ winRate() }}%</div>
+                <div class="donut-cap">WIN RATE</div>
+              </div>
+            </div>
+            <div class="record-line">
+              <span class="rec-win">{{ wins() }}W</span><span class="rec-dash">&mdash;</span><span class="rec-loss">{{ losses() }}L</span>
+              <span class="rec-total">over {{ total() }} battles</span>
+            </div>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi-tile" [class.accent-win]="currentStreak().isWin" [class.accent-loss]="!currentStreak().isWin">
+              <div class="kpi-value">{{ currentStreak().length }}{{ currentStreak().isWin ? 'W' : 'L' }}</div>
+              <div class="kpi-label">Current streak</div>
+              <div class="kpi-sub">{{ currentStreak().isWin ? 'on a roll' : 'shake it off' }}</div>
+            </div>
+            <div class="kpi-tile accent-violet">
+              <div class="kpi-value">{{ bestWinStreak() }}</div>
+              <div class="kpi-label">Best win streak</div>
+              <div class="kpi-sub">personal best</div>
+            </div>
+            <div class="kpi-tile accent-cyan">
+              <div class="kpi-value">{{ avgRoundsPerBattle() }}</div>
+              <div class="kpi-label">Avg rounds / battle</div>
+              <div class="kpi-sub">decisive finishes</div>
+            </div>
+            @if (goToPokemon(); as g) {
+              <div class="kpi-tile accent-yellow">
+                <div class="kpi-value name">{{ capitalize(g.name) }}</div>
+                <div class="kpi-label">Go-to Pok&eacute;mon</div>
+                <div class="kpi-sub">{{ g.count }} rounds fielded</div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Recent form -->
+        <div class="card form-card">
+          <div class="form-head"><span class="card-title">Recent form</span><span class="form-hint">oldest &rarr; latest</span></div>
+          <div class="form-strip">
+            @for (f of recentForm(); track $index) {
+              <div class="form-pip" [class.win]="f.win" [class.loss]="!f.win" [title]="f.title">{{ f.win ? 'W' : 'L' }}</div>
+            }
+          </div>
+        </div>
+
+        <!-- Insights -->
+        <div class="insights-row">
+          <div class="card champ-card">
+            <div class="card-head">
+              <span class="card-title">Your champions</span>
+              <span class="card-helper">Most-fielded Pok&eacute;mon and how they perform.</span>
+            </div>
+            <div class="champ-list">
+              @for (ch of champions(); track ch.name) {
+                <div class="champ-row">
+                  <div class="champ-icon">
+                    @if (ch.spriteUrl) { <img [src]="ch.spriteUrl" alt="{{ ch.name }}" /> }
+                  </div>
+                  <div class="champ-mid">
+                    <div class="champ-top">
+                      <span class="champ-name">{{ capitalize(ch.name) }}</span>
+                      <span class="champ-rec">{{ ch.wins }}W &middot; {{ ch.count - ch.wins }}L</span>
+                    </div>
+                    <div class="champ-track"><div class="champ-fill" [style.width.%]="ch.pct"></div></div>
+                  </div>
+                  <div class="champ-pct">{{ ch.pct }}%</div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="card edge-card">
+            <div class="card-head">
+              <span class="card-title">Type read</span>
+              <span class="card-helper">What the matchups are teaching you.</span>
+            </div>
+            <div class="edge-list">
+              @if (typeEdges().best; as b) {
+                <div class="edge-row edge">
+                  <div class="edge-tag">EDGE</div>
+                  <div class="edge-body">
+                    <div class="edge-title">Strong vs {{ capitalize(b.type) }} types</div>
+                    <div class="edge-text">You've won {{ b.pct }}% ({{ b.wins }}/{{ b.count }}) against {{ capitalize(b.type) }}-type opponents &mdash; keep leaning into it.</div>
+                  </div>
+                </div>
+              }
+              @if (typeEdges().worst; as w) {
+                <div class="edge-row watch">
+                  <div class="edge-tag">WATCH</div>
+                  <div class="edge-body">
+                    <div class="edge-title">Tested by {{ capitalize(w.type) }} types</div>
+                    <div class="edge-text">Only {{ w.pct }}% ({{ w.wins }}/{{ w.count }}) versus {{ capitalize(w.type) }}-type opponents &mdash; bring a counter next time.</div>
+                  </div>
+                </div>
+              }
+              @if (!typeEdges().best && !typeEdges().worst) {
+                <div class="edge-empty">Play a few more matches against varied opponent types to see insights here.</div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Match log -->
+        <div class="card recent-card">
+          <div class="recent-head">
+            <span class="card-title">Match log</span>
+            <div class="tabs">
+              @for (t of tabs; track t.value) {
+                <button type="button" class="tab-btn" [class.active]="filter() === t.value" (click)="setFilter(t.value)">{{ t.label }}</button>
+              }
+            </div>
+          </div>
+          <div class="match-list">
+            @for (m of matchLog(); track m.id) {
+              <div class="match-row" [class.win]="m.win" [class.loss]="!m.win">
+                <div class="result-mark">{{ m.win ? 'W' : 'L' }}</div>
+                <div class="matchup">
+                  <span class="opp-name">vs {{ m.opponentName }}</span>
+                  <span class="score">{{ m.score }}</span>
+                  <span class="difficulty-pill">{{ capitalize(m.difficulty) }}</span>
+                  @if (m.decidedBy) { <span class="decided">decided by {{ m.decidedBy }}</span> }
+                </div>
+                <div class="team-strip">
+                  @for (t of m.team; track t.pokemonId) {
+                    <div class="team-icon">
+                      @if (t.spriteUrl) { <img [src]="t.spriteUrl" alt="{{ t.pokemonName }}" /> }
+                    </div>
+                  }
+                </div>
+                <div class="date">{{ m.date }}</div>
+              </div>
+            }
+            @if (noMatches()) {
+              <div class="no-match">No battles in this filter.</div>
+            }
+          </div>
+        </div>
+
+      }
+    </div>
+  }
+</div>

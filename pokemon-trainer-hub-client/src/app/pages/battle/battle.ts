@@ -3,13 +3,19 @@ import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { TeamService } from '../../core/team';
 import { PokemonService, PokemonDetail, PokemonSummary } from '../../core/pokemon';
+import { BattleHistoryService, RecordMatchPayload } from '../../core/battle-history';
 import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
 import { ThemeService } from '../../shared/theme';
 import { AppSettingsService } from '../../shared/app-settings';
 import { LoadingScreen } from '../../shared/loading-screen/loading-screen';
 
 const MIN_TEAM_SIZE = 1;
-const POWER_ADVANTAGE_THRESHOLD = 15;
+// A percentage of the higher rolled Power, not a fixed number — a flat "15"
+// was almost never reached between two weak Pokémon (~40 Power, where 15 is
+// over a third of it) but was reached almost every round between two strong
+// ones (~300 Power, where 15 is under 5%), so "how often luck decides" swung
+// wildly with roster strength. A fixed percentage keeps that consistent.
+const POWER_ADVANTAGE_THRESHOLD_PCT = 0.08;
 const RIVAL_NAMES = ['Rival Ash', 'Rival Skye', 'Rival Jun', 'Rival Nova', 'Rival Rook'];
 
 // ---- Battle Settings (Prepare for Battle screen) ----
@@ -39,7 +45,7 @@ function calculateRequiredWins(rounds: BattleLength): number {
   return Math.ceil(rounds / 2);
 }
 
-// How far opponent power should sit from the user's team average for each
+// How far opponent power should sit from the user's team power for each
 // difficulty — a multiplier, not a fabricated stat.
 const DIFFICULTY_POWER_MULTIPLIER: Record<BattleDifficulty, number> = {
   easy: 0.75,
@@ -48,12 +54,37 @@ const DIFFICULTY_POWER_MULTIPLIER: Record<BattleDifficulty, number> = {
   boss: 1.8,
 };
 
-// Re-sorts real candidates by how close their real Power is to the
-// difficulty-adjusted target — never filters down to fewer than the pool
-// already has, so it always degrades gracefully instead of running short.
-function applyDifficulty(pool: PokemonSummary[], difficulty: BattleDifficulty, avgPower: number): PokemonSummary[] {
-  const target = avgPower * DIFFICULTY_POWER_MULTIPLIER[difficulty];
-  return [...pool].sort((a, b) => Math.abs(a.baseExperience - target) - Math.abs(b.baseExperience - target));
+// One difficulty-adjusted target per opponent slot, spread evenly across
+// the user's own team's real power range (min → max) instead of every slot
+// chasing one single average. A team with one outlier Pokémon (very strong
+// or very weak) no longer pulls the whole 5-Pokémon opponent roster toward
+// that one number — the roster mirrors the team's actual spread instead.
+function buildPowerTargets(minPower: number, maxPower: number, count: number, multiplier: number): number[] {
+  if (count <= 1) return [((minPower + maxPower) / 2) * multiplier];
+  return Array.from({ length: count }, (_, i) => (minPower + ((maxPower - minPower) * i) / (count - 1)) * multiplier);
+}
+
+// Greedily assigns each target to whichever remaining real candidate is
+// closest to it — a simple, good-enough matching for this simplified engine,
+// not a fully optimal assignment.
+function pickClosestForTargets(candidates: PokemonSummary[], targets: number[]): PokemonSummary[] {
+  const remaining = [...candidates];
+  const picked: PokemonSummary[] = [];
+  for (const target of targets) {
+    if (remaining.length === 0) break;
+    let bestIndex = 0;
+    let bestDiff = Math.abs(remaining[0].baseExperience - target);
+    for (let i = 1; i < remaining.length; i++) {
+      const diff = Math.abs(remaining[i].baseExperience - target);
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        bestIndex = i;
+      }
+    }
+    picked.push(remaining[bestIndex]);
+    remaining.splice(bestIndex, 1);
+  }
+  return picked;
 }
 
 // Greedily picks real Pokémon with distinct primary types (for "Balanced"),
@@ -82,7 +113,8 @@ function pickTypeDiverse(sorted: PokemonSummary[], count: number): PokemonSummar
 function selectOpponents(
   pool: PokemonSummary[],
   count: number,
-  avgPower: number,
+  minPower: number,
+  maxPower: number,
   settings: BattleSettings,
 ): PokemonSummary[] {
   let candidates = pool;
@@ -93,12 +125,21 @@ function selectOpponents(
     candidates = preferred.length >= count ? preferred : pool;
   }
 
-  const byDifficulty = applyDifficulty(candidates, settings.difficulty, avgPower);
+  const multiplier = DIFFICULTY_POWER_MULTIPLIER[settings.difficulty];
 
   if (settings.opponentType === 'balanced') {
-    return pickTypeDiverse(byDifficulty, count);
+    // Type diversity is the primary driver here, so a single midpoint target
+    // (rather than a full per-slot spread) is enough to bias which real
+    // Pokémon represents each distinct type.
+    const midTarget = ((minPower + maxPower) / 2) * multiplier;
+    const byMidTarget = [...candidates].sort(
+      (a, b) => Math.abs(a.baseExperience - midTarget) - Math.abs(b.baseExperience - midTarget),
+    );
+    return pickTypeDiverse(byMidTarget, count);
   }
-  return byDifficulty.slice(0, count);
+
+  const targets = buildPowerTargets(minPower, maxPower, count, multiplier);
+  return pickClosestForTargets(candidates, targets);
 }
 
 // Small random multiplier applied to Power before comparing rounds — never
@@ -174,6 +215,7 @@ export class Battle implements OnDestroy {
   private readonly pokemonService = inject(PokemonService);
   protected readonly theme = inject(ThemeService);
   private readonly appSettings = inject(AppSettingsService);
+  private readonly battleHistoryService = inject(BattleHistoryService);
 
   protected readonly isLoading = signal(true);
   protected readonly hasError = signal(false);
@@ -242,6 +284,10 @@ export class Battle implements OnDestroy {
   protected readonly hoveredYourId = signal<number | null>(null);
   protected readonly roundHistory = signal<RoundRecord[]>([]);
   protected readonly isTransitioning = signal(false);
+  // Guards against recording the same match twice — continueAfterReveal()
+  // only flips phase to 'matchOver' once, but this makes that guarantee
+  // explicit rather than relying on it.
+  private readonly matchRecorded = signal(false);
 
   private pendingRound: RoundRecord | null = null;
   private timer: ReturnType<typeof setTimeout> | null = null;
@@ -342,7 +388,9 @@ export class Battle implements OnDestroy {
 
   private generateOpponent(count: number): void {
     const team = this.yourTeam();
-    const avgPower = team.length ? team.reduce((sum, m) => sum + m.power, 0) / team.length : 0;
+    const powers = team.map((m) => m.power);
+    const minPower = powers.length ? Math.min(...powers) : 0;
+    const maxPower = powers.length ? Math.max(...powers) : 0;
     const settings = this.settings();
 
     this.pokemonService.search({ sort: 'id', page: 1 }).subscribe((firstPage) => {
@@ -351,7 +399,7 @@ export class Battle implements OnDestroy {
       const randomPage = 1 + Math.floor(Math.random() * totalPages);
 
       const useResults = (results: typeof firstPage.results) => {
-        const selected = selectOpponents(this.shuffle(results), count, avgPower, settings);
+        const selected = selectOpponents(this.shuffle(results), count, minPower, maxPower, settings);
         if (selected.length < count) {
           // PokeAPI/search is unreachable (search() swallows errors into an
           // empty result) — a broken/short opponent roster would make the
@@ -428,7 +476,8 @@ export class Battle implements OnDestroy {
     const yourRolled = applyLuckFactor(yourMon.power, settings.luckFactor);
     const oppRolled = applyLuckFactor(oppMon.power, settings.luckFactor);
     const diff = yourRolled - oppRolled;
-    if (Math.abs(diff) >= POWER_ADVANTAGE_THRESHOLD) {
+    const threshold = Math.max(yourRolled, oppRolled) * POWER_ADVANTAGE_THRESHOLD_PCT;
+    if (Math.abs(diff) >= threshold) {
       return { winner: diff > 0 ? 'you' : 'opp', reason: 'Power advantage' };
     }
     return { winner: Math.random() < 0.5 ? 'you' : 'opp', reason: 'Coin flip' };
@@ -548,7 +597,61 @@ export class Battle implements OnDestroy {
 
   continueAfterReveal(): void {
     if (this.isTransitioning()) return;
-    this.phase.set(this.matchDecided() ? 'matchOver' : 'picking');
+    if (this.matchDecided()) {
+      this.recordMatch();
+      this.phase.set('matchOver');
+    } else {
+      this.phase.set('picking');
+    }
+  }
+
+  // Saves the completed match to Battle History — real per-round detail and
+  // the trainer's full team roster at the time, not just whichever members
+  // got used. Fire-and-forget: a failed save is swallowed by the service's
+  // own catchError, never blocking or erroring this screen — Battle stays
+  // fully playable even if history saving is down.
+  private recordMatch(): void {
+    if (this.matchRecorded()) return;
+    this.matchRecorded.set(true);
+
+    const settings = this.settings();
+    // Rounds are always odd (1/3/5), so a real tie in total wins is
+    // mathematically impossible once the match is decided — matchResult's
+    // 'draw' case is unreachable here, this just keeps the payload's type
+    // honest about what the server actually accepts.
+    const result: 'win' | 'loss' = this.matchResult() === 'loss' ? 'loss' : 'win';
+
+    const payload: RecordMatchPayload = {
+      opponentName: this.opponentName(),
+      difficulty: settings.difficulty,
+      rounds: settings.rounds,
+      roundsPlayed: this.roundHistory().length,
+      opponentType: settings.opponentType,
+      luckFactor: settings.luckFactor,
+      result,
+      yourWins: this.yourWins(),
+      oppWins: this.oppWins(),
+      roundDetails: this.roundHistory().map((r) => ({
+        round: r.round,
+        yourPokemonId: r.yourMon.pokemonId,
+        yourPokemonName: r.yourMon.name,
+        yourType: r.yourMon.types[0],
+        oppPokemonId: r.oppMon.pokemonId,
+        oppPokemonName: r.oppMon.name,
+        oppType: r.oppMon.types[0],
+        winner: r.winner,
+        reason: r.reason,
+      })),
+      teamSnapshot: this.yourTeam().map((m) => ({
+        pokemonId: m.pokemonId,
+        pokemonName: m.name,
+        spriteUrl: m.spriteUrl,
+        types: m.types,
+        power: m.power,
+      })),
+    };
+
+    this.battleHistoryService.recordMatch(payload).subscribe();
   }
 
   // Back to the Prepare for Battle screen — settings are kept as they were
@@ -557,6 +660,7 @@ export class Battle implements OnDestroy {
   battleAgain(): void {
     if (this.timer) clearTimeout(this.timer);
     this.phase.set('preview');
+    this.matchRecorded.set(false);
     this.usedYourIds.set(new Set());
     this.usedOppIds.set(new Set());
     this.selectedYourId.set(null);

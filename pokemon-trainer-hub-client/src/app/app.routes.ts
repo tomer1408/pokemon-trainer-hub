@@ -61,6 +61,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/battle/battle').then((m) => m.Battle),
   },
   {
+    path: 'battle-history',
+    canActivate: [authGuardFn],
+    loadComponent: () => import('./pages/battle-history/battle-history').then((m) => m.BattleHistory),
+  },
+  {
     path: 'starter-quiz',
     canActivate: [authGuardFn],
     loadComponent: () => import('./pages/starter-quiz/starter-quiz').then((m) => m.StarterQuiz),

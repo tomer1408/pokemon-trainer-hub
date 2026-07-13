@@ -65,6 +65,34 @@ model SupportRequest {
   createdAt   DateTime @default(now())
 }
 
+// One row per completed Battle Simulation match — a running log (like
+// TrainerNote/SupportRequest), never edited after creation. roundsJson holds
+// the real per-round detail (which Pokémon fought which, who won each round,
+// and why); teamSnapshotJson holds the trainer's FULL Dream Team roster as it
+// stood at that moment (not just the Pokémon actually used in a round — the
+// team can be smaller/larger than the rounds played, and changes over time,
+// so this is captured separately). Both as JSON strings — one flat table is
+// enough for this app's scale, no need for a normalized child table.
+model BattleMatch {
+  id               Int      @id @default(autoincrement())
+  auth0UserId      String
+  opponentName     String
+  difficulty       String
+  // The Bo1/Bo3/Bo5 setting picked before the match started.
+  rounds           Int
+  // Rounds actually played — can be less than `rounds` when a side clinches
+  // the match early (e.g. a 2-0 sweep in a Best of 3 never plays round 3).
+  roundsPlayed     Int
+  opponentType     String
+  luckFactor       String
+  result           String
+  yourWins         Int
+  oppWins          Int
+  roundsJson       String
+  teamSnapshotJson String
+  createdAt        DateTime @default(now())
+}
+
 model TrainerProfile {
   id              Int      @id @default(autoincrement())
   auth0UserId     String   @unique
