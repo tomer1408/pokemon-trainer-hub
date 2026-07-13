@@ -234,6 +234,67 @@
   font-weight: 700;
 }
 
+/* ---- Per-side actions ---- */
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  width: 100%;
+}
+
+.fav-mini-btn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--overlay-08);
+  color: var(--text-muted);
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fav-mini-btn.active {
+  color: var(--yellow);
+}
+
+.team-mini-btn {
+  flex: 1;
+  border: none;
+  border-radius: 100px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 12.5px;
+  background: linear-gradient(120deg, var(--violet-deep), var(--cyan));
+  color: #fff;
+}
+
+.team-mini-btn.on-team {
+  background: #f4562b;
+  color: #fff;
+}
+
+.team-mini-btn.compare {
+  background: transparent;
+  color: var(--cyan);
+  border: 1.5px solid var(--cyan);
+}
+
+.dim-overlay.light .team-mini-btn.compare {
+  color: #0D827A;
+  border-color: #0D827A;
+}
+
+.dim-overlay.light .team-mini-btn.on-team {
+  background: #DC2626;
+}
+
 .vs-badge {
   width: 44px;
   height: 44px;

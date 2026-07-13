@@ -290,14 +290,25 @@
     />
   }
 
-  <!-- Compare any two Pokémon (standalone, no team/swap action) -->
+  <!-- Compare any two Pokémon (standalone tool) — each side can still be
+       added to Team/Favorites directly from the comparison, reusing the
+       same onAction/toggleFavorite logic the grid cards use. -->
   @if (compareSlotA(); as a) {
     @if (compareSlotB(); as b) {
       <app-pokemon-compare-modal
         [pokemonA]="a"
         [pokemonB]="b"
+        [isFavoriteA]="isFavorite(a.id)"
+        [isFavoriteB]="isFavorite(b.id)"
+        [isOnTeamA]="isOnTeam(a.id)"
+        [isOnTeamB]="isOnTeam(b.id)"
+        [teamFull]="teamFull()"
         [isLight]="theme.isLight()"
         (closed)="closeCompareModal()"
+        (toggleFavoriteA)="toggleFavorite(a)"
+        (toggleFavoriteB)="toggleFavorite(b)"
+        (addToTeamA)="onAction(a)"
+        (addToTeamB)="onAction(b)"
       />
     }
   }

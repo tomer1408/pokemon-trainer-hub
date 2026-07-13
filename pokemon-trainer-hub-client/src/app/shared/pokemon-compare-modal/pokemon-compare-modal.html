@@ -27,6 +27,25 @@
               <span class="card-power-label">PWR</span>
               <span class="card-power-value">{{ pokemonA.baseExperience }}</span>
             </div>
+            <div class="card-actions">
+              <button
+                type="button"
+                class="fav-mini-btn"
+                [class.active]="isFavoriteA"
+                (click)="toggleFavoriteA.emit()"
+              >
+                {{ isFavoriteA ? '♥' : '♡' }}
+              </button>
+              <button
+                type="button"
+                class="team-mini-btn"
+                [class.on-team]="isOnTeamA"
+                [class.compare]="!isOnTeamA && teamFull"
+                (click)="addToTeamA.emit()"
+              >
+                {{ actionLabel(isOnTeamA) }}
+              </button>
+            </div>
           </div>
 
           <div class="vs-badge">VS</div>
@@ -46,6 +65,25 @@
             <div class="card-power-row">
               <span class="card-power-label">PWR</span>
               <span class="card-power-value">{{ pokemonB.baseExperience }}</span>
+            </div>
+            <div class="card-actions">
+              <button
+                type="button"
+                class="fav-mini-btn"
+                [class.active]="isFavoriteB"
+                (click)="toggleFavoriteB.emit()"
+              >
+                {{ isFavoriteB ? '♥' : '♡' }}
+              </button>
+              <button
+                type="button"
+                class="team-mini-btn"
+                [class.on-team]="isOnTeamB"
+                [class.compare]="!isOnTeamB && teamFull"
+                (click)="addToTeamB.emit()"
+              >
+                {{ actionLabel(isOnTeamB) }}
+              </button>
             </div>
           </div>
         </div>

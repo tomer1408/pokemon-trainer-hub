@@ -51,13 +51,15 @@
                       <span class="power-value">{{ member.baseExperience }}</span>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    class="compare-btn"
-                    (click)="$event.stopPropagation(); compareTeamAgainstFavorites(member.pokemonId)"
-                  >
-                    &#8644; Compare
-                  </button>
+                  @if (favoriteCandidates().length > 0) {
+                    <button
+                      type="button"
+                      class="compare-btn"
+                      (click)="$event.stopPropagation(); compareTeamAgainstFavorites(member.pokemonId)"
+                    >
+                      &#8644; Compare
+                    </button>
+                  }
                 </div>
               </div>
             } @else {
@@ -126,13 +128,15 @@
                   <span class="pool-power-value">{{ card.baseExperience }}</span>
                   <span class="pool-power-label">PWR</span>
                 </div>
-                <button
-                  type="button"
-                  class="compare-btn pool-compare-btn"
-                  (click)="$event.stopPropagation(); compareFavoriteAgainstTeam(card.pokemonId)"
-                >
-                  &#8644; Compare
-                </button>
+                @if (savedTeamMembers().length > 0) {
+                  <button
+                    type="button"
+                    class="compare-btn pool-compare-btn"
+                    (click)="$event.stopPropagation(); compareFavoriteAgainstTeam(card.pokemonId)"
+                  >
+                    &#8644; Compare
+                  </button>
+                }
               </div>
             }
             @if (favPool().length === 0) {
@@ -181,7 +185,7 @@
                   <span class="pool-power-value">{{ card.baseExperience }}</span>
                   <span class="pool-power-label">PWR</span>
                 </div>
-                @if (isFavorite(card.pokemonId)) {
+                @if (isFavorite(card.pokemonId) && savedTeamMembers().length > 0) {
                   <button
                     type="button"
                     class="compare-btn pool-compare-btn"
