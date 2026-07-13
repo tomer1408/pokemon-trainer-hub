@@ -115,10 +115,18 @@ export class StarterQuiz {
     this.quizRecommendation.getRecommendations(profile).subscribe({
       next: (recs) => {
         this.recommendations.set(recs);
-        this.phase.set('results');
-        // Real, server-side record tied to the logged-in user — not client
-        // storage. Fire-and-forget: nothing on this screen depends on it.
-        this.profileService.markStarterQuizCompleted().subscribe();
+        // Real, server-side record tied to the logged-in user — waited on
+        // (not fire-and-forget) before showing results, so the flag is
+        // durably saved before the user can click through and log out.
+        // Logout is a full-page navigation to Auth0, which aborts any
+        // still-in-flight request — firing this and immediately moving on
+        // let that abort the PATCH before it ever reached the database,
+        // so a genuinely completed quiz could still prompt again next
+        // login. markStarterQuizCompleted() already resolves (never
+        // throws) even on failure, so this can't get the user stuck here.
+        this.profileService.markStarterQuizCompleted().subscribe(() => {
+          this.phase.set('results');
+        });
       },
       error: () => this.phase.set('error'),
     });

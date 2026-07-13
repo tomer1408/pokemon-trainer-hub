@@ -65,6 +65,17 @@
         </div>
       </div>
 
+      @if (showQuizNudge()) {
+        <div class="quiz-nudge">
+          <span class="quiz-nudge-icon">?</span>
+          <div class="quiz-nudge-copy">
+            <span class="quiz-nudge-title">Take the Starter Quiz</span>
+            <span class="quiz-nudge-sub">A few quick questions get you personalized Pok&eacute;mon recommendations for your team.</span>
+          </div>
+          <a routerLink="/starter-quiz" class="quiz-nudge-cta">Take the Quiz</a>
+        </div>
+      }
+
       <!-- ===== DREAM TEAM PREVIEW ===== -->
       <div class="team-card">
         <div class="card-head">

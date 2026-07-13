@@ -95,6 +95,15 @@ export class Home {
   );
   protected readonly trainerInitial = computed(() => this.trainerName().charAt(0).toUpperCase());
 
+  // Checks the real server-side flag, not a client "skip" — a trainer who
+  // skipped the quiz for this tab session (starterQuizGuard) still sees
+  // this on every visit to Home, and it only disappears once the quiz is
+  // genuinely completed (PATCH /api/profile/starter-quiz has landed).
+  protected readonly showQuizNudge = computed(() => {
+    const p = this.profile();
+    return !!p && !p.hasCompletedStarterQuiz;
+  });
+
   private readonly avatarPokemonId = computed(() => this.profile()?.avatarPokemonId ?? null);
   protected readonly avatarSprite = toSignal(
     toObservable(this.avatarPokemonId).pipe(
