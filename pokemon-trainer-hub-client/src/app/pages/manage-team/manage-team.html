@@ -10,6 +10,105 @@
             Drag Pok&eacute;mon to build your line-up &mdash; reorder your team or pull favorites in and out.
           </p>
         </div>
+
+        <!-- Scouting Bench — drag any two cards here for a non-destructive
+             side-by-side read; nothing here ever leaves its team/favorite/
+             bench spot just by being scouted. -->
+        <div class="scout-card">
+          <div class="scout-lead">
+            <span class="scout-title">Scouting Bench</span>
+            <span class="scout-sub">Drag any two Pok&eacute;mon here to size them up</span>
+          </div>
+          <div class="scout-slots-row">
+            <div
+              class="scout-slot-wrap"
+              [class.drag-over]="overScout() === 0"
+              (dragover)="$event.preventDefault(); onScoutDragOver(0)"
+              (dragleave)="onScoutDragLeave(0)"
+              (drop)="$event.preventDefault(); $event.stopPropagation(); onScoutDrop(0)"
+            >
+              @if (scoutA(); as s) {
+                <div class="scout-filled">
+                  <button type="button" class="scout-clear-btn" (click)="clearScout(0)">&times;</button>
+                  <div class="scout-top">
+                    <div class="scout-art" [style.background]="typeColor(s.types[0]) + '22'">
+                      @if (s.spriteUrl) { <img [src]="s.spriteUrl" alt="{{ s.pokemonName }}" /> }
+                    </div>
+                    <div class="scout-id-col">
+                      <span class="scout-name">{{ s.pokemonName }}</span>
+                      @if (s.types[0]; as type) {
+                        <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                          <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
+                        </span>
+                      }
+                    </div>
+                    <div class="scout-meta-col">
+                      <span class="scout-pwr">{{ s.baseExperience }}</span>
+                    </div>
+                  </div>
+                  <div class="scout-stats-col">
+                    @for (row of scoutStatsFor(0); track row.label) {
+                      <div class="scout-stat-cell">
+                        <span class="scout-stat-label">{{ row.label }}</span>
+                        <div class="scout-stat-track"><div class="scout-stat-fill" [class.wins]="row.wins" [style.width.%]="row.pct"></div></div>
+                        <span class="scout-stat-val" [class.wins]="row.wins">{{ row.value }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              } @else {
+                <div class="scout-empty">
+                  <span class="scout-plus">+</span>
+                  <span>Drop first Pok&eacute;mon</span>
+                </div>
+              }
+            </div>
+
+            <div
+              class="scout-slot-wrap"
+              [class.drag-over]="overScout() === 1"
+              (dragover)="$event.preventDefault(); onScoutDragOver(1)"
+              (dragleave)="onScoutDragLeave(1)"
+              (drop)="$event.preventDefault(); $event.stopPropagation(); onScoutDrop(1)"
+            >
+              @if (scoutB(); as s) {
+                <div class="scout-filled">
+                  <button type="button" class="scout-clear-btn" (click)="clearScout(1)">&times;</button>
+                  <div class="scout-top">
+                    <div class="scout-art" [style.background]="typeColor(s.types[0]) + '22'">
+                      @if (s.spriteUrl) { <img [src]="s.spriteUrl" alt="{{ s.pokemonName }}" /> }
+                    </div>
+                    <div class="scout-id-col">
+                      <span class="scout-name">{{ s.pokemonName }}</span>
+                      @if (s.types[0]; as type) {
+                        <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                          <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
+                        </span>
+                      }
+                    </div>
+                    <div class="scout-meta-col">
+                      <span class="scout-pwr">{{ s.baseExperience }}</span>
+                    </div>
+                  </div>
+                  <div class="scout-stats-col">
+                    @for (row of scoutStatsFor(1); track row.label) {
+                      <div class="scout-stat-cell">
+                        <span class="scout-stat-label">{{ row.label }}</span>
+                        <div class="scout-stat-track"><div class="scout-stat-fill" [class.wins]="row.wins" [style.width.%]="row.pct"></div></div>
+                        <span class="scout-stat-val" [class.wins]="row.wins">{{ row.value }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              } @else {
+                <div class="scout-empty">
+                  <span class="scout-plus">+</span>
+                  <span>Drop second Pok&eacute;mon</span>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Team row -->
@@ -221,11 +320,6 @@
                   <span class="stats-panel-label">Team Power</span>
                   <span class="stats-panel-value">{{ draftTeamPower() }}</span>
                 </div>
-                <div class="stats-panel-row">
-                  <span class="stats-panel-label">Tier</span>
-                  <span class="tier-pill">{{ draftTeamTier() }}</span>
-                </div>
-
                 <div class="stats-panel-coverage-title">Type Coverage</div>
                 <div class="segmented-bar">
                   @for (seg of draftTypeSegments(); track seg.type) {

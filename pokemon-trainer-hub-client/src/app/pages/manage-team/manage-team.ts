@@ -4,7 +4,7 @@ import { forkJoin } from 'rxjs';
 import { TeamService } from '../../core/team';
 import { FavoritesService } from '../../core/favorites';
 import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
-import { getTeamPower, getTeamTier, getTypeSegments } from '../../shared/team-power';
+import { getTeamPower, getTypeSegments } from '../../shared/team-power';
 import { ThemeService } from '../../shared/theme';
 import { PokemonDetailModal } from '../../shared/pokemon-detail-modal/pokemon-detail-modal';
 import { LoadingScreen } from '../../shared/loading-screen/loading-screen';
@@ -82,6 +82,14 @@ export class ManageTeam implements AfterViewInit {
   protected readonly overBench = signal(false);
   protected readonly overTrash = signal(false);
 
+  // ---- Scouting Bench — non-destructive drag-in comparison of any two
+  // cards already on the page (team/favorite/bench). Dropping here never
+  // removes the card from wherever it came from — it's a reference copy
+  // purely for a quick side-by-side read.
+  protected readonly scoutA = signal<ComparablePokemon | null>(null);
+  protected readonly scoutB = signal<ComparablePokemon | null>(null);
+  protected readonly overScout = signal<0 | 1 | null>(null);
+
   protected readonly showSaveConfirm = signal(false);
   protected readonly showRevertConfirm = signal(false);
   protected readonly showLeaveConfirm = signal(false);
@@ -158,11 +166,10 @@ export class ManageTeam implements AfterViewInit {
 
   // Live preview of the draft team's stats — recomputed from teamDraft(),
   // not savedTeam(), using the exact same shared calculations as Home/My
-  // Team, so dragging a card in updates Power/tier/coverage immediately,
-  // before Save Changes — lets a trainer see the effect of a change before
+  // Team, so dragging a card in updates Power/coverage immediately, before
+  // Save Changes — lets a trainer see the effect of a change before
   // committing to it.
   protected readonly draftTeamPower = computed(() => getTeamPower(this.teamDraft()));
-  protected readonly draftTeamTier = computed(() => getTeamTier(this.teamDraft().length));
   protected readonly draftTypeSegments = computed(() => getTypeSegments(this.teamDraft()));
 
   typeColor(type: string): string {
@@ -231,6 +238,51 @@ export class ManageTeam implements AfterViewInit {
       this.overFav.set(false);
       this.overBench.set(false);
     }
+  }
+
+  // ---- Scouting Bench ----
+
+  onScoutDragOver(index: 0 | 1): void {
+    if (this.overScout() !== index) this.overScout.set(index);
+  }
+
+  onScoutDragLeave(index: 0 | 1): void {
+    if (this.overScout() === index) this.overScout.set(null);
+  }
+
+  onScoutDrop(index: 0 | 1): void {
+    const item = this.drag()?.item;
+    this.overScout.set(null);
+    if (!item) return;
+    if (index === 0) this.scoutA.set(item);
+    else this.scoutB.set(item);
+  }
+
+  clearScout(index: 0 | 1): void {
+    if (index === 0) this.scoutA.set(null);
+    else this.scoutB.set(null);
+  }
+
+  private static readonly SCOUT_STAT_KEYS = ['hp', 'attack', 'defense'] as const;
+  private static readonly SCOUT_STAT_LABELS: Record<string, string> = { hp: 'HP', attack: 'ATK', defense: 'DEF' };
+
+  // A small 3-stat read (HP/ATK/DEF) per scouted side, each row colored
+  // toward whichever side currently wins it — mirrors the mockup's own
+  // compact per-card comparison exactly (no separate stat table).
+  scoutStatsFor(which: 0 | 1): { label: string; value: number; pct: number; wins: boolean }[] {
+    const self = which === 0 ? this.scoutA() : this.scoutB();
+    const other = which === 0 ? this.scoutB() : this.scoutA();
+    if (!self) return [];
+    return ManageTeam.SCOUT_STAT_KEYS.map((key) => {
+      const value = self.stats.find((s) => s.name === key)?.value ?? 0;
+      const otherValue = other?.stats.find((s) => s.name === key)?.value ?? null;
+      return {
+        label: ManageTeam.SCOUT_STAT_LABELS[key],
+        value,
+        pct: Math.min(100, Math.round((value / 150) * 100)),
+        wins: otherValue != null && value > otherValue,
+      };
+    });
   }
 
   // Drag-and-drop only ever touches teamDraft/benchDraft — draftState — and
