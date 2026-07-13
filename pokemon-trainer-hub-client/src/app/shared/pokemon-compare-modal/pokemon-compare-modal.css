@@ -138,18 +138,6 @@
   text-transform: capitalize;
 }
 
-.close-btn {
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1px solid var(--border-soft);
-  background: var(--overlay-05);
-  color: var(--text-muted);
-  font-size: 15px;
-  cursor: pointer;
-}
-
 /* ---- VS row ---- */
 .vs-row {
   display: grid;
