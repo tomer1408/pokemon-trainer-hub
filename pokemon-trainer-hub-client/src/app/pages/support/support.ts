@@ -57,6 +57,14 @@ export class Support {
   protected readonly topicErr = computed(() => this.tried() && !this.form().topic);
   protected readonly msgErr = computed(() => this.tried() && !this.form().message.trim());
 
+  // Plain <a href="#faq">/<a href="#contact"> looked right but actually broke:
+  // with <base href="/"> in index.html, a fragment-only href resolves against
+  // that base, not the current path, so clicking it from /support navigated
+  // to "/#faq" (the Landing route) instead of scrolling within this page.
+  scrollToSection(id: string): void {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   toggleFaq(index: number): void {
     this.openFaqIndex.set(this.openFaqIndex() === index ? null : index);
   }

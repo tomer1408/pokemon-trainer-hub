@@ -132,10 +132,13 @@
   align-items: center;
   background: linear-gradient(120deg, var(--violet-deep), var(--cyan));
   color: #fff;
+  border: none;
   border-radius: 100px;
   padding: 12px 22px;
   font-weight: 800;
   font-size: 13.5px;
+  font-family: inherit;
+  cursor: pointer;
 }
 
 .hero-secondary {
@@ -148,6 +151,8 @@
   padding: 12px 22px;
   font-weight: 700;
   font-size: 13.5px;
+  font-family: inherit;
+  cursor: pointer;
 }
 
 /* ---- Shared card ---- */
