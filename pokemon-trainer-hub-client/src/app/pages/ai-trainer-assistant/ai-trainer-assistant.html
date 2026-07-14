@@ -43,6 +43,7 @@
                 <span class="typing-dot" [style.animation-delay.s]="0"></span>
                 <span class="typing-dot" [style.animation-delay.s]="0.15"></span>
                 <span class="typing-dot" [style.animation-delay.s]="0.3"></span>
+                <span class="typing-message">{{ thinkingMessage() }}</span>
               </div>
             } @else if (analysisError(); as errMsg) {
               <p class="bubble-text">{{ errMsg }}</p>
@@ -127,6 +128,7 @@
               <span class="typing-dot" [style.animation-delay.s]="0"></span>
               <span class="typing-dot" [style.animation-delay.s]="0.15"></span>
               <span class="typing-dot" [style.animation-delay.s]="0.3"></span>
+              <span class="typing-message">{{ thinkingMessage() }}</span>
             </div>
           </div>
         }

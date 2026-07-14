@@ -281,6 +281,13 @@
   animation: typingBounce 1.2s ease-in-out infinite;
 }
 
+.typing-message {
+  margin-inline-start: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
 .suggest-row {
   display: flex;
   flex-wrap: wrap;

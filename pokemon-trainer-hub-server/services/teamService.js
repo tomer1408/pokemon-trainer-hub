@@ -49,26 +49,34 @@ async function nextPosition(auth0UserId) {
 
 // Adds a Pokémon to the team. Throws ServiceError('DUPLICATE' | 'TEAM_FULL' | 'NOT_FOUND' | 'UPSTREAM_ERROR').
 async function addToTeam(auth0UserId, pokemonId) {
-  const existing = await prisma.dreamTeamMember.findUnique({
-    where: { auth0UserId_pokemonId: { auth0UserId, pokemonId } },
-  });
+  // The duplicate-check, team-size count, next-slot lookup, and Pokémon
+  // lookup (PokeAPI, usually cached) are all independent of each other's
+  // result, so they run concurrently instead of four round trips in a row —
+  // on production (Azure SQL over a real network, not localhost) each extra
+  // sequential round trip is real added latency.
+  const [existing, currentCount, position, pokemonResult] = await Promise.all([
+    prisma.dreamTeamMember.findUnique({ where: { auth0UserId_pokemonId: { auth0UserId, pokemonId } } }),
+    prisma.dreamTeamMember.count({ where: { auth0UserId } }),
+    nextPosition(auth0UserId),
+    fetchPokemonDetail(pokemonId).then(
+      (value) => ({ ok: true, value }),
+      (err) => ({ ok: false, err }),
+    ),
+  ]);
 
   if (existing) {
     throw new ServiceError('DUPLICATE', `${existing.pokemonName} is already in your team.`);
   }
 
-  const currentCount = await prisma.dreamTeamMember.count({ where: { auth0UserId } });
   if (currentCount >= MAX_TEAM_SIZE) {
     throw new ServiceError('TEAM_FULL', 'Your Dream Team is already full (5/5).');
   }
 
-  let pokemon;
-  try {
-    pokemon = await fetchPokemonDetail(pokemonId);
-  } catch (err) {
+  if (!pokemonResult.ok) {
     throw new ServiceError('UPSTREAM_ERROR', 'PokeAPI is unavailable. Please try again later.');
   }
 
+  const pokemon = pokemonResult.value;
   if (!pokemon) {
     throw new ServiceError('NOT_FOUND', 'Pokémon not found.');
   }
@@ -79,7 +87,7 @@ async function addToTeam(auth0UserId, pokemonId) {
       pokemonId: pokemon.id,
       pokemonName: pokemon.name,
       spriteUrl: pokemon.spriteUrl,
-      position: await nextPosition(auth0UserId),
+      position,
     },
   });
 

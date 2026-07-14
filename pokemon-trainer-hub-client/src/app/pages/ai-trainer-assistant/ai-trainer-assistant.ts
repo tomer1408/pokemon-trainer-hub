@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs';
@@ -10,6 +10,7 @@ import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
 import { ThemeService } from '../../shared/theme';
 import { PokemonDetailModal } from '../../shared/pokemon-detail-modal/pokemon-detail-modal';
 import { TeamSwapModal } from '../../shared/team-swap-modal/team-swap-modal';
+import { AI_THINKING_MESSAGES } from '../../shared/ai-thinking-messages';
 
 const MAX_TEAM_SIZE = 5;
 
@@ -80,8 +81,26 @@ export class AiTrainerAssistant {
 
   protected readonly typeColors = TYPE_COLORS;
 
+  // A real Gemini reply can take anywhere from ~2 to ~15 seconds — this
+  // cycles a status message under the typing dots (both tabs share it) so a
+  // slow reply reads as "still working" instead of a bubble frozen on dots.
+  protected readonly isBusy = computed(() => this.analysisLoading() || this.isThinking());
+  private readonly thinkingMessageIndex = signal(0);
+  protected readonly thinkingMessage = computed(() => AI_THINKING_MESSAGES[this.thinkingMessageIndex()]);
+
   constructor() {
     this.runAnalysis();
+
+    effect((onCleanup) => {
+      if (!this.isBusy()) {
+        this.thinkingMessageIndex.set(0);
+        return;
+      }
+      const timer = setInterval(() => {
+        this.thinkingMessageIndex.update((i) => (i + 1) % AI_THINKING_MESSAGES.length);
+      }, 1800);
+      onCleanup(() => clearInterval(timer));
+    });
   }
 
   setTabAnalyze(): void {

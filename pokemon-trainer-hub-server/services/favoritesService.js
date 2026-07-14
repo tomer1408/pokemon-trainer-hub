@@ -34,21 +34,27 @@ async function getFavorites(auth0UserId) {
 
 // Adds a Pokémon to favorites. Throws ServiceError('DUPLICATE' | 'NOT_FOUND' | 'UPSTREAM_ERROR').
 async function addFavorite(auth0UserId, pokemonId) {
-  const existing = await prisma.favorite.findUnique({
-    where: { auth0UserId_pokemonId: { auth0UserId, pokemonId } },
-  });
+  // The duplicate-check (DB) and the Pokémon lookup (PokeAPI, usually cached)
+  // don't depend on each other's result, so they run concurrently instead of
+  // one-after-another — on production (Azure SQL over a real network, not
+  // localhost) each extra sequential round trip is real added latency.
+  const [existing, pokemonResult] = await Promise.all([
+    prisma.favorite.findUnique({ where: { auth0UserId_pokemonId: { auth0UserId, pokemonId } } }),
+    fetchPokemonDetail(pokemonId).then(
+      (value) => ({ ok: true, value }),
+      (err) => ({ ok: false, err }),
+    ),
+  ]);
 
   if (existing) {
     throw new ServiceError('DUPLICATE', `${existing.pokemonName} is already in your favorites.`);
   }
 
-  let pokemon;
-  try {
-    pokemon = await fetchPokemonDetail(pokemonId);
-  } catch (err) {
+  if (!pokemonResult.ok) {
     throw new ServiceError('UPSTREAM_ERROR', 'PokeAPI is unavailable. Please try again later.');
   }
 
+  const pokemon = pokemonResult.value;
   if (!pokemon) {
     throw new ServiceError('NOT_FOUND', 'Pokémon not found.');
   }

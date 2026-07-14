@@ -55,13 +55,40 @@ const TeamNameSchema = z.object({
 });
 
 // Generous but bounded — a hung Gemini call shouldn't hang the request
-// forever; withTimeout() below rejects and the caller falls back.
-const TEAM_NAME_TIMEOUT_MS = 12000;
+// forever; withTimeout() below rejects and the caller falls back. Shared by
+// every Gemini-backed feature (team names, team analysis, description
+// search, chat), not just team names, despite the name.
+const AI_CALL_TIMEOUT_MS = 12000;
+
+// A handful of real synonyms per type, for queryDescription's fallback below
+// — a lightweight version of the keyword matching this feature used before
+// it was rewritten to use a real LLM. Only used when Gemini itself is too
+// slow or unavailable.
+const TYPE_KEYWORDS = {
+  fire: ['fire', 'flame', 'burn', 'hot', 'blaze'],
+  water: ['water', 'aqua', 'swim', 'ocean', 'sea', 'wave'],
+  electric: ['electric', 'shock', 'thunder', 'lightning', 'volt', 'spark'],
+  grass: ['grass', 'plant', 'leaf', 'nature', 'forest'],
+  ice: ['ice', 'snow', 'frost', 'cold', 'freeze'],
+  fighting: ['fight', 'punch', 'kick', 'martial', 'brawl'],
+  poison: ['poison', 'toxic', 'venom'],
+  ground: ['ground', 'earth', 'dig', 'sand', 'dirt'],
+  flying: ['fly', 'flying', 'wing', 'sky', 'air'],
+  psychic: ['psychic', 'mind', 'telekinetic', 'psi'],
+  bug: ['bug', 'insect'],
+  rock: ['rock', 'stone', 'boulder'],
+  ghost: ['ghost', 'spooky', 'spirit', 'phantom'],
+  dragon: ['dragon', 'wyvern'],
+  dark: ['dark', 'shadow', 'evil', 'night'],
+  steel: ['steel', 'metal', 'iron'],
+  fairy: ['fairy', 'cute', 'magical'],
+  normal: ['normal', 'balanced', 'all-round'],
+};
 
 function withTimeout(promise, ms) {
   return Promise.race([
     promise,
-    new Promise((_, reject) => setTimeout(() => reject(new Error('Team name generation timed out')), ms)),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('AI call timed out')), ms)),
   ]);
 }
 
@@ -76,41 +103,103 @@ function buildModel() {
   });
 }
 
+// Deterministic stand-in for analyzeTeam below, used only when Gemini is too
+// slow (past AI_CALL_TIMEOUT_MS) or unavailable — same priority the prompt
+// itself asks the model to use (an uncovered type first, else the team's
+// strongest theme), computed directly from the real team instead of asking
+// an LLM to restate it.
+function buildAnalyzeFallback(team, presentTypes, missingTypes) {
+  if (missingTypes.length > 0) {
+    const type = missingTypes[0];
+    return {
+      type,
+      reasoning: `Your team has no ${type}-type coverage yet — adding one would round things out nicely.`,
+    };
+  }
+  const strongest = team.length ? team.reduce((a, b) => (b.baseExperience > a.baseExperience ? b : a)) : null;
+  const type = strongest ? strongest.types[0] : 'normal';
+  return {
+    type,
+    reasoning: `Every type is already covered, so doubling down on ${type} would reinforce your team's strongest theme.`,
+  };
+}
+
 // Real LLM reasoning over the trainer's actual Dream Team (types/power/
 // stats) — analogous to the old rule-based "missing type" logic, but the
 // model decides and explains it instead of a canned sentence template.
-async function analyzeTeam(team) {
+// Falls back to buildAnalyzeFallback() above (source: 'fallback') if Gemini
+// doesn't answer within AI_CALL_TIMEOUT_MS or errors outright — same
+// timeout+fallback pattern already used by generateTeamNames below.
+// `deps` is test-only dependency injection (`invoke`/`timeoutMs`), same
+// convention as generateTeamNames.
+async function analyzeTeam(team, deps = {}) {
   const presentTypes = [...new Set(team.flatMap((m) => m.types))];
   const missingTypes = POKEMON_TYPES.filter((t) => !presentTypes.includes(t));
+  const timeoutMs = deps.timeoutMs ?? AI_CALL_TIMEOUT_MS;
+  const invoke = deps.invoke ?? ((prompt) => buildModel().withStructuredOutput(RecommendationSchema).invoke(prompt));
 
-  const model = buildModel().withStructuredOutput(RecommendationSchema);
   const teamSummary = team.length
     ? team.map((m) => `${m.pokemonName} (types: ${m.types.join('/')}, power: ${m.baseExperience})`).join('; ')
     : 'empty — no Pokémon yet';
 
-  const result = await model.invoke(
-    `You are the Pokémon Trainer Hub's AI Trainer Assistant, talking directly to a trainer.\n` +
-    `Their real Dream Team: ${teamSummary}\n` +
-    `Types already covered: ${presentTypes.join(', ') || 'none'}\n` +
-    `Types with no coverage: ${missingTypes.join(', ') || 'none'}\n\n` +
-    `Pick exactly ONE Pokémon type that would most improve this team right now — prefer a ` +
-    `type with no coverage; if every type is already covered, pick whichever type would ` +
-    `most reinforce the team's strongest theme. Write a short (1-2 sentence), encouraging, ` +
-    `trainer-facing reason for the pick.`,
-  );
-  return result;
+  try {
+    const result = await withTimeout(
+      invoke(
+        `You are the Pokémon Trainer Hub's AI Trainer Assistant, talking directly to a trainer.\n` +
+        `Their real Dream Team: ${teamSummary}\n` +
+        `Types already covered: ${presentTypes.join(', ') || 'none'}\n` +
+        `Types with no coverage: ${missingTypes.join(', ') || 'none'}\n\n` +
+        `Pick exactly ONE Pokémon type that would most improve this team right now — prefer a ` +
+        `type with no coverage; if every type is already covered, pick whichever type would ` +
+        `most reinforce the team's strongest theme. Write a short (1-2 sentence), encouraging, ` +
+        `trainer-facing reason for the pick.`,
+      ),
+      timeoutMs,
+    );
+    return { ...result, source: 'ai' };
+  } catch (err) {
+    console.error('Team analysis failed, using fallback:', err.message);
+    return { ...buildAnalyzeFallback(team, presentTypes, missingTypes), source: 'fallback' };
+  }
+}
+
+// Deterministic stand-in for queryDescription below — a lightweight keyword
+// match (real substring search against each type's own name plus a few
+// common synonyms), only used when Gemini is too slow or unavailable.
+function buildQueryFallback(text) {
+  const lower = text.toLowerCase();
+  for (const [type, keywords] of Object.entries(TYPE_KEYWORDS)) {
+    if (keywords.some((kw) => lower.includes(kw))) {
+      return { type, reasoning: `"${text}" sounds like a great match for ${type}-type Pokémon.` };
+    }
+  }
+  return {
+    type: 'normal',
+    reasoning: "Couldn't pin down an exact type from that description, so here's a well-rounded Normal-type pick.",
+  };
 }
 
 // Real LLM interpretation of free text ("fast and electric") instead of the
-// old fixed keyword-substring list.
-async function queryDescription(text) {
-  const model = buildModel().withStructuredOutput(RecommendationSchema);
-  const result = await model.invoke(
-    `A Pokémon trainer described what kind of Pokémon they want: "${text}"\n` +
-    `Pick exactly ONE of the 18 canonical Pokémon types that best matches this description, ` +
-    `and write a short (1-2 sentence) reason that references what they described.`,
-  );
-  return result;
+// old fixed keyword-substring list. Falls back to buildQueryFallback() above
+// (source: 'fallback') on a timeout or Gemini error.
+async function queryDescription(text, deps = {}) {
+  const timeoutMs = deps.timeoutMs ?? AI_CALL_TIMEOUT_MS;
+  const invoke = deps.invoke ?? ((prompt) => buildModel().withStructuredOutput(RecommendationSchema).invoke(prompt));
+
+  try {
+    const result = await withTimeout(
+      invoke(
+        `A Pokémon trainer described what kind of Pokémon they want: "${text}"\n` +
+        `Pick exactly ONE of the 18 canonical Pokémon types that best matches this description, ` +
+        `and write a short (1-2 sentence) reason that references what they described.`,
+      ),
+      timeoutMs,
+    );
+    return { ...result, source: 'ai' };
+  } catch (err) {
+    console.error('Description query failed, using fallback:', err.message);
+    return { ...buildQueryFallback(text), source: 'fallback' };
+  }
 }
 
 // Always the real, current strongest Pokémon of a type from PokeAPI (via
@@ -127,27 +216,49 @@ async function getStrongestOfType(type) {
   return valid.reduce((a, b) => (b.baseExperience > a.baseExperience ? b : a));
 }
 
+// Honest, non-AI stand-in when Gemini itself doesn't answer in time — unlike
+// analyzeTeam/queryDescription above, open-ended chat has no real data to
+// compute a substitute answer from, so this just says so plainly instead of
+// guessing at a reply.
+function buildChatFallback() {
+  return {
+    text: "I'm having trouble thinking right now — please try again in a moment, or check out the Explorer or My Team pages in the meantime!",
+    pokemonName: null,
+  };
+}
+
 // Real, open-ended multi-turn conversation — unlike analyzeTeam/
 // queryDescription, the reply text itself is free-form, not a fixed shape.
 // `history` is [{ role: 'user' | 'assistant', text }, ...], oldest first.
 // Returns { text, pokemon }, where pokemon is only ever real PokeAPI data
-// (or null) — see ChatReplySchema/CHAT_SYSTEM_PROMPT above for why.
-async function chatWithAssistant(history) {
+// (or null) — see ChatReplySchema/CHAT_SYSTEM_PROMPT above for why. Falls
+// back to buildChatFallback() above on a timeout or Gemini error, same
+// pattern as analyzeTeam/queryDescription/generateTeamNames.
+async function chatWithAssistant(history, deps = {}) {
   const recent = history.slice(-MAX_CHAT_HISTORY);
   const messages = [
     new SystemMessage(CHAT_SYSTEM_PROMPT),
     ...recent.map((m) => (m.role === 'user' ? new HumanMessage(m.text) : new AIMessage(m.text))),
   ];
+  const timeoutMs = deps.timeoutMs ?? AI_CALL_TIMEOUT_MS;
+  const invoke = deps.invoke ?? ((msgs) => buildModel().withStructuredOutput(ChatReplySchema).invoke(msgs));
 
-  const model = buildModel().withStructuredOutput(ChatReplySchema);
-  const result = await model.invoke(messages);
+  let result;
+  let source = 'ai';
+  try {
+    result = await withTimeout(invoke(messages), timeoutMs);
+  } catch (err) {
+    console.error('Assistant chat failed, using fallback:', err.message);
+    result = buildChatFallback();
+    source = 'fallback';
+  }
 
   let pokemon = null;
   if (result.pokemonName) {
     pokemon = await fetchPokemonDetail(result.pokemonName).catch(() => null);
   }
 
-  return { text: result.text, pokemon };
+  return { text: result.text, pokemon, source };
 }
 
 // Default model call, split out so tests can inject a fake `invoke` below
@@ -169,7 +280,7 @@ function invokeTeamNameModel(prompt) {
 async function generateTeamNames(team, style, deps = {}) {
   const safeStyle = VALID_STYLES.includes(style) ? style : 'Epic';
   const invoke = deps.invoke ?? invokeTeamNameModel;
-  const timeoutMs = deps.timeoutMs ?? TEAM_NAME_TIMEOUT_MS;
+  const timeoutMs = deps.timeoutMs ?? AI_CALL_TIMEOUT_MS;
 
   try {
     const teamSummary = team

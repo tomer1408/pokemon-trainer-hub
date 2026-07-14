@@ -9,6 +9,7 @@ import { FavoritesService } from '../../core/favorites';
 import { PokemonDetailModal } from '../pokemon-detail-modal/pokemon-detail-modal';
 import { TeamSwapModal } from '../team-swap-modal/team-swap-modal';
 import { ThemeService } from '../theme';
+import { AI_THINKING_MESSAGES } from '../ai-thinking-messages';
 
 const MAX_TEAM_SIZE = 5;
 
@@ -86,11 +87,28 @@ export class AssistantChat {
   protected readonly swapCandidateId = signal<number | null>(null);
   protected readonly compareCandidateId = signal<number | null>(null);
 
+  // A real Gemini reply can take anywhere from ~2 to ~15 seconds — this
+  // cycles a status message under the typing dots so a slow reply reads as
+  // "still working" instead of a bubble frozen on dots.
+  private readonly thinkingMessageIndex = signal(0);
+  protected readonly thinkingMessage = computed(() => AI_THINKING_MESSAGES[this.thinkingMessageIndex()]);
+
   constructor() {
     effect(() => {
       this.messages();
       this.thinking();
       queueMicrotask(() => this.scrollToBottom());
+    });
+
+    effect((onCleanup) => {
+      if (!this.thinking()) {
+        this.thinkingMessageIndex.set(0);
+        return;
+      }
+      const timer = setInterval(() => {
+        this.thinkingMessageIndex.update((i) => (i + 1) % AI_THINKING_MESSAGES.length);
+      }, 1800);
+      onCleanup(() => clearInterval(timer));
     });
   }
 
