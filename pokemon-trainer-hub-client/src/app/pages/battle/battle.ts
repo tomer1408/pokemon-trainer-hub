@@ -168,6 +168,13 @@ interface BattleMon {
   bestMove: string | null;
 }
 
+const BATTLE_LOADING_TIPS = [
+  'Scouting the arena…',
+  'Sizing up the competition…',
+  'Sharpening battle strategies…',
+  'Checking type matchups…',
+];
+
 type Phase = 'preview' | 'picking' | 'suspense' | 'revealed' | 'matchOver';
 type Winner = 'you' | 'opp';
 type Reason = 'Type advantage' | 'Power advantage' | 'Coin flip';
@@ -218,6 +225,7 @@ export class Battle implements OnDestroy {
   private readonly battleHistoryService = inject(BattleHistoryService);
 
   protected readonly isLoading = signal(true);
+  protected readonly loadingTips = BATTLE_LOADING_TIPS;
   protected readonly hasError = signal(false);
 
   protected readonly yourTeam = signal<BattleMon[]>([]);

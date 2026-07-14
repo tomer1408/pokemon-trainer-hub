@@ -189,25 +189,27 @@
           }
         </div>
 
-        <div class="actions-row">
-          <button type="button" class="fav-action-btn" [class.active]="isFavorite" (click)="toggleFavorite.emit()">
-            {{ isFavorite ? '♥ Favorited' : '♡ Add to Favorites' }}
-          </button>
-          @if (isOnTeam) {
-            <button type="button" class="add-team-btn remove-team-btn" (click)="requestRemoveFromTeam()">
-              Remove from Team
+        @if (!readOnly) {
+          <div class="actions-row">
+            <button type="button" class="fav-action-btn" [class.active]="isFavorite" (click)="toggleFavorite.emit()">
+              {{ isFavorite ? '♥ Favorited' : '♡ Add to Favorites' }}
             </button>
-          } @else {
-            <button type="button" class="add-team-btn" (click)="addToTeam.emit()">
-              {{ teamFull ? 'Compare' : 'Add to Team' }}
+            @if (isOnTeam) {
+              <button type="button" class="add-team-btn remove-team-btn" (click)="requestRemoveFromTeam()">
+                Remove from Team
+              </button>
+            } @else {
+              <button type="button" class="add-team-btn" (click)="addToTeam.emit()">
+                {{ teamFull ? 'Compare' : 'Add to Team' }}
+              </button>
+            }
+          </div>
+
+          @if (!isOnTeam && !teamFull && hasTeam) {
+            <button type="button" class="compare-team-btn" (click)="compare.emit()">
+              Compare with My Team
             </button>
           }
-        </div>
-
-        @if (!isOnTeam && !teamFull && hasTeam) {
-          <button type="button" class="compare-team-btn" (click)="compare.emit()">
-            Compare with My Team
-          </button>
         }
       } @else {
         <div class="error-state">Couldn't load this Pok&eacute;mon. Please try again.</div>

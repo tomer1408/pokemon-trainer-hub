@@ -37,7 +37,7 @@
     }
 
     @if (phase() === 'loading') {
-      <app-loading-screen [isLight]="theme.isLight()" size="lg" message="Finding your matches&hellip;" />
+      <app-loading-screen [isLight]="theme.isLight()" [fullScreen]="true" size="lg" [messages]="loadingTips" />
     }
 
     @if (phase() === 'error') {

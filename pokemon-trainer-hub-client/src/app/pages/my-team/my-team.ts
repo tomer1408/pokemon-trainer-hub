@@ -23,6 +23,13 @@ import { TeamNameGeneratorModal } from '../../shared/team-name-generator-modal/t
 
 const MAX_TEAM_SIZE = 5;
 
+const MY_TEAM_LOADING_TIPS = [
+  'Assembling your Dream Team…',
+  'Calculating team power…',
+  'Checking type coverage…',
+  'Reviewing your squad…',
+];
+
 @Component({
   selector: 'app-my-team',
   imports: [RouterLink, PokemonDetailModal, LoadingScreen, TeamNameGeneratorModal],
@@ -86,6 +93,7 @@ export class MyTeam implements AfterViewInit {
   );
 
   protected readonly isLoading = computed(() => this.teamResult() === undefined);
+  protected readonly loadingTips = MY_TEAM_LOADING_TIPS;
 
   constructor() {
     // Loading → loaded swaps in very different content heights, but the

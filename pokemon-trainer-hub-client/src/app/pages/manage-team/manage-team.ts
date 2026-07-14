@@ -12,6 +12,13 @@ import { TeamSwapModal, ComparablePokemon, SwapMode } from '../../shared/team-sw
 
 const MAX_TEAM_SIZE = 5;
 
+const MANAGE_TEAM_LOADING_TIPS = [
+  'Rearranging your roster…',
+  'Checking bench strength…',
+  'Syncing team slots…',
+  'Polishing team badges…',
+];
+
 type DragSource = 'team' | 'fav' | 'bench';
 interface DragState {
   item: ComparablePokemon;
@@ -67,6 +74,7 @@ export class ManageTeam implements AfterViewInit {
   protected readonly theme = inject(ThemeService);
 
   protected readonly isLoading = signal(true);
+  protected readonly loadingTips = MANAGE_TEAM_LOADING_TIPS;
 
   // ---- savedState ----
   private readonly savedTeam = signal<ComparablePokemon[]>([]);

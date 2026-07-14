@@ -12,6 +12,13 @@ import { LoadingScreen } from '../../shared/loading-screen/loading-screen';
 import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
 import { clearStarterQuizSkip } from '../../shared/quiz/quiz-completion';
 
+const SETTINGS_LOADING_TIPS = [
+  'Loading your preferences…',
+  'Syncing your settings…',
+  'Checking your theme…',
+  'Applying your preferences…',
+];
+
 type ProfileFetchStatus = 'ok' | 'missing' | 'error';
 
 // Matches Settings.dc.html, with one structural change: Theme, Colorblind
@@ -56,6 +63,7 @@ export class Settings {
   );
   protected readonly profile = computed(() => this.profileResult()?.profile ?? null);
   protected readonly isLoading = computed(() => this.profileResult() === undefined);
+  protected readonly loadingTips = SETTINGS_LOADING_TIPS;
   protected readonly hasError = computed(() => this.profileResult()?.status === 'error');
   protected readonly hasNoProfile = computed(() => this.profileResult()?.status === 'missing');
 

@@ -15,6 +15,13 @@ import { ThemeService } from '../../shared/theme';
 import { LoadingScreen } from '../../shared/loading-screen/loading-screen';
 import { TeamNameGeneratorModal } from '../../shared/team-name-generator-modal/team-name-generator-modal';
 
+const PROFILE_LOADING_TIPS = [
+  'Pulling up your trainer card…',
+  'Polishing your badges…',
+  'Loading your achievements…',
+  'Syncing trainer stats…',
+];
+
 interface ProfileDraft {
   trainerName: string;
   favoriteType: PokemonType;
@@ -105,6 +112,7 @@ export class Profile {
   );
   private readonly loadedProfile = computed(() => this.profileResult()?.profile ?? null);
   protected readonly isLoading = computed(() => this.profileResult() === undefined);
+  protected readonly loadingTips = PROFILE_LOADING_TIPS;
   protected readonly hasError = computed(() => this.profileResult()?.status === 'error');
   protected readonly hasNoProfile = computed(() => this.profileResult()?.status === 'missing');
 

@@ -745,13 +745,18 @@
 
 /* ---- 3. Suspense ---- */
 .suspense-box {
-  position: relative;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  padding: 50px 20px;
+  justify-content: center;
+  gap: 28px;
+  padding: 20px;
+  background: var(--bg);
+  box-sizing: border-box;
 }
 
 .suspense-sweep {
@@ -764,27 +769,28 @@
 }
 
 .suspense-vs {
-  width: 84px;
-  height: 84px;
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--violet-deep), var(--cyan));
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'Bungee', sans-serif;
-  font-size: 22px;
+  font-size: 36px;
   color: #fff;
+  box-shadow: 0 0 60px rgba(124, 58, 237, 0.45);
   animation: vsPulse 0.6s ease-in-out infinite;
 }
 
 .suspense-dots {
   display: flex;
-  gap: 10px;
+  gap: 14px;
 }
 
 .dot {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: var(--violet);
   animation: dotBounce 1s ease-in-out infinite;
@@ -795,7 +801,7 @@
 
 .suspense-text {
   font-family: 'Space Mono', monospace;
-  font-size: 16px;
+  font-size: 20px;
   color: var(--text-muted);
 }
 
@@ -1090,6 +1096,8 @@
 
 .match-actions-row {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 10px;
   margin-top: 4px;
 }

@@ -19,6 +19,13 @@ type Phase = 'intro' | 'quiz' | 'loading' | 'results' | 'error';
 
 const MAX_TEAM_SIZE = 5;
 
+const QUIZ_LOADING_TIPS = [
+  'Finding your matches…',
+  'Analyzing your answers…',
+  'Consulting the Pokédex…',
+  'Matching your trainer style…',
+];
+
 // Rule-based Starter Quiz — not AI/LLM. Each answer adds fixed points to a
 // preference profile (shared/quiz/quiz-questions.ts); the profile is scored
 // against real Gen 1 Pokémon data at the end (quiz-recommendation.service.ts)
@@ -43,6 +50,7 @@ export class StarterQuiz {
   protected readonly totalSteps = QUIZ_QUESTIONS.length;
 
   protected readonly phase = signal<Phase>('intro');
+  protected readonly loadingTips = QUIZ_LOADING_TIPS;
   protected readonly step = signal(0);
   protected readonly selectedAnswers = signal<(QuizAnswer | null)[]>(
     new Array(QUIZ_QUESTIONS.length).fill(null),

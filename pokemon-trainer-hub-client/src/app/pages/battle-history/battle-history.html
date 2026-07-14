@@ -1,6 +1,6 @@
 <div class="battle-history" [class.light]="theme.isLight()">
   @if (isLoading()) {
-    <app-loading-screen [isLight]="theme.isLight()" [fullScreen]="true" size="lg" />
+    <app-loading-screen [isLight]="theme.isLight()" [fullScreen]="true" size="lg" [messages]="loadingTips" />
   } @else {
     <div class="content">
       <a routerLink="/my-team" class="back-link">&larr; Back to My Team</a>
@@ -141,7 +141,13 @@
           </div>
           <div class="match-list">
             @for (m of matchLog(); track m.id) {
-              <div class="match-row" [class.win]="m.win" [class.loss]="!m.win">
+              <button
+                type="button"
+                class="match-row"
+                [class.win]="m.win"
+                [class.loss]="!m.win"
+                (click)="openMatch(m.id)"
+              >
                 <div class="result-mark">{{ m.win ? 'W' : 'L' }}</div>
                 <div class="matchup">
                   <span class="opp-name">vs {{ m.opponentName }}</span>
@@ -157,7 +163,7 @@
                   }
                 </div>
                 <div class="date">{{ m.date }}</div>
-              </div>
+              </button>
             }
             @if (noMatches()) {
               <div class="no-match">No battles in this filter.</div>
@@ -167,5 +173,72 @@
 
       }
     </div>
+  }
+
+  <!-- ===== Match detail modal ===== -->
+  @if (selectedMatch(); as sm) {
+    <div class="match-modal-overlay" (click)="closeMatch()">
+      <div class="match-modal-card" (click)="$event.stopPropagation()">
+        <div class="match-modal-header">
+          <div>
+            <div class="match-modal-title">vs {{ sm.opponentName }}</div>
+            <div class="match-modal-sub">
+              {{ capitalize(sm.difficulty) }} &middot; {{ capitalize(sm.opponentType) }} opponent &middot; {{ capitalize(sm.luckFactor) }} luck
+            </div>
+          </div>
+          <div class="match-modal-score" [class.win]="sm.result === 'win'" [class.loss]="sm.result === 'loss'">
+            {{ sm.yourWins }}&ndash;{{ sm.oppWins }}
+          </div>
+          <button type="button" class="match-modal-close" (click)="closeMatch()" aria-label="Close">&times;</button>
+        </div>
+
+        <div class="match-modal-body">
+          <div class="match-modal-section-title">Your Team That Match</div>
+          <div class="match-modal-team-row">
+            @for (t of sm.teamSnapshot; track t.pokemonId) {
+              <button type="button" class="match-modal-mon" (click)="viewPokemon(t.pokemonId)">
+                <div class="match-modal-mon-sprite" [style.background]="typeColor(t.types[0]) + '33'">
+                  @if (t.spriteUrl) { <img [src]="t.spriteUrl" alt="{{ t.pokemonName }}" /> }
+                </div>
+                <span class="match-modal-mon-name">{{ capitalize(t.pokemonName) }}</span>
+                <span class="match-modal-mon-power">PWR {{ t.power }}</span>
+              </button>
+            }
+          </div>
+
+          <div class="match-modal-section-title">Round by Round</div>
+          <div class="match-modal-rounds">
+            @for (r of sm.roundDetails; track r.round) {
+              <div class="match-modal-round-row" [class.win]="r.winner === 'you'" [class.loss]="r.winner === 'opp'">
+                <div class="match-modal-round-top">
+                  <span class="match-modal-round-num">R{{ r.round }}</span>
+                  <span class="match-modal-round-matchup">
+                    <strong>{{ capitalize(r.yourPokemonName) }}</strong> ({{ capitalize(r.yourType) }})
+                    vs
+                    <strong>{{ capitalize(r.oppPokemonName) }}</strong> ({{ capitalize(r.oppType) }})
+                  </span>
+                  <span class="match-modal-round-outcome">{{ r.winner === 'you' ? 'Win' : 'Loss' }}</span>
+                </div>
+                <p class="match-modal-round-explanation">{{ roundExplanation(r) }}</p>
+              </div>
+            }
+          </div>
+
+          <div class="match-modal-insight">
+            <span class="match-modal-insight-label">Key Insight</span>
+            <p class="match-modal-insight-text">{{ selectedMatchInsight() }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (viewedPokemonId(); as pid) {
+    <app-pokemon-detail-modal
+      [pokemonId]="pid"
+      [readOnly]="true"
+      [isLight]="theme.isLight()"
+      (closed)="closePokemonView()"
+    />
   }
 </div>

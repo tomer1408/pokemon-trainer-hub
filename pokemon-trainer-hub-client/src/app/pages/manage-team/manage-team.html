@@ -1,6 +1,6 @@
 <div class="manage-team" [class.light]="theme.isLight()" [style.height.px]="pageHeightPx()">
   @if (isLoading()) {
-    <app-loading-screen [isLight]="theme.isLight()" [fullScreen]="true" size="lg" />
+    <app-loading-screen [isLight]="theme.isLight()" [fullScreen]="true" size="lg" [messages]="loadingTips" />
   } @else {
     <div class="content">
       <div class="header-row">
