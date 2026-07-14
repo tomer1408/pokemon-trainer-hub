@@ -7,8 +7,8 @@ import { ExperienceLevel, POKEMON_TYPES, PokemonType } from '../../trainer-profi
 import { ProfileService, TrainerProfile } from '../../core/profile';
 import { TeamService } from '../../core/team';
 import { FavoritesService } from '../../core/favorites';
-import { PokemonService, PokemonSummary } from '../../core/pokemon';
-import { PROFILE_ICON_POKEMON_IDS } from '../../shared/profile-icons';
+import { AvatarIconsService, AvatarIconOption } from '../../core/avatar-icons';
+import { AVATAR_CATEGORY_ORDER, AVATAR_CATEGORY_LABELS } from '../../shared/avatar-categories';
 import { getTeamPower, getTeamTier } from '../../shared/team-power';
 import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
 import { ThemeService } from '../../shared/theme';
@@ -42,10 +42,11 @@ type ProfileFetchStatus = 'ok' | 'missing' | 'error';
 // memberSince/teamCompletionPct/achievements computed signals below for what
 // they were replaced with instead of being faked.
 //
-// The Edit Profile modal only lets the trainer change team-identity fields
-// (Trainer Name, Favorite Type, Experience Level, Team Name, Avatar) — first/
-// last name, date of birth, and country are set once at onboarding and shown
-// read-only in Personal Details; policy acceptance is likewise permanent.
+// The Edit Profile modal only lets the trainer change Avatar, Favorite Type,
+// and Team Name — Trainer Name is set once at onboarding and shown read-only
+// here (like first/last name, date of birth, and country); policy
+// acceptance is likewise permanent. Experience Level isn't user-editable
+// anywhere (server-authoritative), so it's never shown in this modal at all.
 @Component({
   selector: 'app-profile',
   imports: [FormsModule, RouterLink, LoadingScreen, TeamNameGeneratorModal],
@@ -56,12 +57,29 @@ export class Profile {
   private readonly profileService = inject(ProfileService);
   private readonly teamService = inject(TeamService);
   private readonly favoritesService = inject(FavoritesService);
-  private readonly pokemonService = inject(PokemonService);
+  private readonly avatarIconsService = inject(AvatarIconsService);
   protected readonly theme = inject(ThemeService);
 
-  protected readonly iconOptions = toSignal(this.pokemonService.getByIds(PROFILE_ICON_POKEMON_IDS), {
-    initialValue: [] as PokemonSummary[],
+  protected readonly iconOptions = toSignal(this.avatarIconsService.getAvatarIcons(), {
+    initialValue: [] as AvatarIconOption[],
   });
+
+  protected readonly categories = computed(() => {
+    const present = new Set(this.iconOptions().map((i) => i.category));
+    return AVATAR_CATEGORY_ORDER.filter((c) => present.has(c));
+  });
+  protected readonly selectedCategory = signal<string>(AVATAR_CATEGORY_ORDER[0]);
+  protected readonly iconsInCategory = computed(() =>
+    this.iconOptions().filter((i) => i.category === this.selectedCategory()),
+  );
+
+  categoryLabel(category: string): string {
+    return AVATAR_CATEGORY_LABELS[category] ?? category;
+  }
+
+  selectCategory(category: string): void {
+    this.selectedCategory.set(category);
+  }
 
   protected readonly pokemonTypes = POKEMON_TYPES;
 
@@ -149,7 +167,7 @@ export class Profile {
 
   private spriteForIcon(id: number | null): string | null {
     if (id == null) return null;
-    return this.iconOptions().find((p) => p.id === id)?.spriteUrl ?? null;
+    return this.iconOptions().find((p) => p.pokemonId === id)?.spriteUrl ?? null;
   }
 
   constructor() {
@@ -227,7 +245,7 @@ export class Profile {
     this.closeModal();
   }
 
-  updateDraft(field: 'trainerName' | 'teamName', value: string): void {
+  updateDraft(field: 'teamName', value: string): void {
     const d = this.draft();
     if (d) this.draft.set({ ...d, [field]: value });
   }
@@ -256,6 +274,15 @@ export class Profile {
   selectIcon(pokemonId: number | null): void {
     const d = this.draft();
     if (d) this.draft.set({ ...d, avatarPokemonId: pokemonId });
+  }
+
+  // "None" isn't a real category, so setting selectedCategory to this value
+  // naturally empties iconsInCategory (no icon's category ever matches it) —
+  // the grid just disappears instead of still showing the last-browsed
+  // category's icons underneath the highlighted None pill.
+  selectNone(): void {
+    this.selectIcon(null);
+    this.selectedCategory.set('none');
   }
 
   requestSave(): void {

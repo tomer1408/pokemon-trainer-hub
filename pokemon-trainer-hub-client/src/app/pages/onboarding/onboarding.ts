@@ -5,8 +5,8 @@ import { Router } from '@angular/router';
 import { COUNTRIES } from '../../countries';
 import { EXPERIENCE_LEVELS, ExperienceLevel, POKEMON_TYPES, PokemonType } from '../../trainer-profile-options';
 import { ProfileService, TrainerProfile } from '../../core/profile';
-import { PokemonService, PokemonSummary } from '../../core/pokemon';
-import { PROFILE_ICON_POKEMON_IDS } from '../../shared/profile-icons';
+import { AvatarIconsService, AvatarIconOption } from '../../core/avatar-icons';
+import { AVATAR_CATEGORY_ORDER, AVATAR_CATEGORY_LABELS } from '../../shared/avatar-categories';
 import { calculateAgeRange, isBelowMinAge, isFutureDate } from '../../shared/age-range';
 import { PolicyModal, PolicyType } from '../../shared/policy-modal/policy-modal';
 import { TeamNameGeneratorModal } from '../../shared/team-name-generator-modal/team-name-generator-modal';
@@ -42,7 +42,7 @@ interface OnboardingForm {
 })
 export class Onboarding {
   private readonly profileService = inject(ProfileService);
-  private readonly pokemonService = inject(PokemonService);
+  private readonly avatarIconsService = inject(AvatarIconsService);
   private readonly router = inject(Router);
 
   protected readonly countries = COUNTRIES;
@@ -74,9 +74,26 @@ export class Onboarding {
     marketingEmailsOptIn: false,
   });
 
-  protected readonly iconOptions = toSignal(this.pokemonService.getByIds(PROFILE_ICON_POKEMON_IDS), {
-    initialValue: [] as PokemonSummary[],
+  protected readonly iconOptions = toSignal(this.avatarIconsService.getAvatarIcons(), {
+    initialValue: [] as AvatarIconOption[],
   });
+
+  protected readonly categories = computed(() => {
+    const present = new Set(this.iconOptions().map((i) => i.category));
+    return AVATAR_CATEGORY_ORDER.filter((c) => present.has(c));
+  });
+  protected readonly selectedCategory = signal<string>(AVATAR_CATEGORY_ORDER[0]);
+  protected readonly iconsInCategory = computed(() =>
+    this.iconOptions().filter((i) => i.category === this.selectedCategory()),
+  );
+
+  categoryLabel(category: string): string {
+    return AVATAR_CATEGORY_LABELS[category] ?? category;
+  }
+
+  selectCategory(category: string): void {
+    this.selectedCategory.set(category);
+  }
 
   protected readonly ageRange = computed(() => calculateAgeRange(this.form().dateOfBirth));
   protected readonly isUnderMinAge = computed(() => isBelowMinAge(this.form().dateOfBirth));

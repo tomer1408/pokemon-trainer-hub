@@ -142,13 +142,25 @@
           <div class="section-sub">Pick an icon for your trainer profile.</div>
         </div>
       </div>
+      <div class="icon-category-row">
+        @for (category of categories(); track category) {
+          <button
+            type="button"
+            class="icon-category-btn"
+            [class.active]="selectedCategory() === category"
+            (click)="selectCategory(category)"
+          >
+            {{ categoryLabel(category) }}
+          </button>
+        }
+      </div>
       <div class="icon-grid">
-        @for (icon of iconOptions(); track icon.id) {
+        @for (icon of iconsInCategory(); track icon.pokemonId) {
           <button
             type="button"
             class="icon-wrap"
-            [class.active]="form().avatarPokemonId === icon.id"
-            (click)="selectIcon(icon.id)"
+            [class.active]="form().avatarPokemonId === icon.pokemonId"
+            (click)="selectIcon(icon.pokemonId)"
           >
             @if (icon.spriteUrl) {
               <img [src]="icon.spriteUrl" alt="{{ icon.name }}" />

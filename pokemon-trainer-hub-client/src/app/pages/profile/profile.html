@@ -162,24 +162,34 @@
               <div class="avatar-hex">
                 @if (draftAvatarSprite(); as sprite) {
                   <img class="avatar-sprite" [src]="sprite" alt="Trainer avatar" />
-                } @else {
-                  <span class="avatar-glyph" [style.background]="typeColor(d.favoriteType)"></span>
                 }
               </div>
               <div class="avatar-picker-label">Choose avatar</div>
-              <div class="avatar-picker-grid">
+              <div class="avatar-category-row">
                 <button
                   type="button"
-                  class="avatar-none-btn"
+                  class="avatar-category-btn"
                   [class.active]="d.avatarPokemonId == null"
-                  (click)="selectIcon(null)"
+                  (click)="selectNone()"
                 >None</button>
-                @for (icon of iconOptions(); track icon.id) {
+                @for (category of categories(); track category) {
+                  <button
+                    type="button"
+                    class="avatar-category-btn"
+                    [class.active]="d.avatarPokemonId != null && selectedCategory() === category"
+                    (click)="selectCategory(category)"
+                  >
+                    {{ categoryLabel(category) }}
+                  </button>
+                }
+              </div>
+              <div class="avatar-picker-grid">
+                @for (icon of iconsInCategory(); track icon.pokemonId) {
                   <button
                     type="button"
                     class="avatar-opt-btn"
-                    [class.active]="d.avatarPokemonId === icon.id"
-                    (click)="selectIcon(icon.id)"
+                    [class.active]="d.avatarPokemonId === icon.pokemonId"
+                    (click)="selectIcon(icon.pokemonId)"
                   >
                     @if (icon.spriteUrl) {
                       <img [src]="icon.spriteUrl" alt="{{ icon.name }}" />
@@ -189,16 +199,23 @@
               </div>
             </div>
 
-            <label class="edit-name-block">
-              <span class="field-label">Trainer Name</span>
-              <input
-                type="text"
-                class="name-input"
-                name="trainerName"
-                [ngModel]="d.trainerName"
-                (ngModelChange)="updateDraft('trainerName', $event)"
-              />
-            </label>
+            <div class="edit-name-block">
+              <label class="edit-field">
+                <span class="field-label">Team Name</span>
+                <div class="input-with-ai">
+                  <input
+                    type="text"
+                    name="teamName"
+                    placeholder="Name your Dream Team (optional)"
+                    [ngModel]="d.teamName"
+                    (ngModelChange)="updateDraft('teamName', $event)"
+                  />
+                  <button type="button" class="ai-name-btn" (click)="openNameGenerator()">
+                    &#10024; Generate with AI
+                  </button>
+                </div>
+              </label>
+            </div>
           </div>
 
           <div class="edit-grid">
@@ -219,22 +236,6 @@
                 }
               </div>
             </div>
-
-            <label class="edit-field">
-              <span class="field-label">Team Name</span>
-              <div class="input-with-ai">
-                <input
-                  type="text"
-                  name="teamName"
-                  placeholder="Name your Dream Team (optional)"
-                  [ngModel]="d.teamName"
-                  (ngModelChange)="updateDraft('teamName', $event)"
-                />
-                <button type="button" class="ai-name-btn" (click)="openNameGenerator()">
-                  &#10024; Generate with AI
-                </button>
-              </div>
-            </label>
           </div>
 
           @if (saveError()) {

@@ -93,6 +93,23 @@ model BattleMatch {
   createdAt        DateTime @default(now())
 }
 
+// Shared reference data, not per-user — every trainer reads the same rows
+// (unlike every other model here, which is scoped by auth0UserId). Seeded
+// once via scripts/seed-avatar-icons.js, not written to at request time.
+model AvatarIcon {
+  id        Int    @id @default(autoincrement())
+  // Real Pokédex id for creature icons. The 5 "General" item icons (Poké
+  // Ball etc.) aren't Pokémon at all, so they get negative sentinel ids
+  // (-1..-5) instead — keeps TrainerProfile.avatarPokemonId (already a
+  // plain Int, already just storing whichever id the client picked) usable
+  // with zero schema changes to that table.
+  pokemonId Int    @unique
+  name      String
+  category  String
+  spriteUrl String
+  sortOrder Int    @default(0)
+}
+
 model TrainerProfile {
   id              Int      @id @default(autoincrement())
   auth0UserId     String   @unique
