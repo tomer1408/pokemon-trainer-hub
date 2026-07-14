@@ -10,6 +10,7 @@ import { TYPE_COLORS, PokemonTypeName } from '../pokemon-types';
 export class PotdCard {
   readonly pokemon = input.required<PokemonDetail>();
   readonly isLight = input(false);
+  readonly isPikachu = input(false);
   // Narrow-container usage (e.g. Explorer's team sidebar) — fills the
   // available width instead of the fixed 340px used in wider row layouts.
   readonly compact = input(false);

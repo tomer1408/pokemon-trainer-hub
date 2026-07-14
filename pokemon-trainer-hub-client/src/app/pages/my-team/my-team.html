@@ -1,7 +1,7 @@
-<div class="my-team" [class.light]="theme.isLight()" [style.height.px]="pageHeightPx()">
+<div class="my-team" [class.light]="theme.isLight()" [class.pikachu]="theme.isPikachu()" [style.height.px]="pageHeightPx()">
   <div class="content">
     @if (isLoading()) {
-      <app-loading-screen [isLight]="theme.isLight()" [fullScreen]="true" size="lg" [messages]="loadingTips" />
+      <app-loading-screen [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" [fullScreen]="true" size="lg" [messages]="loadingTips" />
     } @else if (hasError()) {
       <div class="error-state">
         <p class="error-message">We couldn't load your team right now.</p>
@@ -218,6 +218,7 @@
       [isOnTeam]="true"
       [teamFull]="true"
       [isLight]="theme.isLight()"
+      [isPikachu]="theme.isPikachu()"
       (closed)="closeDetail()"
       (toggleFavorite)="toggleFavorite(id)"
       (removeFromTeam)="removeFromTeamModal(id)"
@@ -227,6 +228,7 @@
   @if (showNameGenerator()) {
     <app-team-name-generator-modal
       [isLight]="theme.isLight()"
+      [isPikachu]="theme.isPikachu()"
       [teamEmpty]="!hasTeam()"
       [saving]="savingName()"
       [saveError]="nameSaveError()"

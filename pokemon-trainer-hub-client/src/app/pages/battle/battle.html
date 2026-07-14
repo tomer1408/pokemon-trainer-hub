@@ -1,11 +1,11 @@
-<div class="battle-page" [class.light]="theme.isLight()">
+<div class="battle-page" [class.light]="theme.isLight()" [class.pikachu]="theme.isPikachu()">
   <div class="content">
     @if (!isLoading()) {
       <a routerLink="/my-team" class="back-link">&larr; Back to My Team</a>
     }
 
     @if (isLoading()) {
-      <app-loading-screen [isLight]="theme.isLight()" [fullScreen]="true" size="lg" [messages]="loadingTips" />
+      <app-loading-screen [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" [fullScreen]="true" size="lg" [messages]="loadingTips" />
     } @else if (hasError()) {
       <div class="error-state">
         <p class="error-message">We couldn't load your team for battle.</p>

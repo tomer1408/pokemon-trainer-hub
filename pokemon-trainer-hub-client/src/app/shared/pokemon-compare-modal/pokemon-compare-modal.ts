@@ -46,6 +46,7 @@ export class PokemonCompareModal {
   // every other Add to Team button in the app.
   @Input() teamFull = false;
   @Input() isLight = false;
+  @Input() isPikachu = false;
 
   @Output() closed = new EventEmitter<void>();
   @Output() toggleFavoriteA = new EventEmitter<void>();

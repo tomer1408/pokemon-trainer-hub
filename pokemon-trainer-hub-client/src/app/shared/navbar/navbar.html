@@ -1,13 +1,19 @@
-<div class="navbar" [class.light]="theme.isLight()">
+<div class="navbar" [class.light]="theme.isLight()" [class.pikachu]="theme.isPikachu()">
   <div class="navbar-inner">
     <div class="navbar-left">
       <app-account-menu
         [trainerName]="trainerName()"
         [email]="trainerEmail()"
         [isLight]="theme.isLight()"
+        [isPikachu]="theme.isPikachu()"
       />
 
-      <a routerLink="/home" class="logo">Pokemon Trainer Hub</a>
+      <a routerLink="/home" class="logo">
+        @if (logoSprite()?.spriteUrl; as sprite) {
+          <img class="logo-icon" [src]="sprite" alt="" />
+        }
+        Pokemon Trainer Hub
+      </a>
 
       <nav class="nav-row">
         <a routerLink="/home" routerLinkActive="active" class="nav-link">Home</a>
@@ -19,8 +25,9 @@
 
     <div class="navbar-right">
       <div class="theme-switch">
-        <button type="button" class="theme-btn" [class.active]="!theme.isLight()" (click)="setDark()">☾ Dark</button>
+        <button type="button" class="theme-btn" [class.active]="theme.mode() === 'dark'" (click)="setDark()">☾ Dark</button>
         <button type="button" class="theme-btn" [class.active]="theme.isLight()" (click)="setLight()">☀ Light</button>
+        <button type="button" class="theme-btn" [class.active]="theme.isPikachu()" (click)="setPikachu()">⚡ Pikachu</button>
       </div>
     </div>
   </div>

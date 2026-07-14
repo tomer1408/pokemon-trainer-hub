@@ -13,6 +13,7 @@ import { AssistantService, TEAM_NAME_STYLES, TeamNameStyle } from '../../core/as
 })
 export class TeamNameGeneratorModal {
   @Input() isLight = false;
+  @Input() isPikachu = false;
   // True when the trainer's Dream Team has no members yet — generation is
   // disabled and the modal explains why instead of calling the server.
   @Input() teamEmpty = false;

@@ -70,6 +70,7 @@ export class TeamSwapModal implements OnChanges {
   @Input({ required: true }) comparisonCandidates: ComparablePokemon[] = [];
   @Input() mode: SwapMode = 'overflow';
   @Input() isLight = false;
+  @Input() isPikachu = false;
   // When false, confirming does NOT call the backend — it just reports which
   // pair was picked and lets the host apply it locally instead. Used by
   // Manage My Team when the anchor is a team member that's only sitting in

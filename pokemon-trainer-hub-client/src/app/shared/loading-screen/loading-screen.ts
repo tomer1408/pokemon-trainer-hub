@@ -33,6 +33,7 @@ const SIZES: Record<LoadingScreenSize, SizeConfig> = {
 })
 export class LoadingScreen implements OnInit, OnDestroy {
   readonly isLight = input(false);
+  readonly isPikachu = input(false);
   readonly fullScreen = input(false);
   readonly size = input<LoadingScreenSize>('md');
   // Toggles the bouncing Pokéball itself (not a progress bar).

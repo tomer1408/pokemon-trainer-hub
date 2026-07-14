@@ -1,6 +1,6 @@
-<div class="battle-history" [class.light]="theme.isLight()">
+<div class="battle-history" [class.light]="theme.isLight()" [class.pikachu]="theme.isPikachu()">
   @if (isLoading()) {
-    <app-loading-screen [isLight]="theme.isLight()" [fullScreen]="true" size="lg" [messages]="loadingTips" />
+    <app-loading-screen [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" [fullScreen]="true" size="lg" [messages]="loadingTips" />
   } @else {
     <div class="content">
       <a routerLink="/my-team" class="back-link">&larr; Back to My Team</a>
@@ -238,6 +238,7 @@
       [pokemonId]="pid"
       [readOnly]="true"
       [isLight]="theme.isLight()"
+      [isPikachu]="theme.isPikachu()"
       (closed)="closePokemonView()"
     />
   }

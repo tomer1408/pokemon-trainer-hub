@@ -1,7 +1,7 @@
-<div class="settings-page" [class.light]="theme.isLight()">
+<div class="settings-page" [class.light]="theme.isLight()" [class.pikachu]="theme.isPikachu()">
   <div class="content">
     @if (isLoading()) {
-      <app-loading-screen [isLight]="theme.isLight()" [fullScreen]="true" size="lg" [messages]="loadingTips" />
+      <app-loading-screen [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" [fullScreen]="true" size="lg" [messages]="loadingTips" />
     } @else if (hasError()) {
       <div class="error-state">
         <p class="error-message">We couldn't load your settings right now.</p>
@@ -57,8 +57,9 @@
             <div class="setting-helper">Choose how Pok&eacute;mon Trainer Hub looks.</div>
           </div>
           <div class="seg-row">
-            <button type="button" class="seg-btn" [class.active]="!theme.isLight()" (click)="theme.setDark()">Dark</button>
+            <button type="button" class="seg-btn" [class.active]="theme.mode() === 'dark'" (click)="theme.setDark()">Dark</button>
             <button type="button" class="seg-btn" [class.active]="theme.isLight()" (click)="theme.setLight()">Light</button>
+            <button type="button" class="seg-btn" [class.active]="theme.isPikachu()" (click)="theme.setPikachu()">Pikachu</button>
           </div>
         </div>
 
@@ -162,6 +163,6 @@
   }
 
   @if (openPolicyModal(); as t) {
-    <app-policy-modal [type]="t" [isLight]="theme.isLight()" (closed)="closePolicy()" />
+    <app-policy-modal [type]="t" [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" (closed)="closePolicy()" />
   }
 </div>

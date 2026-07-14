@@ -35,6 +35,23 @@
   --overlay-08: var(--overlay-08);
 }
 
+.quiz-page.pikachu {
+  --bg: var(--background-page-pikachu);
+  --surface: var(--surface-primary-pikachu);
+  --surface-raised: var(--surface-raised-pikachu);
+  --border-soft: var(--border-default-pikachu);
+  --text-body: var(--text-primary-pikachu);
+  --text-muted: var(--text-secondary-pikachu);
+  --violet: var(--primary-pikachu);
+  --violet-deep: var(--primary-active-pikachu);
+  --cyan: var(--accent-pikachu);
+  --yellow: var(--energy-pikachu);
+  --good: var(--accent-pikachu);
+  --bad: var(--error-pikachu);
+  --overlay-05: var(--overlay-05-pikachu);
+  --overlay-08: var(--overlay-08-pikachu);
+}
+
 .quiz-page {
   min-height: 100vh;
   padding-bottom: 60px;
@@ -47,6 +64,13 @@
   background:
     radial-gradient(ellipse 900px 520px at 50% 0%, rgba(79, 70, 229, 0.07), transparent 62%),
     radial-gradient(ellipse 600px 420px at 90% 20%, rgba(15, 159, 148, 0.05), transparent 65%),
+    var(--bg);
+}
+
+.quiz-page.pikachu {
+  background:
+    radial-gradient(ellipse 900px 520px at 50% 0%, rgba(255, 201, 60, 0.20), transparent 62%),
+    radial-gradient(ellipse 600px 420px at 90% 20%, rgba(227, 53, 13, 0.08), transparent 65%),
     var(--bg);
 }
 
@@ -145,6 +169,10 @@
   color: #9A6700;
 }
 
+.quiz-page.pikachu .stat-value-gold {
+  color: var(--energy-dark);
+}
+
 .error-state {
   display: flex;
   flex-direction: column;
@@ -186,7 +214,8 @@
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.34);
 }
 
-.quiz-page.light .quiz-card {
+.quiz-page.light .quiz-card,
+.quiz-page.pikachu .quiz-card {
   box-shadow: 0 16px 36px rgba(23, 32, 51, 0.08);
 }
 
@@ -351,7 +380,8 @@
   border-color: var(--good);
 }
 
-.quiz-page.light .option-btn.correct {
+.quiz-page.light .option-btn.correct,
+.quiz-page.pikachu .option-btn.correct {
   background: #EAF7EE;
   border-color: #15803D;
   color: #15803D;
@@ -362,7 +392,8 @@
   border-color: var(--bad);
 }
 
-.quiz-page.light .option-btn.wrong-pick {
+.quiz-page.light .option-btn.wrong-pick,
+.quiz-page.pikachu .option-btn.wrong-pick {
   background: #FDECEC;
   border-color: #DC2626;
   color: #DC2626;
@@ -398,7 +429,8 @@
   background: var(--good);
 }
 
-.quiz-page.light .option-mark-correct {
+.quiz-page.light .option-mark-correct,
+.quiz-page.pikachu .option-mark-correct {
   background: #15803D;
 }
 
@@ -430,6 +462,10 @@
 
 .quiz-page.light .next-btn {
   box-shadow: 0 10px 24px rgba(79, 70, 229, 0.26);
+}
+
+.quiz-page.pikachu .next-btn {
+  box-shadow: 0 10px 24px rgba(255, 201, 60, 0.35);
 }
 
 .next-btn:hover {

@@ -35,6 +35,23 @@
   --overlay-35: var(--overlay-35);
 }
 
+.home.pikachu {
+  --bg: var(--background-page-pikachu);
+  --surface: var(--surface-primary-pikachu);
+  --surface-raised: var(--surface-raised-pikachu);
+  --border-soft: var(--border-default-pikachu);
+  --text-body: var(--text-primary-pikachu);
+  --text-muted: var(--text-secondary-pikachu);
+  --violet: var(--primary-pikachu);
+  --violet-deep: var(--primary-active-pikachu);
+  --cyan: var(--accent-pikachu);
+  --yellow: var(--energy-pikachu);
+  --overlay-05: var(--overlay-05-pikachu);
+  --overlay-08: var(--overlay-08-pikachu);
+  --overlay-10: var(--overlay-accent-10-pikachu);
+  --overlay-35: var(--overlay-35-pikachu);
+}
+
 .home {
   min-height: 100vh;
   padding-bottom: 60px;
@@ -50,7 +67,15 @@
     var(--bg);
 }
 
-.home.light .hero-outer {
+.home.pikachu {
+  background:
+    radial-gradient(ellipse 850px 480px at 15% 0%, rgba(255, 201, 60, 0.20), transparent 62%),
+    radial-gradient(ellipse 600px 420px at 85% 10%, rgba(227, 53, 13, 0.08), transparent 65%),
+    var(--bg);
+}
+
+.home.light .hero-outer,
+.home.pikachu .hero-outer {
   box-shadow: 0 20px 44px rgba(35, 48, 68, 0.16);
 }
 
@@ -58,22 +83,31 @@
   color: #DC2626;
 }
 
-/* Intentional exception: the Battle CTA stays a dark "arena" card even in
-   Light Mode, rather than becoming another white card. */
-.home.light .battle-promo-card {
+.home.pikachu .error-message {
+  color: var(--error-pikachu);
+}
+
+/* Intentional exception: the Battle CTA stays a dark "arena" card in every
+   bright theme (Light and Pikachu alike), rather than becoming another
+   white/pale card. */
+.home.light .battle-promo-card,
+.home.pikachu .battle-promo-card {
   background: linear-gradient(150deg, #172033, #312E81 50%, #0F766E);
   border-color: transparent;
 }
 
-.home.light .battle-promo-title {
+.home.light .battle-promo-title,
+.home.pikachu .battle-promo-title {
   color: #FFFFFF;
 }
 
-.home.light .battle-promo-desc {
+.home.light .battle-promo-desc,
+.home.pikachu .battle-promo-desc {
   color: rgba(255, 255, 255, 0.78);
 }
 
-.home.light .battle-promo-cta {
+.home.light .battle-promo-cta,
+.home.pikachu .battle-promo-cta {
   color: #F4B740;
 }
 
@@ -86,8 +120,18 @@
   color: #0D827A;
 }
 
+.home.pikachu .team-kicker,
+.home.pikachu .rec-kicker,
+.home.pikachu .potd-cta {
+  color: var(--accent-hover-pikachu);
+}
+
 .home.light .progress-big {
   color: #9A6700;
+}
+
+.home.pikachu .progress-big {
+  color: var(--energy-dark);
 }
 
 .content {

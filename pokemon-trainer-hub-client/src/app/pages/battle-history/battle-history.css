@@ -37,10 +37,34 @@
   --overlay-08: var(--overlay-08);
 }
 
+.battle-history.pikachu {
+  --bg: var(--background-page-pikachu);
+  --surface: var(--surface-primary-pikachu);
+  --surface-raised: var(--surface-raised-pikachu);
+  --border-soft: var(--border-default-pikachu);
+  --text-body: var(--text-primary-pikachu);
+  --text-muted: var(--text-secondary-pikachu);
+  --violet: var(--primary-pikachu);
+  --violet-deep: var(--primary-active-pikachu);
+  --cyan: var(--accent-pikachu);
+  --yellow: var(--energy-pikachu);
+  --good: var(--accent-pikachu);
+  --bad: var(--error-pikachu);
+  --overlay-05: var(--overlay-05-pikachu);
+  --overlay-06: var(--overlay-06-pikachu);
+  --overlay-08: var(--overlay-08-pikachu);
+}
+
 .battle-history.light .kpi-value,
 .battle-history.light .champ-pct,
 .battle-history.light .donut-pct {
   color: #0D827A;
+}
+
+.battle-history.pikachu .kpi-value,
+.battle-history.pikachu .champ-pct,
+.battle-history.pikachu .donut-pct {
+  color: var(--accent-hover-pikachu);
 }
 
 .battle-history {
@@ -55,6 +79,13 @@
   background:
     radial-gradient(ellipse 900px 520px at 50% 0%, rgba(79, 70, 229, 0.07), transparent 62%),
     radial-gradient(ellipse 600px 420px at 90% 10%, rgba(15, 159, 148, 0.06), transparent 65%),
+    var(--bg);
+}
+
+.battle-history.pikachu {
+  background:
+    radial-gradient(ellipse 900px 520px at 50% 0%, rgba(255, 201, 60, 0.20), transparent 62%),
+    radial-gradient(ellipse 600px 420px at 90% 10%, rgba(227, 53, 13, 0.08), transparent 65%),
     var(--bg);
 }
 
@@ -896,6 +927,10 @@
   border-radius: 14px;
   background: linear-gradient(120deg, rgba(124, 58, 237, 0.12), rgba(94, 234, 212, 0.10));
   border: 1px solid var(--border-soft);
+}
+
+.battle-history.pikachu .match-modal-insight {
+  background: linear-gradient(120deg, rgba(255, 201, 60, 0.18), rgba(227, 53, 13, 0.10));
 }
 
 .match-modal-insight-label {

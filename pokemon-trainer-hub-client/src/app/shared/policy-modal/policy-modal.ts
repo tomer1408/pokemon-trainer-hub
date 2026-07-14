@@ -14,6 +14,7 @@ export type PolicyType = 'terms' | 'privacy';
 export class PolicyModal {
   @Input({ required: true }) type!: PolicyType;
   @Input() isLight = false;
+  @Input() isPikachu = false;
 
   @Output() closed = new EventEmitter<void>();
 

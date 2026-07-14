@@ -1,4 +1,4 @@
-<div class="explorer" [class.light]="theme.isLight()">
+<div class="explorer" [class.light]="theme.isLight()" [class.pikachu]="theme.isPikachu()">
   <!-- Search banner -->
   <div class="search-banner">
     <span class="search-glyph"></span>
@@ -230,7 +230,7 @@
     @if (potd(); as p) {
       <div class="potd-panel">
         <div class="potd-panel-heading">Pok&eacute;mon of the Day</div>
-        <app-potd-card [pokemon]="p" [isLight]="theme.isLight()" [compact]="true" (opened)="openDetail(p)" />
+        <app-potd-card [pokemon]="p" [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" [compact]="true" (opened)="openDetail(p)" />
       </div>
     }
   </ng-template>
@@ -257,6 +257,7 @@
       [teamFull]="teamFull()"
       [hasTeam]="hasTeam()"
       [isLight]="theme.isLight()"
+      [isPikachu]="theme.isPikachu()"
       (closed)="closeDetail()"
       (toggleFavorite)="toggleFavorite(sp)"
       (addToTeam)="onAction(sp)"
@@ -272,6 +273,7 @@
       [comparisonCandidates]="team()"
       mode="overflow"
       [isLight]="theme.isLight()"
+      [isPikachu]="theme.isPikachu()"
       (closed)="closeSwap()"
       (swapped)="onSwapped()"
     />
@@ -284,6 +286,7 @@
       [comparisonCandidates]="team()"
       mode="compare"
       [isLight]="theme.isLight()"
+      [isPikachu]="theme.isPikachu()"
       (closed)="closeCompareWithTeam()"
       (added)="onCompareAdded()"
       (swapped)="onCompareSwapped()"
@@ -304,6 +307,7 @@
         [isOnTeamB]="isOnTeam(b.id)"
         [teamFull]="teamFull()"
         [isLight]="theme.isLight()"
+        [isPikachu]="theme.isPikachu()"
         (closed)="closeCompareModal()"
         (toggleFavoriteA)="toggleFavorite(a)"
         (toggleFavoriteB)="toggleFavorite(b)"

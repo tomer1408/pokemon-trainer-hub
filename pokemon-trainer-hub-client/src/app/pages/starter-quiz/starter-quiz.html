@@ -1,4 +1,4 @@
-<div class="quiz-page" [class.light]="theme.isLight()">
+<div class="quiz-page" [class.light]="theme.isLight()" [class.pikachu]="theme.isPikachu()">
   <div class="content">
 
     @if (phase() === 'intro') {
@@ -37,7 +37,7 @@
     }
 
     @if (phase() === 'loading') {
-      <app-loading-screen [isLight]="theme.isLight()" [fullScreen]="true" size="lg" [messages]="loadingTips" />
+      <app-loading-screen [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" [fullScreen]="true" size="lg" [messages]="loadingTips" />
     }
 
     @if (phase() === 'error') {
@@ -119,6 +119,7 @@
       [teamFull]="teamFull()"
       [hasTeam]="hasTeam()"
       [isLight]="theme.isLight()"
+      [isPikachu]="theme.isPikachu()"
       (closed)="closeDetail()"
       (toggleFavorite)="toggleFavoriteFromModal(id)"
       (addToTeam)="addToTeam(id)"
@@ -133,6 +134,7 @@
       [comparisonCandidates]="team()"
       mode="overflow"
       [isLight]="theme.isLight()"
+      [isPikachu]="theme.isPikachu()"
       (closed)="closeSwap()"
       (swapped)="onSwapped()"
     />
@@ -144,6 +146,7 @@
       [comparisonCandidates]="team()"
       mode="compare"
       [isLight]="theme.isLight()"
+      [isPikachu]="theme.isPikachu()"
       (closed)="closeCompareWithTeam()"
       (added)="onCompareAdded()"
       (swapped)="onCompareSwapped()"

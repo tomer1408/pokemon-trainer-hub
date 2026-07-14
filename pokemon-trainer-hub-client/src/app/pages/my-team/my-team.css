@@ -41,11 +41,31 @@
   --bad: var(--error);
 }
 
-.my-team.light .slot-outer {
+.my-team.pikachu {
+  --bg: var(--background-page-pikachu);
+  --surface: var(--surface-primary-pikachu);
+  --surface-raised: var(--surface-raised-pikachu);
+  --border-soft: var(--border-default-pikachu);
+  --text-body: var(--text-primary-pikachu);
+  --text-muted: var(--text-secondary-pikachu);
+  --violet: var(--primary-pikachu);
+  --violet-deep: var(--primary-active-pikachu);
+  --cyan: var(--accent-pikachu);
+  --yellow: var(--energy-pikachu);
+  --overlay-05: var(--overlay-05-pikachu);
+  --overlay-06: var(--overlay-06-pikachu);
+  --overlay-08: var(--overlay-08-pikachu);
+  --good: var(--accent-pikachu);
+  --bad: var(--error-pikachu);
+}
+
+.my-team.light .slot-outer,
+.my-team.pikachu .slot-outer {
   box-shadow: 0 14px 30px rgba(35, 48, 68, 0.16);
 }
 
-.my-team.light .hex-badge {
+.my-team.light .hex-badge,
+.my-team.pikachu .hex-badge {
   color: #FFFFFF;
 }
 
@@ -57,8 +77,17 @@
   color: #0D827A;
 }
 
+.my-team.pikachu .power-value,
+.my-team.pikachu .strongest-power {
+  color: var(--accent-hover-pikachu);
+}
+
 .my-team.light .summary-value {
   color: #9A6700;
+}
+
+.my-team.pikachu .summary-value {
+  color: var(--energy-dark);
 }
 
 .my-team {
@@ -75,6 +104,13 @@
   background:
     radial-gradient(ellipse 850px 480px at 15% 0%, rgba(79, 70, 229, 0.07), transparent 62%),
     radial-gradient(ellipse 600px 420px at 85% 10%, rgba(15, 159, 148, 0.06), transparent 65%),
+    var(--bg);
+}
+
+.my-team.pikachu {
+  background:
+    radial-gradient(ellipse 850px 480px at 15% 0%, rgba(255, 201, 60, 0.20), transparent 62%),
+    radial-gradient(ellipse 600px 420px at 85% 10%, rgba(227, 53, 13, 0.08), transparent 65%),
     var(--bg);
 }
 

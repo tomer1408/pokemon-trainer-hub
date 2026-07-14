@@ -17,6 +17,7 @@ export class AccountMenu {
   readonly trainerName = input('Trainer');
   readonly email = input('');
   readonly isLight = input(false);
+  readonly isPikachu = input(false);
 
   protected readonly colorblindModes = COLORBLIND_MODE_OPTIONS;
   protected readonly initial = computed(() => this.trainerName().charAt(0).toUpperCase() || 'T');

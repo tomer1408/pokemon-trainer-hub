@@ -35,6 +35,23 @@
   --overlay-08: var(--overlay-08);
 }
 
+.battle-page.pikachu {
+  --bg: var(--background-page-pikachu);
+  --surface: var(--surface-primary-pikachu);
+  --surface-raised: var(--surface-raised-pikachu);
+  --border-soft: var(--border-default-pikachu);
+  --text-body: var(--text-primary-pikachu);
+  --text-muted: var(--text-secondary-pikachu);
+  --violet: var(--primary-pikachu);
+  --violet-deep: var(--primary-active-pikachu);
+  --cyan: var(--accent-pikachu);
+  --yellow: var(--energy-pikachu);
+  --good: var(--accent-pikachu);
+  --bad: var(--error-pikachu);
+  --overlay-05: var(--overlay-05-pikachu);
+  --overlay-08: var(--overlay-08-pikachu);
+}
+
 .battle-page {
   min-height: 100vh;
   padding-bottom: 60px;
@@ -50,18 +67,39 @@
     var(--bg);
 }
 
+.battle-page.pikachu {
+  background:
+    radial-gradient(ellipse 900px 500px at 50% 0%, rgba(255, 201, 60, 0.18), transparent 62%),
+    radial-gradient(ellipse 600px 420px at 90% 15%, rgba(227, 53, 13, 0.07), transparent 65%),
+    var(--bg);
+}
+
 .battle-page.light .difficulty-card.selected,
 .battle-page.light .settings-pill.selected {
   background: #E6F7F5;
   border-color: #0F9F94;
 }
 
+.battle-page.pikachu .difficulty-card.selected,
+.battle-page.pikachu .settings-pill.selected {
+  background: #FFF1B8;
+  border-color: var(--accent-pikachu);
+}
+
 .battle-page.light .pick-card:hover:not(.used) {
   box-shadow: 0 16px 34px rgba(15, 159, 148, 0.24);
 }
 
+.battle-page.pikachu .pick-card:hover:not(.used) {
+  box-shadow: 0 16px 34px rgba(227, 53, 13, 0.24);
+}
+
 .battle-page.light .pick-card.selected {
   background: #E6F7F5;
+}
+
+.battle-page.pikachu .pick-card.selected {
+  background: #FFF1B8;
 }
 
 .battle-page.light .faceoff-card.winner-card {
@@ -69,16 +107,31 @@
   box-shadow: 0 0 32px rgba(244, 183, 64, 0.35), inset 0 0 22px rgba(244, 183, 64, 0.12);
 }
 
+.battle-page.pikachu .faceoff-card.winner-card {
+  background: linear-gradient(160deg, rgba(255, 201, 60, 0.18), var(--surface));
+  box-shadow: 0 0 32px rgba(255, 201, 60, 0.4), inset 0 0 22px rgba(255, 201, 60, 0.15);
+}
+
 .battle-page.light .winner-badge {
   background: radial-gradient(circle at 50% 38%, #F4B740, rgba(244, 183, 64, 0.3));
   box-shadow: 0 4px 14px rgba(244, 183, 64, 0.45);
+}
+
+.battle-page.pikachu .winner-badge {
+  background: radial-gradient(circle at 50% 38%, #FFC93C, rgba(255, 201, 60, 0.3));
+  box-shadow: 0 4px 14px rgba(255, 201, 60, 0.5);
 }
 
 .battle-page.light .result-badge.good {
   box-shadow: 0 16px 34px rgba(15, 159, 148, 0.30);
 }
 
-.battle-page.light .result-badge.bad {
+.battle-page.pikachu .result-badge.good {
+  box-shadow: 0 16px 34px rgba(227, 53, 13, 0.30);
+}
+
+.battle-page.light .result-badge.bad,
+.battle-page.pikachu .result-badge.bad {
   box-shadow: 0 16px 34px rgba(220, 38, 38, 0.30);
 }
 
@@ -94,8 +147,21 @@
   color: #0D827A;
 }
 
+.battle-page.pikachu .eyebrow,
+.battle-page.pikachu .summary-ready,
+.battle-page.pikachu .faceoff-power,
+.battle-page.pikachu .detail-adv,
+.battle-page.pikachu .result-text.good,
+.battle-page.pikachu .history-outcome.good {
+  color: var(--accent-hover-pikachu);
+}
+
 .battle-page.light .score-num.gold {
   color: #9A6700;
+}
+
+.battle-page.pikachu .score-num.gold {
+  color: var(--energy-dark);
 }
 
 .content {

@@ -1,4 +1,4 @@
-<div class="page" [class.light]="theme.isLight()">
+<div class="page" [class.light]="theme.isLight()" [class.pikachu]="theme.isPikachu()">
 
   <div class="content">
 
@@ -155,6 +155,7 @@
       [teamFull]="teamFull()"
       [hasTeam]="hasTeam()"
       [isLight]="theme.isLight()"
+      [isPikachu]="theme.isPikachu()"
       (closed)="closeDetail()"
       (toggleFavorite)="toggleFavorite(id)"
       (addToTeam)="addToTeam(id)"
@@ -169,6 +170,7 @@
       [comparisonCandidates]="team()"
       mode="overflow"
       [isLight]="theme.isLight()"
+      [isPikachu]="theme.isPikachu()"
       (closed)="closeSwap()"
       (swapped)="onSwapped()"
     />
@@ -180,6 +182,7 @@
       [comparisonCandidates]="team()"
       mode="compare"
       [isLight]="theme.isLight()"
+      [isPikachu]="theme.isPikachu()"
       (closed)="closeCompareWithTeam()"
       (added)="onCompareAdded()"
       (swapped)="onCompareSwapped()"

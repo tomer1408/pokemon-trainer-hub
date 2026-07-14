@@ -35,6 +35,23 @@
   --danger: var(--error);
 }
 
+.profile-page.pikachu {
+  --bg: var(--background-page-pikachu);
+  --surface: var(--surface-primary-pikachu);
+  --surface-raised: var(--surface-raised-pikachu);
+  --border-soft: var(--border-default-pikachu);
+  --text-body: var(--text-primary-pikachu);
+  --text-muted: var(--text-secondary-pikachu);
+  --violet: var(--primary-pikachu);
+  --violet-deep: var(--primary-active-pikachu);
+  --cyan: var(--accent-pikachu);
+  --yellow: var(--energy-pikachu);
+  --overlay-05: var(--overlay-05-pikachu);
+  --overlay-06: var(--overlay-06-pikachu);
+  --overlay-08: var(--overlay-08-pikachu);
+  --danger: var(--error-pikachu);
+}
+
 .profile-page {
   min-height: 100vh;
   padding-bottom: 60px;
@@ -50,11 +67,20 @@
     var(--bg);
 }
 
-.profile-page.light .id-card-outer {
+.profile-page.pikachu {
+  background:
+    radial-gradient(ellipse 850px 480px at 15% 0%, rgba(255, 201, 60, 0.20), transparent 62%),
+    radial-gradient(ellipse 600px 420px at 85% 10%, rgba(227, 53, 13, 0.08), transparent 65%),
+    var(--bg);
+}
+
+.profile-page.light .id-card-outer,
+.profile-page.pikachu .id-card-outer {
   box-shadow: 0 20px 44px rgba(35, 48, 68, 0.16);
 }
 
-.profile-page.light .tier-chip {
+.profile-page.light .tier-chip,
+.profile-page.pikachu .tier-chip {
   box-shadow: 0 6px 16px rgba(35, 48, 68, 0.14);
 }
 
@@ -62,15 +88,22 @@
   background: linear-gradient(115deg, #4F46E5, #3730A3 50%, #0F9F94);
 }
 
-.profile-page.light .modal-card {
+.profile-page.pikachu .banner {
+  background: linear-gradient(115deg, #FFC93C, #E3A100 50%, #E3350D);
+}
+
+.profile-page.light .modal-card,
+.profile-page.pikachu .modal-card {
   box-shadow: var(--shadow-modal, 0 24px 64px rgba(23, 32, 51, 0.20));
 }
 
-.profile-page.light .confirm-card {
+.profile-page.light .confirm-card,
+.profile-page.pikachu .confirm-card {
   box-shadow: 0 24px 64px rgba(23, 32, 51, 0.20);
 }
 
-.profile-page.light .toast {
+.profile-page.light .toast,
+.profile-page.pikachu .toast {
   box-shadow: 0 20px 40px rgba(23, 32, 51, 0.20);
 }
 
@@ -78,8 +111,16 @@
   background: rgba(79, 70, 229, 0.12);
 }
 
+.profile-page.pikachu .stat-icon-wrap.icon-violet {
+  background: rgba(255, 201, 60, 0.18);
+}
+
 .profile-page.light .stat-icon-wrap.icon-yellow {
   background: rgba(244, 183, 64, 0.18);
+}
+
+.profile-page.pikachu .stat-icon-wrap.icon-yellow {
+  background: rgba(227, 53, 13, 0.14);
 }
 
 .profile-page.light .badge-card.earned {
@@ -87,9 +128,19 @@
   border-color: rgba(15, 159, 148, 0.4);
 }
 
+.profile-page.pikachu .badge-card.earned {
+  background: linear-gradient(160deg, rgba(255, 201, 60, 0.14), var(--surface));
+  border-color: rgba(227, 53, 13, 0.35);
+}
+
 .profile-page.light .badge-card.earned .medal {
   background: radial-gradient(circle at 50% 40%, #0F9F94, rgba(15, 159, 148, 0.25));
   box-shadow: 0 0 18px rgba(15, 159, 148, 0.35);
+}
+
+.profile-page.pikachu .badge-card.earned .medal {
+  background: radial-gradient(circle at 50% 40%, #E3350D, rgba(227, 53, 13, 0.25));
+  box-shadow: 0 0 18px rgba(227, 53, 13, 0.35);
 }
 
 /* --yellow/--cyan stay bright above (matches badge/pill/icon fills); plain
@@ -100,11 +151,23 @@
   color: #9A6700;
 }
 
+.profile-page.pikachu .stat-value,
+.profile-page.pikachu .stat-link.accent {
+  color: var(--energy-dark);
+}
+
 .profile-page.light .stat-value-tier,
 .profile-page.light .stat-link,
 .profile-page.light .ach-count,
 .profile-page.light .badge-card.earned .badge-status {
   color: #0D827A;
+}
+
+.profile-page.pikachu .stat-value-tier,
+.profile-page.pikachu .stat-link,
+.profile-page.pikachu .ach-count,
+.profile-page.pikachu .badge-card.earned .badge-status {
+  color: var(--accent-hover-pikachu);
 }
 
 .content {

@@ -37,7 +37,24 @@
   --overlay-08: var(--overlay-08);
 }
 
-.dim-overlay.light .modal-outer {
+.dim-overlay.pikachu {
+  --surface: var(--surface-primary-pikachu);
+  --surface-raised: var(--surface-raised-pikachu);
+  --border-soft: var(--border-default-pikachu);
+  --text-body: var(--text-primary-pikachu);
+  --text-muted: var(--text-secondary-pikachu);
+  --violet: var(--primary-pikachu);
+  --violet-deep: var(--primary-active-pikachu);
+  --cyan: var(--accent-pikachu);
+  --yellow: var(--energy-pikachu);
+  --good: var(--accent-pikachu);
+  --overlay-05: var(--overlay-05-pikachu);
+  --overlay-06: var(--overlay-06-pikachu);
+  --overlay-08: var(--overlay-08-pikachu);
+}
+
+.dim-overlay.light .modal-outer,
+.dim-overlay.pikachu .modal-outer {
   box-shadow: 0 20px 44px rgba(35, 48, 68, 0.20);
 }
 
@@ -50,10 +67,21 @@
   color: #9A6700;
 }
 
+.dim-overlay.pikachu .kicker,
+.dim-overlay.pikachu .stat-value-left {
+  color: var(--energy-dark);
+}
+
 .dim-overlay.light .card-power-value,
 .dim-overlay.light .stat-value-right,
 .dim-overlay.light .win-mark {
   color: #0D827A;
+}
+
+.dim-overlay.pikachu .card-power-value,
+.dim-overlay.pikachu .stat-value-right,
+.dim-overlay.pikachu .win-mark {
+  color: var(--accent-hover-pikachu);
 }
 
 .dim-overlay {
@@ -279,7 +307,13 @@
   border-color: #0D827A;
 }
 
-.dim-overlay.light .team-mini-btn.on-team {
+.dim-overlay.pikachu .team-mini-btn.compare {
+  color: var(--accent-hover-pikachu);
+  border-color: var(--accent-hover-pikachu);
+}
+
+.dim-overlay.light .team-mini-btn.on-team,
+.dim-overlay.pikachu .team-mini-btn.on-team {
   background: #DC2626;
 }
 

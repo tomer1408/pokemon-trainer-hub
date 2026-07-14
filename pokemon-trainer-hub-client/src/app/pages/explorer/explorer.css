@@ -36,19 +36,40 @@
   --overlay-40: var(--overlay-40);
 }
 
-.explorer.light .search-banner {
+.explorer.pikachu {
+  --bg: var(--background-page-pikachu);
+  --surface: var(--surface-primary-pikachu);
+  --border-soft: var(--border-default-pikachu);
+  --text-body: var(--text-primary-pikachu);
+  --text-muted: var(--text-secondary-pikachu);
+  --violet: var(--primary-pikachu);
+  --violet-deep: var(--primary-active-pikachu);
+  --cyan: var(--accent-pikachu);
+  --yellow: var(--energy-pikachu);
+  --overlay-05: var(--overlay-05-pikachu);
+  --overlay-06: var(--overlay-06-pikachu);
+  --overlay-08: var(--overlay-08-pikachu);
+  --overlay-12: var(--overlay-05-pikachu);
+  --overlay-40: var(--overlay-35-pikachu);
+}
+
+.explorer.light .search-banner,
+.explorer.pikachu .search-banner {
   box-shadow: 0 12px 28px rgba(35, 48, 68, 0.10);
 }
 
-.explorer.light .pokemon-card:hover {
+.explorer.light .pokemon-card:hover,
+.explorer.pikachu .pokemon-card:hover {
   box-shadow: 0 14px 30px rgba(35, 48, 68, 0.16);
 }
 
-.explorer.light .confirm-card {
+.explorer.light .confirm-card,
+.explorer.pikachu .confirm-card {
   box-shadow: 0 24px 64px rgba(23, 32, 51, 0.20);
 }
 
-.explorer.light .mobile-bar {
+.explorer.light .mobile-bar,
+.explorer.pikachu .mobile-bar {
   box-shadow: 0 -8px 24px rgba(35, 48, 68, 0.18);
 }
 
@@ -60,12 +81,23 @@
   color: #9A6700;
 }
 
+.explorer.pikachu .fav-btn.active,
+.explorer.pikachu .sidebar-power-value {
+  color: var(--energy-dark);
+}
+
 .explorer.light .card-action.compare {
   color: #0D827A;
   border-color: #0D827A;
 }
 
-.explorer.light .card-action.on-team {
+.explorer.pikachu .card-action.compare {
+  color: var(--accent-hover-pikachu);
+  border-color: var(--accent-hover-pikachu);
+}
+
+.explorer.light .card-action.on-team,
+.explorer.pikachu .card-action.on-team {
   background: #DC2626;
 }
 

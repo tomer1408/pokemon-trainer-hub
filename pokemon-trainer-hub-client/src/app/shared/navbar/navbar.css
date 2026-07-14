@@ -45,6 +45,30 @@
   border-bottom: 1px solid var(--border-soft);
 }
 
+.navbar.pikachu {
+  --bg: var(--surface-primary-pikachu);
+  --surface: var(--surface-primary-pikachu);
+  --border-soft: var(--border-default-pikachu);
+  --text-body: var(--text-primary-pikachu);
+  --text-muted: var(--text-secondary-pikachu);
+  --violet: var(--primary-pikachu);
+  --violet-deep: var(--primary-active-pikachu);
+  --cyan: var(--accent-pikachu);
+  --bad: var(--error-pikachu);
+  --overlay-05: var(--overlay-05-pikachu);
+
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.navbar.pikachu .logo {
+  color: var(--cyan);
+}
+
+.navbar.pikachu .theme-btn.active {
+  background: var(--violet);
+  color: var(--text-body);
+}
+
 .navbar-left {
   display: flex;
   align-items: center;
@@ -54,11 +78,21 @@
 }
 
 .logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-family: 'Bungee', sans-serif;
   font-size: 17px;
   color: var(--violet);
   letter-spacing: 0.5px;
   text-decoration: none;
+}
+
+.logo-icon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .nav-row {

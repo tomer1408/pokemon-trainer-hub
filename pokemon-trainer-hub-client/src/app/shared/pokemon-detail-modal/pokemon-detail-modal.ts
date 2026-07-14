@@ -26,6 +26,7 @@ export class PokemonDetailModal implements OnChanges {
   // nothing to compare against on a 0-member team.
   @Input() hasTeam = false;
   @Input() isLight = false;
+  @Input() isPikachu = false;
   // Used for historical/read-only contexts (e.g. Battle History's match
   // detail) where the Pokémon shown may not even be on the trainer's team
   // anymore — hides the favorite/team-membership actions entirely rather

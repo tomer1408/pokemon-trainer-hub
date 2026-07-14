@@ -1,11 +1,11 @@
-<div class="dim-overlay" [class.light]="isLight" (click)="onClose()">
+<div class="dim-overlay" [class.light]="isLight" [class.pikachu]="isPikachu" (click)="onClose()">
   <div class="modal-outer" (click)="$event.stopPropagation()">
     <div class="modal-inner">
       <button type="button" class="close-btn" (click)="onClose()">&times;</button>
 
       @if (isLoading()) {
         <div class="loading-state">
-          <app-loading-screen [isLight]="isLight" size="sm" />
+          <app-loading-screen [isLight]="isLight" [isPikachu]="isPikachu" size="sm" />
         </div>
       } @else if (pokemon(); as p) {
         <div class="header-row">

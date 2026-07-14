@@ -1,4 +1,4 @@
-<div class="dim-overlay" [class.light]="isLight" (click)="onClose()">
+<div class="dim-overlay" [class.light]="isLight" [class.pikachu]="isPikachu" (click)="onClose()">
   <div class="modal-card" (click)="$event.stopPropagation()">
     <h2 class="modal-title">{{ title() }}</h2>
     <p class="modal-body">{{ body() }}</p>

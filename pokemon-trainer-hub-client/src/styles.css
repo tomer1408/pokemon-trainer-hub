@@ -98,6 +98,45 @@
   --shadow-modal: 0 24px 64px rgba(23, 32, 51, 0.20);
   --shadow-primary: 0 10px 24px rgba(79, 70, 229, 0.24);
   --shadow-accent: 0 10px 24px rgba(15, 159, 148, 0.20);
+
+  /* ==========================================================================
+     PIKACHU MODE
+     A third, opt-in palette (alongside Light and Dark above) — Pikachu
+     yellow as primary, its cheek-red as accent, warm-ink text on a pale
+     yellow page. Same token names/roles as the "-night" family, just a
+     "-pikachu" suffix, so components adopt it the same way they already
+     adopt Dark Mode: map local vars from these instead of hardcoding hex.
+     Rolled out gradually per-page (Navbar, Home, Profile first) rather than
+     everywhere at once.
+     ========================================================================== */
+
+  --background-page-pikachu: #FFF6D8;
+
+  --surface-primary-pikachu: #FFFFFF;
+  --surface-raised-pikachu: #FFFBEF;
+
+  --text-primary-pikachu: #241C05;
+  --text-secondary-pikachu: #6B5B1E;
+
+  --primary-pikachu: #FFC93C;
+  --primary-hover-pikachu: #FFB800;
+  --primary-active-pikachu: #E3A100;
+
+  --accent-pikachu: #E3350D;
+  --accent-hover-pikachu: #C22B08;
+
+  --energy-pikachu: #FFE066;
+
+  --error-pikachu: #D7263D;
+
+  --border-default-pikachu: #F0D98C;
+
+  --overlay-05-pikachu: rgba(36, 28, 5, 0.05);
+  --overlay-06-pikachu: rgba(36, 28, 5, 0.06);
+  --overlay-08-pikachu: rgba(36, 28, 5, 0.08);
+  --overlay-10-pikachu: rgba(36, 28, 5, 0.10);
+  --overlay-35-pikachu: rgba(36, 28, 5, 0.35);
+  --overlay-accent-10-pikachu: rgba(227, 53, 13, 0.10);
 }
 
 /* Matches the dark-theme --bg used across pages/navbar, so there's no white

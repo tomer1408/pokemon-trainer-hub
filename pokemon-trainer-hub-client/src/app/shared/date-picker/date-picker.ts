@@ -38,11 +38,22 @@ export class DatePicker {
 
   private readonly today = new Date();
   private readonly todayIso = toIso(this.today.getFullYear(), this.today.getMonth(), this.today.getDate());
+  protected readonly currentYear = this.today.getFullYear();
 
   protected readonly viewYear = signal(this.today.getFullYear());
   protected readonly viewMonth = signal(this.today.getMonth());
 
+  // 'years' is a fast jump view — pick a whole year (e.g. for a decades-old
+  // date of birth) instead of clicking the month arrows one year at a time.
+  protected readonly pickerMode = signal<'days' | 'years'>('days');
+  protected readonly yearRangeStart = signal(this.today.getFullYear());
+
   protected readonly monthLabel = computed(() => `${MONTH_NAMES[this.viewMonth()]} ${this.viewYear()}`);
+
+  protected readonly yearGrid = computed(() => {
+    const start = this.yearRangeStart();
+    return Array.from({ length: 12 }, (_, i) => start + i);
+  });
 
   // Explicit UTC — the stored value is a plain calendar date with no time
   // component, so formatting in the browser's local timezone could shift it
@@ -84,12 +95,31 @@ export class DatePicker {
         this.viewYear.set(this.today.getFullYear());
         this.viewMonth.set(this.today.getMonth());
       }
+      this.pickerMode.set('days');
     }
     this.open.update((v) => !v);
   }
 
   close(): void {
     this.open.set(false);
+  }
+
+  openYearPicker(): void {
+    this.yearRangeStart.set(this.viewYear() - (this.viewYear() % 12));
+    this.pickerMode.set('years');
+  }
+
+  selectYear(year: number): void {
+    this.viewYear.set(year);
+    this.pickerMode.set('days');
+  }
+
+  prevYearPage(): void {
+    this.yearRangeStart.update((y) => y - 12);
+  }
+
+  nextYearPage(): void {
+    this.yearRangeStart.update((y) => y + 12);
   }
 
   @HostListener('document:keydown.escape')

@@ -31,6 +31,21 @@
   --input-bg: var(--surface-primary);
 }
 
+.support-page.pikachu {
+  --bg: var(--background-page-pikachu);
+  --surface: var(--surface-primary-pikachu);
+  --border-soft: var(--border-default-pikachu);
+  --text-body: var(--text-primary-pikachu);
+  --text-muted: var(--text-secondary-pikachu);
+  --violet: var(--primary-pikachu);
+  --violet-deep: var(--primary-active-pikachu);
+  --cyan: var(--accent-pikachu);
+  --bad: var(--error-pikachu);
+  --overlay-05: var(--overlay-05-pikachu);
+  --overlay-08: var(--overlay-08-pikachu);
+  --input-bg: var(--surface-primary-pikachu);
+}
+
 .support-page {
   min-height: 100vh;
   padding-bottom: 60px;
@@ -46,10 +61,23 @@
     var(--bg);
 }
 
+.support-page.pikachu {
+  background:
+    radial-gradient(ellipse 820px 480px at 50% 0%, rgba(255, 201, 60, 0.18), transparent 62%),
+    radial-gradient(ellipse 600px 420px at 90% 20%, rgba(227, 53, 13, 0.07), transparent 65%),
+    var(--bg);
+}
+
 .support-page.light input:focus,
 .support-page.light textarea:focus {
   border-color: #4F46E5;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.16);
+}
+
+.support-page.pikachu input:focus,
+.support-page.pikachu textarea:focus {
+  border-color: var(--primary-active-pikachu);
+  box-shadow: 0 0 0 3px rgba(255, 201, 60, 0.25);
 }
 
 .support-page.light .topic-chip.active {
@@ -58,12 +86,26 @@
   color: #0D6F68;
 }
 
+.support-page.pikachu .topic-chip.active {
+  border-color: var(--accent-pikachu);
+  background: #FFF1B8;
+  color: var(--accent-hover-pikachu);
+}
+
 .support-page.light .hero-badge {
   background: linear-gradient(120deg, #4F46E5, #0F9F94);
 }
 
+.support-page.pikachu .hero-badge {
+  background: linear-gradient(120deg, #FFC93C, #E3350D);
+}
+
 .support-page.light .faq-item.open {
   background: #F8FAFC;
+}
+
+.support-page.pikachu .faq-item.open {
+  background: #FFFBEF;
 }
 
 .content {

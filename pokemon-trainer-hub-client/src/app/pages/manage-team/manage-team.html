@@ -1,6 +1,6 @@
-<div class="manage-team" [class.light]="theme.isLight()" [style.height.px]="pageHeightPx()">
+<div class="manage-team" [class.light]="theme.isLight()" [class.pikachu]="theme.isPikachu()" [style.height.px]="pageHeightPx()">
   @if (isLoading()) {
-    <app-loading-screen [isLight]="theme.isLight()" [fullScreen]="true" size="lg" [messages]="loadingTips" />
+    <app-loading-screen [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" [fullScreen]="true" size="lg" [messages]="loadingTips" />
   } @else {
     <div class="content">
       <div class="header-row">
@@ -438,6 +438,7 @@
         [isOnTeam]="isOnTeam(id)"
         [teamFull]="teamDraft().length >= 5"
         [isLight]="theme.isLight()"
+        [isPikachu]="theme.isPikachu()"
         (closed)="closeDetail()"
         (toggleFavorite)="toggleFavoriteFromModal(id)"
         (addToTeam)="addToTeamFromModal(id)"
@@ -452,6 +453,7 @@
         [mode]="compareMode()"
         [persistImmediately]="comparePersistImmediately()"
         [isLight]="theme.isLight()"
+        [isPikachu]="theme.isPikachu()"
         (closed)="closeCompare()"
         (swapped)="onCompareSwapped($event)"
       />

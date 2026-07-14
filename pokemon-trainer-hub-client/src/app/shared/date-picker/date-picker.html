@@ -13,36 +13,56 @@
   @if (open()) {
     <div class="date-scrim" (click)="close()"></div>
     <div class="date-panel" (click)="$event.stopPropagation()">
-      <div class="date-nav">
-        <button type="button" class="nav-btn" (click)="prevYear()" aria-label="Previous year">&laquo;</button>
-        <button type="button" class="nav-btn" (click)="prevMonth()" aria-label="Previous month">&lsaquo;</button>
-        <span class="date-nav-label">{{ monthLabel() }}</span>
-        <button type="button" class="nav-btn" (click)="nextMonth()" aria-label="Next month">&rsaquo;</button>
-        <button type="button" class="nav-btn" (click)="nextYear()" aria-label="Next year">&raquo;</button>
-      </div>
+      @if (pickerMode() === 'days') {
+        <div class="date-nav">
+          <button type="button" class="nav-btn" (click)="prevYear()" aria-label="Previous year">&laquo;</button>
+          <button type="button" class="nav-btn" (click)="prevMonth()" aria-label="Previous month">&lsaquo;</button>
+          <button type="button" class="date-nav-label" (click)="openYearPicker()">{{ monthLabel() }}</button>
+          <button type="button" class="nav-btn" (click)="nextMonth()" aria-label="Next month">&rsaquo;</button>
+          <button type="button" class="nav-btn" (click)="nextYear()" aria-label="Next year">&raquo;</button>
+        </div>
 
-      <div class="weekday-row">
-        @for (wd of weekdayLabels; track wd) {
-          <span class="weekday-cell">{{ wd }}</span>
-        }
-      </div>
+        <div class="weekday-row">
+          @for (wd of weekdayLabels; track wd) {
+            <span class="weekday-cell">{{ wd }}</span>
+          }
+        </div>
 
-      @for (week of weeks(); track $index) {
-        <div class="day-row">
-          @for (cell of week; track $index) {
-            @if (cell) {
-              <button
-                type="button"
-                class="day-cell"
-                [class.selected]="cell.isSelected"
-                [class.today]="cell.isToday"
-                [class.future]="cell.isFuture"
-                [disabled]="cell.isFuture"
-                (click)="selectDay(cell)"
-              >{{ cell.day }}</button>
-            } @else {
-              <span class="day-cell empty"></span>
+        @for (week of weeks(); track $index) {
+          <div class="day-row">
+            @for (cell of week; track $index) {
+              @if (cell) {
+                <button
+                  type="button"
+                  class="day-cell"
+                  [class.selected]="cell.isSelected"
+                  [class.today]="cell.isToday"
+                  [class.future]="cell.isFuture"
+                  [disabled]="cell.isFuture"
+                  (click)="selectDay(cell)"
+                >{{ cell.day }}</button>
+              } @else {
+                <span class="day-cell empty"></span>
+              }
             }
+          </div>
+        }
+      } @else {
+        <div class="date-nav">
+          <button type="button" class="nav-btn" (click)="prevYearPage()" aria-label="Previous years">&lsaquo;</button>
+          <span class="date-nav-label">{{ yearGrid()[0] }}&ndash;{{ yearGrid()[11] }}</span>
+          <button type="button" class="nav-btn" (click)="nextYearPage()" aria-label="Next years">&rsaquo;</button>
+        </div>
+
+        <div class="year-grid">
+          @for (y of yearGrid(); track y) {
+            <button
+              type="button"
+              class="year-cell"
+              [class.selected]="y === viewYear()"
+              [disabled]="y > currentYear"
+              (click)="selectYear(y)"
+            >{{ y }}</button>
           }
         </div>
       }

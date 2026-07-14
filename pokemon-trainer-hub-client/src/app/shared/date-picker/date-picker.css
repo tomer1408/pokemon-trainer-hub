@@ -110,6 +110,50 @@
   font-size: 12.5px;
   color: var(--text-body);
   white-space: nowrap;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+
+button.date-nav-label:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--cyan);
+}
+
+.year-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.year-cell {
+  border: 1px solid var(--border-soft);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-body);
+  font-family: 'Manrope', sans-serif;
+  font-size: 12.5px;
+  padding: 10px 4px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.year-cell:not(:disabled):hover {
+  border-color: var(--violet);
+}
+
+.year-cell.selected {
+  background: linear-gradient(135deg, var(--violet-deep), var(--cyan));
+  color: #fff;
+  font-weight: 800;
+  border-color: transparent;
+}
+
+.year-cell:disabled {
+  color: var(--text-muted);
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .weekday-row,

@@ -41,14 +41,39 @@
   --overlay-05: var(--overlay-05);
 }
 
+.page.pikachu {
+  --bg: var(--background-page-pikachu);
+  --surface: var(--surface-primary-pikachu);
+  --surface-raised: var(--surface-raised-pikachu);
+  --border-soft: var(--border-default-pikachu);
+  --text-body: var(--text-primary-pikachu);
+  --text-muted: var(--text-secondary-pikachu);
+  --violet: var(--primary-pikachu);
+  --violet-deep: var(--primary-active-pikachu);
+  --cyan: var(--accent-pikachu);
+  --yellow: var(--energy-pikachu);
+  --overlay-05: var(--overlay-05-pikachu);
+}
+
 .page.light .stat-value {
   color: #9A6700;
+}
+
+.page.pikachu .stat-value {
+  color: var(--energy-dark);
 }
 
 .page.light {
   background:
     radial-gradient(ellipse 850px 480px at 15% 0%, rgba(79, 70, 229, 0.07), transparent 62%),
     radial-gradient(ellipse 600px 420px at 85% 10%, rgba(15, 159, 148, 0.06), transparent 65%),
+    var(--bg);
+}
+
+.page.pikachu {
+  background:
+    radial-gradient(ellipse 850px 480px at 15% 0%, rgba(255, 201, 60, 0.20), transparent 62%),
+    radial-gradient(ellipse 600px 420px at 85% 10%, rgba(227, 53, 13, 0.08), transparent 65%),
     var(--bg);
 }
 
@@ -87,6 +112,7 @@
 .user-bubble-row { display: flex; justify-content: flex-end; animation: fadeUp 0.25s ease-out; }
 .user-bubble { background: linear-gradient(120deg, var(--violet-deep), var(--cyan)); color: #fff; border-radius: 18px 4px 18px 18px; padding: 11px 16px; font-size: 13.5px; max-width: 400px; }
 .page.light .user-bubble { background: var(--violet); }
+.page.pikachu .user-bubble { background: var(--cyan); }
 .typing-bubble { display: flex; align-items: center; gap: 5px; background: var(--surface); border: 1px solid var(--border-soft); border-radius: 4px 18px 18px 18px; padding: 14px 18px; }
 .typing-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); animation: typingDot 1s ease-in-out infinite; }
 
@@ -109,4 +135,5 @@
 .query-input { flex: 1; background: var(--surface); border: 1px solid var(--border-soft); border-radius: 100px; padding: 12px 18px; color: var(--text-body); font-size: 13.5px; outline: none; box-sizing: border-box; font-family: 'Manrope', sans-serif; }
 .send-btn { border: none; border-radius: 100px; padding: 12px 22px; cursor: pointer; background: linear-gradient(120deg, var(--violet-deep), var(--cyan)); color: #fff; font-weight: 800; font-size: 13px; }
 .page.light .send-btn { background: var(--violet); }
+.page.pikachu .send-btn { background: var(--cyan); }
 .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }

@@ -16,7 +16,17 @@
   --cyan: var(--accent);
 }
 
-.dim-overlay.light .modal-card {
+.dim-overlay.pikachu {
+  --surface: var(--surface-primary-pikachu);
+  --border-soft: var(--border-default-pikachu);
+  --text-body: var(--text-primary-pikachu);
+  --text-muted: var(--text-secondary-pikachu);
+  --violet-deep: var(--primary-active-pikachu);
+  --cyan: var(--accent-pikachu);
+}
+
+.dim-overlay.light .modal-card,
+.dim-overlay.pikachu .modal-card {
   box-shadow: 0 24px 64px rgba(23, 32, 51, 0.20);
 }
 
