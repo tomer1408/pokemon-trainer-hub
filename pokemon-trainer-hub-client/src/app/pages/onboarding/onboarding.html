@@ -47,30 +47,52 @@
       </div>
 
       <div class="field-row">
-        <label class="field-group">
+        <div class="field-group">
           <span class="field-label">Date of Birth <span class="required-mark">*</span></span>
-          <input
-            type="date"
-            name="dateOfBirth"
-            [ngModel]="form().dateOfBirth"
-            (ngModelChange)="updateField('dateOfBirth', $event)"
-          />
+          <app-date-picker [value]="form().dateOfBirth" (valueChange)="updateField('dateOfBirth', $event)" />
           @if (submitted() && dobError()) {
             <div class="field-error">{{ dobError() }}</div>
           }
-        </label>
-        <label class="field-group">
+        </div>
+        <div class="field-group">
           <span class="field-label">Country <span class="required-mark">*</span></span>
-          <select name="country" [ngModel]="form().country" (ngModelChange)="updateField('country', $event)">
-            <option value="">Select your country&hellip;</option>
-            @for (c of countries; track c) {
-              <option [value]="c">{{ c }}</option>
+          <div class="country-select">
+            <button
+              type="button"
+              class="country-trigger"
+              (click)="toggleCountryOpen()"
+              [attr.aria-expanded]="countryOpen()"
+            >
+              <span class="country-trigger-text">
+                @if (form().country) {
+                  <span class="country-flag">{{ selectedCountryFlag() }}</span>{{ form().country }}
+                } @else {
+                  <span class="country-placeholder">Select your country&hellip;</span>
+                }
+              </span>
+              <span class="country-chevron" [class.open]="countryOpen()">&#9662;</span>
+            </button>
+
+            @if (countryOpen()) {
+              <div class="country-scrim" (click)="closeCountryOpen()"></div>
+              <div class="country-panel" (click)="$event.stopPropagation()">
+                @for (c of countries; track c.code) {
+                  <button
+                    type="button"
+                    class="country-item"
+                    [class.active]="form().country === c.name"
+                    (click)="selectCountry(c.name)"
+                  >
+                    <span class="country-flag">{{ countryFlag(c.code) }}</span>{{ c.name }}
+                  </button>
+                }
+              </div>
             }
-          </select>
+          </div>
           @if (submitted() && !form().country) {
             <div class="field-error">Please select your country</div>
           }
-        </label>
+        </div>
       </div>
     </div>
 
@@ -86,7 +108,7 @@
 
       <div class="field-row">
         <label class="field-group">
-          <span class="field-label">Trainer Name <span class="required-mark">*</span></span>
+          <span class="field-label">Trainer Nickname <span class="required-mark">*</span></span>
           <div class="helper-text">What should other trainers call you?</div>
           <input
             type="text"
@@ -96,22 +118,19 @@
             (ngModelChange)="updateField('trainerName', $event)"
           />
           @if (submitted() && !form().trainerName.trim()) {
-            <div class="field-error">Choose a trainer name</div>
+            <div class="field-error">Choose a trainer nickname</div>
           }
         </label>
         <label class="field-group">
           <span class="field-label">Team Name</span>
           <div class="helper-text">Name your Dream Team.</div>
-          <div class="input-with-ai">
-            <input
-              type="text"
-              placeholder="e.g. Thunder Squad, Fire Legends, Pika Crew"
-              name="teamName"
-              [ngModel]="form().teamName"
-              (ngModelChange)="updateField('teamName', $event)"
-            />
-            <button type="button" class="ai-name-btn" (click)="openNameGenerator()">&#10024; Generate with AI</button>
-          </div>
+          <input
+            type="text"
+            placeholder="e.g. Thunder Squad, Fire Legends, Pika Crew"
+            name="teamName"
+            [ngModel]="form().teamName"
+            (ngModelChange)="updateField('teamName', $event)"
+          />
         </label>
       </div>
 
@@ -214,13 +233,5 @@
 
   @if (openPolicyModal(); as t) {
     <app-policy-modal [type]="t" (closed)="closePolicy()" />
-  }
-
-  @if (showNameGenerator()) {
-    <app-team-name-generator-modal
-      [teamEmpty]="true"
-      (closed)="closeNameGenerator()"
-      (nameSelected)="onNameSelected($event)"
-    />
   }
 </div>

@@ -1,15 +1,15 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { COUNTRIES } from '../../countries';
+import { COUNTRIES, countryFlag } from '../../countries';
 import { EXPERIENCE_LEVELS, ExperienceLevel, POKEMON_TYPES, PokemonType } from '../../trainer-profile-options';
 import { ProfileService, TrainerProfile } from '../../core/profile';
 import { AvatarIconsService, AvatarIconOption } from '../../core/avatar-icons';
 import { AVATAR_CATEGORY_ORDER, AVATAR_CATEGORY_LABELS } from '../../shared/avatar-categories';
 import { calculateAgeRange, isBelowMinAge, isFutureDate } from '../../shared/age-range';
 import { PolicyModal, PolicyType } from '../../shared/policy-modal/policy-modal';
-import { TeamNameGeneratorModal } from '../../shared/team-name-generator-modal/team-name-generator-modal';
+import { DatePicker } from '../../shared/date-picker/date-picker';
 
 interface OnboardingForm {
   firstName: string;
@@ -36,7 +36,7 @@ interface OnboardingForm {
 // the form silently submits EXPERIENCE_LEVELS[0] ('Beginner') as a default.
 @Component({
   selector: 'app-onboarding',
-  imports: [FormsModule, PolicyModal, TeamNameGeneratorModal],
+  imports: [FormsModule, PolicyModal, DatePicker],
   templateUrl: './onboarding.html',
   styleUrl: './onboarding.css',
 })
@@ -46,7 +46,32 @@ export class Onboarding {
   private readonly router = inject(Router);
 
   protected readonly countries = COUNTRIES;
+  protected readonly countryFlag = countryFlag;
   protected readonly pokemonTypes = POKEMON_TYPES;
+
+  protected readonly countryOpen = signal(false);
+  protected readonly selectedCountryFlag = computed(() => {
+    const match = COUNTRIES.find((c) => c.name === this.form().country);
+    return match ? countryFlag(match.code) : '';
+  });
+
+  toggleCountryOpen(): void {
+    this.countryOpen.update((v) => !v);
+  }
+
+  closeCountryOpen(): void {
+    this.countryOpen.set(false);
+  }
+
+  selectCountry(name: string): void {
+    this.updateField('country', name);
+    this.closeCountryOpen();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.countryOpen()) this.closeCountryOpen();
+  }
 
   protected readonly submitting = signal(false);
   protected readonly submitError = signal<string | null>(null);
@@ -54,11 +79,6 @@ export class Onboarding {
   // made — canSubmit() below still always gates the button itself.
   protected readonly submitted = signal(false);
   protected readonly openPolicyModal = signal<PolicyType | null>(null);
-  // The trainer has no Dream Team yet at this point in the flow — the
-  // generator modal itself always shows its "add a Pokémon first" state
-  // here (see [teamEmpty]="true" in the template), so this button never
-  // pretends the AI drew on real team data that doesn't exist.
-  protected readonly showNameGenerator = signal(false);
 
   protected readonly form = signal<OnboardingForm>({
     firstName: '',
@@ -154,22 +174,6 @@ export class Onboarding {
 
   closePolicy(): void {
     this.openPolicyModal.set(null);
-  }
-
-  openNameGenerator(): void {
-    this.showNameGenerator.set(true);
-  }
-
-  closeNameGenerator(): void {
-    this.showNameGenerator.set(false);
-  }
-
-  // Onboarding has no Save action of its own for this field — it's just
-  // part of the same form submitted by submitProfile() below, so picking a
-  // suggestion only fills the field locally; nothing is persisted yet.
-  onNameSelected(name: string): void {
-    this.updateField('teamName', name);
-    this.showNameGenerator.set(false);
   }
 
   submitProfile(): void {

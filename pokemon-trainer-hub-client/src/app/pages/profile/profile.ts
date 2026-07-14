@@ -43,8 +43,8 @@ type ProfileFetchStatus = 'ok' | 'missing' | 'error';
 // they were replaced with instead of being faked.
 //
 // The Edit Profile modal only lets the trainer change Avatar, Favorite Type,
-// and Team Name — Trainer Name is set once at onboarding and shown read-only
-// here (like first/last name, date of birth, and country); policy
+// and Team Name — Trainer Nickname is set once at onboarding and shown
+// read-only here (like first/last name, date of birth, and country); policy
 // acceptance is likewise permanent. Experience Level isn't user-editable
 // anywhere (server-authoritative), so it's never shown in this modal at all.
 @Component({
