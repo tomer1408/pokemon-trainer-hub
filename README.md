@@ -188,6 +188,18 @@ This means the network-level allowlist is broader than a dedicated IP would be �
 
 Auth0's **Allowed Callback URLs**, **Logout URLs**, and **Web Origins** must include the Vercel URL alongside `localhost:4200` (not replacing it, so local dev keeps working).
 
+**Build Command (Render)**: `npm install && npx prisma generate && npx prisma migrate deploy` — `migrate deploy` (not `migrate dev`) only applies migrations that already exist as files in `prisma/migrations/` (created earlier via `migrate dev` against local Docker and committed to git); it never generates or guesses new ones, which is what makes it safe to run automatically against a real production database on every deploy. This means a schema change only needs `migrate dev` run once locally — Render then applies it in production the next time `main` is deployed, with no manual step.
+
+### Keeping the free-tier backend warm
+
+Render's free tier spins the server down after ~15 minutes of no traffic; the next request then pays a one-time cold start (measured directly: ~31.5s cold vs ~0.25s once warm). The first mitigation attempt was a GitHub Actions workflow (`.github/workflows/render-keep-alive.yml`) pinging every 10 minutes — but comparing its actual run timestamps via the GitHub API showed real gaps of 1–3 hours, not 10 minutes. GitHub does not guarantee frequent `schedule` triggers fire on time, especially on low-activity repos, so the server kept going cold anyway.
+
+The real fix: **[UptimeRobot](https://uptimerobot.com)**, a purpose-built uptime monitor, pinging two endpoints every 5 minutes (comfortably inside Render's 15-minute window):
+- `GET /api/health` — keeps the Node process itself alive.
+- `GET /api/health/db` — separately exercises the real Prisma → Azure SQL connection, since that pays its own first-connection cost (measured ~4s) independently of the Node process being warm.
+
+The old GitHub Actions workflow is kept in the repo as a harmless secondary backup (unreliable timing, but free and non-conflicting) — UptimeRobot is the mechanism actually relied on.
+
 ### Deployment health check
 
 **`GET /api/health/db`** confirms the deployed backend can actually reach the database (not just that the Node process is up) — see the Health section below.
