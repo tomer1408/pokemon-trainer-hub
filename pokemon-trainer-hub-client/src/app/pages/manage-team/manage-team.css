@@ -533,6 +533,15 @@
   opacity: 0.4;
 }
 
+/* Distinguishes a slot that was already part of the saved team before this
+   visit from one only added in the current unsaved draft — a solid,
+   confirmed color instead of the animated holo gradient every slot has by
+   default, so "already real" reads as calmer/settled next to "new change". */
+.slot-outer.original-member {
+  background: var(--success);
+  animation: none;
+}
+
 .slot-inner {
   position: relative;
   background: var(--surface);
@@ -579,6 +588,13 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.slot-info-badge {
+  position: absolute;
+  bottom: -8px;
+  right: -6px;
+  z-index: 3;
 }
 
 .grip {

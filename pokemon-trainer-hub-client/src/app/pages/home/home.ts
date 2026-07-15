@@ -13,6 +13,7 @@ import { ThemeService } from '../../shared/theme';
 import { PokemonDetailModal } from '../../shared/pokemon-detail-modal/pokemon-detail-modal';
 import { TeamSwapModal } from '../../shared/team-swap-modal/team-swap-modal';
 import { LoadingScreen } from '../../shared/loading-screen/loading-screen';
+import { InfoTooltip } from '../../shared/info-tooltip/info-tooltip';
 import { dayOfYearPokemonId } from '../../shared/pokemon-of-the-day';
 
 const MAX_TEAM_SIZE = 5;
@@ -55,7 +56,7 @@ const ACTION_TILES: ActionTile[] = [
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, PokemonDetailModal, TeamSwapModal, LoadingScreen],
+  imports: [RouterLink, PokemonDetailModal, TeamSwapModal, LoadingScreen, InfoTooltip],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })

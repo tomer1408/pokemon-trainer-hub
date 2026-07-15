@@ -5,7 +5,14 @@
     <a routerLink="/my-team" class="back-link">← Back to My Team</a>
 
     <div class="header-block">
-      <h1 class="page-title">Let's figure out your next move</h1>
+      <h1 class="page-title">
+        Let's figure out your next move
+        <app-info-tooltip
+          text="A real Gemini AI model reads your team and only ever picks a Pokémon type plus its reasoning — it never invents a Pokémon. The actual Pokémon you see is always looked up afterward from real PokéAPI data, never something the model made up."
+          [isLight]="theme.isLight()"
+          [isPikachu]="theme.isPikachu()"
+        />
+      </h1>
     </div>
 
     <div class="tab-row">

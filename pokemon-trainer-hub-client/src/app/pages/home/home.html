@@ -48,7 +48,14 @@
           <div class="progress-stats-row">
             <div class="progress-stat">
               <span class="progress-stat-value">{{ teamPower() }}</span>
-              <span class="progress-stat-label">Team Power</span>
+              <span class="progress-stat-label">
+                Team Power
+                <app-info-tooltip
+                  text="Team Power is the sum of your Pokémon's real base experience. A high number alone isn't everything — covering more types and avoiding shared weaknesses makes a team stronger in practice, not just its Power total."
+                  [isLight]="theme.isLight()"
+                  [isPikachu]="theme.isPikachu()"
+                />
+              </span>
             </div>
             <div class="progress-stat">
               @if (topType(); as tt) {

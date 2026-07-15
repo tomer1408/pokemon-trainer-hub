@@ -106,7 +106,15 @@
           </section>
 
           <section class="settings-section">
-            <div class="settings-label-row"><span class="settings-num">04</span><span class="settings-title">Luck Factor</span></div>
+            <div class="settings-label-row">
+              <span class="settings-num">04</span>
+              <span class="settings-title">Luck Factor</span>
+              <app-info-tooltip
+                text="A real type advantage always wins a round outright — luck can never override it. Luck only adds randomness to the Power comparison when neither side has a type edge: Low = ±5%, Medium = ±12%, High = ±25%. Still tied after that comes down to a coin flip."
+                [isLight]="theme.isLight()"
+                [isPikachu]="theme.isPikachu()"
+              />
+            </div>
             <div class="settings-pill-row">
               @for (opt of luckOptions; track opt.value) {
                 <button type="button" class="settings-pill" [class.selected]="settings().luckFactor === opt.value" (click)="updateSetting('luckFactor', opt.value)">

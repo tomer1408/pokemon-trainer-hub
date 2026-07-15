@@ -62,7 +62,14 @@
       <!-- Team Statistics -->
       <div class="stats-card">
         <div class="stats-header-row">
-          <span class="stats-title">Team Statistics</span>
+          <span class="stats-title">
+            Team Statistics
+            <app-info-tooltip
+              text="Total Power is the sum of your Pokémon's real base experience, and Tier is based on how many Pokémon you've added. But a high Power total isn't the whole story — covering more types and avoiding shared weaknesses (see Type Coverage below) is what makes a team genuinely strong, not just its Power number."
+              [isLight]="theme.isLight()"
+              [isPikachu]="theme.isPikachu()"
+            />
+          </span>
           <span class="tier-pill">{{ tier() }}</span>
         </div>
 
@@ -133,7 +140,14 @@
             </div>
           </div>
           <div class="readiness-label-block">
-            <div class="readiness-title">Battle Readiness</div>
+            <div class="readiness-title">
+              Battle Readiness
+              <app-info-tooltip
+                text="A 0-100 score blended from three real parts: Offense (40%, your average Power), Type Coverage (35%, how many of the 18 types your team is collectively strong against), and Balance & Synergy (25%, a mix of type diversity and how evenly matched your members' power levels are)."
+                [isLight]="theme.isLight()"
+                [isPikachu]="theme.isPikachu()"
+              />
+            </div>
             <div class="readiness-verdict">{{ battleReadiness().verdict }}</div>
           </div>
         </div>
@@ -154,7 +168,14 @@
       <!-- Matchup Analysis + Squad Milestones -->
       <div class="analytics-grid">
         <div class="matchup-card">
-          <div class="matchup-title">Matchup Analysis</div>
+          <div class="matchup-title">
+            Matchup Analysis
+            <app-info-tooltip
+              text="Strong Against lists every type your team's own types deal double damage to (real PokéAPI type chart). Vulnerable To counts how many members share a real weakness to each type — a member's second type can cancel out a weakness its first type would otherwise have."
+              [isLight]="theme.isLight()"
+              [isPikachu]="theme.isPikachu()"
+            />
+          </div>
           <div class="matchup-grid">
             <div class="matchup-col">
               <div class="matchup-col-head"><span class="strong-dot"></span>Strong Against</div>

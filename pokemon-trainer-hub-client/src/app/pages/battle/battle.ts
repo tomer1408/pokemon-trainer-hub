@@ -8,6 +8,7 @@ import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
 import { ThemeService } from '../../shared/theme';
 import { AppSettingsService } from '../../shared/app-settings';
 import { LoadingScreen } from '../../shared/loading-screen/loading-screen';
+import { InfoTooltip } from '../../shared/info-tooltip/info-tooltip';
 
 const MIN_TEAM_SIZE = 1;
 // A percentage of the higher rolled Power, not a fixed number — a flat "15"
@@ -213,7 +214,7 @@ function generateExplanation(yourMon: BattleMon, oppMon: BattleMon, winner: Winn
 // full battle engine" scope decision; refreshing starts a fresh match.
 @Component({
   selector: 'app-battle',
-  imports: [RouterLink, LoadingScreen],
+  imports: [RouterLink, LoadingScreen, InfoTooltip],
   templateUrl: './battle.html',
   styleUrl: './battle.css',
 })

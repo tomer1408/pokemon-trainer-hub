@@ -1,5 +1,7 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '@auth0/auth0-angular';
 import { SupportService } from '../../core/support';
 import { ThemeService } from '../../shared/theme';
 
@@ -40,13 +42,28 @@ function emptyForm(): SupportForm {
 })
 export class Support {
   private readonly supportService = inject(SupportService);
+  private readonly auth = inject(AuthService);
   protected readonly theme = inject(ThemeService);
 
   protected readonly faqs = FAQS;
   protected readonly openFaqIndex = signal<number | null>(null);
   protected readonly topics = TOPICS;
 
+  private readonly authUser = toSignal(this.auth.user$, { initialValue: null });
+
   protected readonly form = signal<SupportForm>(emptyForm());
+
+  // Pre-fills the real Auth0 email once it resolves — still a plain editable
+  // field, not read-only, and only fills it in while the field is still
+  // empty so it never overwrites something the trainer already typed.
+  constructor() {
+    effect(() => {
+      const email = this.authUser()?.email;
+      if (email && !this.form().email) {
+        this.form.update((f) => ({ ...f, email }));
+      }
+    });
+  }
   protected readonly submitted = signal(false);
   protected readonly sending = signal(false);
   protected readonly tried = signal(false);

@@ -20,6 +20,7 @@ import { ThemeService } from '../../shared/theme';
 import { PokemonDetailModal } from '../../shared/pokemon-detail-modal/pokemon-detail-modal';
 import { LoadingScreen } from '../../shared/loading-screen/loading-screen';
 import { TeamNameGeneratorModal } from '../../shared/team-name-generator-modal/team-name-generator-modal';
+import { InfoTooltip } from '../../shared/info-tooltip/info-tooltip';
 
 const MAX_TEAM_SIZE = 5;
 
@@ -32,7 +33,7 @@ const MY_TEAM_LOADING_TIPS = [
 
 @Component({
   selector: 'app-my-team',
-  imports: [RouterLink, PokemonDetailModal, LoadingScreen, TeamNameGeneratorModal],
+  imports: [RouterLink, PokemonDetailModal, LoadingScreen, TeamNameGeneratorModal, InfoTooltip],
   templateUrl: './my-team.html',
   styleUrl: './my-team.css',
 })

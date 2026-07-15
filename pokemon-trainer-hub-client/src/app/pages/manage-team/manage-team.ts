@@ -9,6 +9,7 @@ import { ThemeService } from '../../shared/theme';
 import { PokemonDetailModal } from '../../shared/pokemon-detail-modal/pokemon-detail-modal';
 import { LoadingScreen } from '../../shared/loading-screen/loading-screen';
 import { TeamSwapModal, ComparablePokemon, SwapMode } from '../../shared/team-swap-modal/team-swap-modal';
+import { InfoTooltip } from '../../shared/info-tooltip/info-tooltip';
 
 const MAX_TEAM_SIZE = 5;
 
@@ -48,7 +49,7 @@ interface DragState {
 // endpoint from here.
 @Component({
   selector: 'app-manage-team',
-  imports: [PokemonDetailModal, LoadingScreen, TeamSwapModal],
+  imports: [PokemonDetailModal, LoadingScreen, TeamSwapModal, InfoTooltip],
   templateUrl: './manage-team.html',
   styleUrl: './manage-team.css',
 })
@@ -204,6 +205,13 @@ export class ManageTeam implements AfterViewInit {
 
   isOnTeam(pokemonId: number): boolean {
     return this.teamDraft().some((m) => m.pokemonId === pokemonId);
+  }
+
+  // Used to visually distinguish a team slot that was already part of the
+  // saved team before this visit from one that's only in the draft so far
+  // (added/moved in during this editing session, not yet saved).
+  isSavedOnTeam(pokemonId: number): boolean {
+    return this.savedIds().has(pokemonId);
   }
 
   // ---- drag lifecycle ----

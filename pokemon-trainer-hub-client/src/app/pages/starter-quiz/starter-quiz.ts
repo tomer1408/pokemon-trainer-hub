@@ -14,6 +14,7 @@ import { ThemeService } from '../../shared/theme';
 import { LoadingScreen } from '../../shared/loading-screen/loading-screen';
 import { PokemonDetailModal } from '../../shared/pokemon-detail-modal/pokemon-detail-modal';
 import { TeamSwapModal } from '../../shared/team-swap-modal/team-swap-modal';
+import { InfoTooltip } from '../../shared/info-tooltip/info-tooltip';
 
 type Phase = 'intro' | 'quiz' | 'loading' | 'results' | 'error';
 
@@ -34,7 +35,7 @@ const QUIZ_LOADING_TIPS = [
 // Team/Favorites integration every other page already uses.
 @Component({
   selector: 'app-starter-quiz',
-  imports: [RouterLink, LoadingScreen, PokemonDetailModal, TeamSwapModal],
+  imports: [RouterLink, LoadingScreen, PokemonDetailModal, TeamSwapModal, InfoTooltip],
   templateUrl: './starter-quiz.html',
   styleUrl: './starter-quiz.css',
 })

@@ -11,6 +11,7 @@ import { ThemeService } from '../../shared/theme';
 import { PokemonDetailModal } from '../../shared/pokemon-detail-modal/pokemon-detail-modal';
 import { TeamSwapModal } from '../../shared/team-swap-modal/team-swap-modal';
 import { AI_THINKING_MESSAGES } from '../../shared/ai-thinking-messages';
+import { InfoTooltip } from '../../shared/info-tooltip/info-tooltip';
 
 const MAX_TEAM_SIZE = 5;
 
@@ -31,7 +32,7 @@ interface ChatMessage {
 // the model invented.
 @Component({
   selector: 'app-ai-trainer-assistant',
-  imports: [RouterLink, PokemonDetailModal, TeamSwapModal],
+  imports: [RouterLink, PokemonDetailModal, TeamSwapModal, InfoTooltip],
   templateUrl: './ai-trainer-assistant.html',
   styleUrl: './ai-trainer-assistant.css',
 })

@@ -170,6 +170,10 @@
           @if (tab() === 'moves') {
             <div class="section-block">
               <div class="section-title">Top Moves</div>
+              <p class="section-hint">
+                The real moves this Pok&eacute;mon learns by leveling up, ranked by power — PokéAPI has no
+                official "best move" field, so this is our own proxy for strongest, not an official ranking.
+              </p>
               @if (p.topMoves.length === 0) {
                 <p class="coming-soon">No damaging level-up moves found for this Pok&eacute;mon.</p>
               } @else {

@@ -25,6 +25,24 @@ test.describe('authenticated flow (mocked Auth0 + API)', () => {
     await expect(page.getByText('Team Power')).toBeVisible();
   });
 
+  test('Team Power info tooltip opens on click and closes on outside click', async ({ page }) => {
+    // Regression check: a native `title` attribute was tried here first and
+    // didn't actually respond to a click/tap at all — this proves the real
+    // click-to-open/close popover (shared/info-tooltip) genuinely works.
+    await page.goto('/');
+    await page.getByRole('button', { name: /get started/i }).click();
+    await page.waitForURL('**/home');
+
+    const infoButton = page.getByRole('button', { name: 'More info' });
+    await expect(page.getByText(/covering more types/i)).not.toBeVisible();
+
+    await infoButton.click();
+    await expect(page.getByText(/covering more types/i)).toBeVisible();
+
+    await page.mouse.click(10, 10);
+    await expect(page.getByText(/covering more types/i)).not.toBeVisible();
+  });
+
   test('My Team renders Battle Readiness and Matchup Analysis computed from the mocked team', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: /get started/i }).click();

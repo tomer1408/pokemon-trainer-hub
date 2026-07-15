@@ -1,0 +1,74 @@
+:host {
+  position: relative;
+  display: inline-block;
+}
+
+.info-hint-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-inline-start: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-secondary-night);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.7;
+  vertical-align: middle;
+}
+
+.info-hint-btn.light {
+  color: var(--text-secondary);
+}
+
+.info-hint-btn.pikachu {
+  color: var(--text-secondary-pikachu, var(--text-secondary));
+}
+
+.info-hint-btn:hover,
+.info-hint-btn:focus-visible {
+  opacity: 1;
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: transparent;
+}
+
+.info-popover {
+  position: absolute;
+  z-index: 201;
+  top: calc(100% + 8px);
+  left: 0;
+  width: max(220px, 60vw);
+  max-width: 280px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--surface-raised-night);
+  border: 1px solid var(--border-default-night);
+  color: var(--text-primary-night);
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.5;
+  text-transform: none;
+  letter-spacing: normal;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
+}
+
+.info-popover.light {
+  background: var(--surface-raised);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+.info-popover.pikachu {
+  background: var(--surface-raised-pikachu, var(--surface-raised));
+  border-color: var(--border-default-pikachu, var(--border-default));
+  color: var(--text-primary-pikachu, var(--text-primary));
+}

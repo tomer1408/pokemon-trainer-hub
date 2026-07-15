@@ -1,0 +1,16 @@
+<button
+  type="button"
+  class="info-hint-btn"
+  [class.light]="isLight()"
+  [class.pikachu]="isPikachu()"
+  [attr.aria-label]="label()"
+  [attr.aria-expanded]="open()"
+  (click)="toggleOpen()"
+>&#9432;</button>
+
+@if (open()) {
+  <div class="scrim" (click)="close()"></div>
+  <div class="info-popover" [class.light]="isLight()" [class.pikachu]="isPikachu()" (click)="$event.stopPropagation()">
+    {{ text() }}
+  </div>
+}

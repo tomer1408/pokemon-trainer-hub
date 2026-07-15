@@ -120,6 +120,7 @@
                 class="slot-outer"
                 [class.drag-over]="overTeamIndex() === $index"
                 [class.dragging]="drag()?.item?.pokemonId === member.pokemonId"
+                [class.original-member]="isSavedOnTeam(member.pokemonId)"
                 draggable="true"
                 (dragstart)="startDrag(member, 'team')"
                 (dragend)="endDrag()"
@@ -131,6 +132,13 @@
                   <div class="heart-badge">&hearts;</div>
                 }
                 <div class="order-badge">{{ $index + 1 }}</div>
+                <div class="slot-info-badge" (click)="$event.stopPropagation()">
+                  <app-info-tooltip
+                    text="A green border means this Pokémon is already on your saved team. The animated rainbow border means it was only added in this unsaved editing session — Save Changes to make it real, or Revert to undo it."
+                    [isLight]="theme.isLight()"
+                    [isPikachu]="theme.isPikachu()"
+                  />
+                </div>
                 <div class="slot-inner">
                   <div class="grip">&#8942;&#8942;</div>
                   <div class="art" [style.background]="typeColor(member.types[0]) + '22'">

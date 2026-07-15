@@ -51,7 +51,14 @@
     @if (phase() === 'results') {
       <div class="results-shell">
         <div class="results-kicker"><span class="kicker-dot"></span>Your matches are in</div>
-        <h1 class="results-title">Meet your <span class="results-title-accent">recommended starters</span></h1>
+        <h1 class="results-title">
+          Meet your <span class="results-title-accent">recommended starters</span>
+          <app-info-tooltip
+            text="Match Score reflects how well each Pokémon fits your specific answers — type, stat, and style preferences — compared against the best possible fit for you. It's a fit score, not a probability, so it's normal for it to land well under 100%."
+            [isLight]="theme.isLight()"
+            [isPikachu]="theme.isPikachu()"
+          />
+        </h1>
 
         @if (actionError()) {
           <p class="action-error">{{ actionError() }}</p>
