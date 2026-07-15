@@ -4,7 +4,10 @@ const path = require('node:path');
 
 // Route-level tests: exercise the real Express router, but with jwtCheck and
 // services/pokeapi.js swapped for test doubles — so these never touch a real
-// Auth0 tenant or a real PokeAPI/network call.
+// Auth0 tenant or a real PokeAPI/network call. The actual ranking logic
+// (sort/tie-break/cache/dedupe) lives in services/pokeapi.js and is covered
+// by services/pokeapi.test.js instead — these tests only check that the
+// route wires the guard and the dedicated function correctly.
 describe('routes/pokemon', () => {
   let request;
   let pokeapi;
@@ -33,6 +36,10 @@ describe('routes/pokemon', () => {
       getListByType: mock.fn(async (type) =>
         type === 'unknown-type' ? null : [{ id: 4, name: 'charmander' }, { id: 5, name: 'charmeleon' }],
       ),
+      getStrongestRankedList: mock.fn(async () => [
+        { id: 5, name: 'charmeleon', baseExperience: 142 },
+        { id: 4, name: 'charmander', baseExperience: 62 },
+      ]),
       getTypeChart: mock.fn(),
     };
     mock.module(path.resolve(__dirname, '../services/pokeapi.js'), { exports: pokeapi });
@@ -55,6 +62,7 @@ describe('routes/pokemon', () => {
     pokeapi.fetchPokemonDetail.mock.resetCalls();
     pokeapi.getMasterList.mock.resetCalls();
     pokeapi.getListByType.mock.resetCalls();
+    pokeapi.getStrongestRankedList.mock.resetCalls();
   });
 
   test('GET /?sort=strongest without a type is rejected with 400 before any lookup runs', async () => {
@@ -64,7 +72,7 @@ describe('routes/pokemon', () => {
     assert.deepEqual(res.body, { message: 'Sorting by strongest requires a type filter.' });
     assert.equal(pokeapi.getMasterList.mock.calls.length, 0);
     assert.equal(pokeapi.getListByType.mock.calls.length, 0);
-    assert.equal(pokeapi.fetchPokemonDetail.mock.calls.length, 0);
+    assert.equal(pokeapi.getStrongestRankedList.mock.calls.length, 0);
   });
 
   test('GET /?sort=strongest&search=... without a type is still rejected — only type satisfies the guard', async () => {
@@ -74,20 +82,29 @@ describe('routes/pokemon', () => {
     assert.deepEqual(res.body, { message: 'Sorting by strongest requires a type filter.' });
   });
 
-  test('GET /?sort=strongest&type=... sorts the type-scoped candidates by baseExperience, descending', async () => {
+  test('GET /?sort=strongest&type=... delegates ranking to the dedicated getStrongestRankedList', async () => {
     const res = await request.get('/api/pokemon?sort=strongest&type=fire');
 
     assert.equal(res.status, 200);
-    assert.deepEqual(pokeapi.getListByType.mock.calls[0].arguments, ['fire']);
-    // fetchPokemonDetail called once to score every type candidate, then
-    // again per-page to build the actual response — ids 4 and 5 both appear
-    // in both passes, so 4 total calls for these 2 candidates.
-    assert.equal(pokeapi.fetchPokemonDetail.mock.calls.length, 4);
+    assert.deepEqual(pokeapi.getStrongestRankedList.mock.calls[0].arguments, ['fire']);
+    // The route's final per-page detail fetch is the only thing still
+    // calling fetchPokemonDetail directly here — the ranking itself is
+    // fully delegated (and mocked out) via getStrongestRankedList, so this
+    // is exactly 2 calls (one per candidate on this single page), not 4.
+    assert.equal(pokeapi.fetchPokemonDetail.mock.calls.length, 2);
     assert.deepEqual(
       res.body.results.map((p) => p.id),
-      [5, 4], // higher baseExperience (mocked as === id) first
+      [5, 4], // pre-ranked order returned as-is by the mock
     );
     assert.equal(res.body.total, 2);
+  });
+
+  test('GET /?sort=strongest&type=...&search=... re-filters the ranked list by name', async () => {
+    const res = await request.get('/api/pokemon?sort=strongest&type=fire&search=meleon');
+
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body.results.map((p) => p.id), [5]); // only "charmeleon" matches
+    assert.equal(res.body.total, 1);
   });
 
   test('GET /?sort=strongest&type=unknown-type returns 400 for an unrecognized type, same as any other sort', async () => {
@@ -95,5 +112,6 @@ describe('routes/pokemon', () => {
 
     assert.equal(res.status, 400);
     assert.equal(res.body.message, 'Unknown type "unknown-type".');
+    assert.equal(pokeapi.getStrongestRankedList.mock.calls.length, 0);
   });
 });

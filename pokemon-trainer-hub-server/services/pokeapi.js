@@ -286,4 +286,112 @@ async function getListByType(type) {
   return list;
 }
 
-module.exports = { fetchPokemonDetail, fetchPokemonFullDetail, getMasterList, getListByType, getTypeChart };
+const STRONGEST_LIMIT_DEFAULT = 5;
+const STRONGEST_LIMIT_MAX = 20;
+const STRONGEST_CONCURRENCY = 8;
+
+// Runs `worker` over `items` with at most `concurrency` in flight at once,
+// preserving the original order of results. Used instead of a single
+// unbounded Promise.all so ranking a large type (dozens-to-100+ real
+// Pokémon across every generation) on a cold cache doesn't burst PokeAPI
+// with that many simultaneous requests at once.
+async function mapWithConcurrency(items, worker, concurrency) {
+  const results = new Array(items.length);
+  let nextIndex = 0;
+
+  async function runNext() {
+    while (nextIndex < items.length) {
+      const current = nextIndex++;
+      results[current] = await worker(items[current], current);
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, runNext));
+  return results;
+}
+
+// Real positive-integer coercion + clamp — mirrors the route's own tolerant
+// parsing of `page` (Math.max(1, parseInt(page,10)||1)) rather than
+// rejecting a bad value outright, since this is meant to be a forgiving
+// convenience default, not a strict validation boundary.
+function normalizeStrongestLimit(limit) {
+  const n = Number.isInteger(limit) ? limit : parseInt(limit, 10);
+  if (!Number.isInteger(n) || n <= 0) return STRONGEST_LIMIT_DEFAULT;
+  return Math.min(n, STRONGEST_LIMIT_MAX);
+}
+
+// One in-flight Promise per normalized type — concurrent callers for the
+// same type share the same computation instead of each starting their own
+// full detail-fetch-and-sort pass. Removed as soon as it settles (success
+// or failure), so a failure never blocks a later retry.
+const strongestInFlight = new Map();
+
+async function buildStrongestRanking(key) {
+  const list = await getListByType(key);
+  if (!list) return null; // unknown type
+
+  const detailed = await mapWithConcurrency(
+    list,
+    (c) => fetchPokemonDetail(c.id).catch(() => null),
+    STRONGEST_CONCURRENCY,
+  );
+
+  return detailed
+    .filter(Boolean)
+    .map((p) => ({ id: p.id, name: p.name, baseExperience: p.baseExperience }))
+    .sort((a, b) => b.baseExperience - a.baseExperience || a.id - b.id);
+}
+
+// The complete ranked list for one type — id/name/baseExperience only (a
+// compact representation, not the full Pokémon shape), cached once per type
+// for 24h under `strongest-by-type:<type>` (stable PokeAPI data, same TTL
+// already used for getListByType/type matchups). A cache hit skips the
+// detail-fetch-and-sort pass entirely. Returns null for an unknown type;
+// throws if PokeAPI itself is unreachable. Never caches a failed or empty
+// ranking, so a transient failure or a genuinely empty result can always be
+// retried on the next call instead of getting stuck.
+async function getStrongestRankedList(type) {
+  const key = String(type).trim().toLowerCase();
+  const cacheKey = `strongest-by-type:${key}`;
+
+  const cached = pokeCache.get(cacheKey);
+  if (cached) return cached;
+
+  if (strongestInFlight.has(key)) return strongestInFlight.get(key);
+
+  const promise = buildStrongestRanking(key).then(
+    (ranked) => {
+      strongestInFlight.delete(key);
+      if (ranked && ranked.length > 0) pokeCache.set(cacheKey, ranked, 86400);
+      return ranked;
+    },
+    (err) => {
+      strongestInFlight.delete(key);
+      throw err;
+    },
+  );
+
+  strongestInFlight.set(key, promise);
+  return promise;
+}
+
+// Dedicated, cached, concurrency-safe "top N strongest of a type" lookup —
+// used by the AI Trainer Assistant (via a thin wrapper in
+// services/assistantService.js) and by GET /api/pokemon?sort=strongest.
+// `limit` is validated/clamped (see normalizeStrongestLimit) rather than
+// rejected outright. Returns null for an unknown type.
+async function getStrongestOfType(type, limit = STRONGEST_LIMIT_DEFAULT) {
+  const ranked = await getStrongestRankedList(type);
+  if (!ranked) return null;
+  return ranked.slice(0, normalizeStrongestLimit(limit));
+}
+
+module.exports = {
+  fetchPokemonDetail,
+  fetchPokemonFullDetail,
+  getMasterList,
+  getListByType,
+  getTypeChart,
+  getStrongestRankedList,
+  getStrongestOfType,
+};

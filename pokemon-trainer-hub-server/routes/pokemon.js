@@ -1,6 +1,13 @@
 const express = require('express');
 const jwtCheck = require('../middleware/auth');
-const { fetchPokemonDetail, fetchPokemonFullDetail, getMasterList, getListByType, getTypeChart } = require('../services/pokeapi');
+const {
+  fetchPokemonDetail,
+  fetchPokemonFullDetail,
+  getMasterList,
+  getListByType,
+  getTypeChart,
+  getStrongestRankedList,
+} = require('../services/pokeapi');
 
 const PAGE_SIZE = 20;
 const router = express.Router();
@@ -65,13 +72,14 @@ router.get('/', jwtCheck, async (req, res) => {
     if (sort === 'name') {
       candidates = [...candidates].sort((a, b) => a.name.localeCompare(b.name));
     } else if (sort === 'strongest') {
-      // Needs full details for every candidate to know its total power — cached,
-      // so this is only slow the very first time an unfiltered list is sorted this way.
-      const detailed = await Promise.all(candidates.map((c) => fetchPokemonDetail(c.id)));
-      candidates = detailed
-        .filter(Boolean)
-        .sort((a, b) => b.baseExperience - a.baseExperience)
-        .map((p) => ({ id: p.id, name: p.name }));
+      // type is guaranteed present here (guarded above). Uses the shared,
+      // cached full ranking for this type — keyed by type alone, not by
+      // search term, so it's reused across different searches of the same
+      // type — then re-applies the same name filter search already applied
+      // to every other sort mode above, since that filtering happened
+      // before this ranked list existed.
+      const ranked = await getStrongestRankedList(type);
+      candidates = search ? ranked.filter((p) => p.name.includes(search.toLowerCase())) : ranked;
     } else {
       candidates = [...candidates].sort((a, b) => a.id - b.id);
     }

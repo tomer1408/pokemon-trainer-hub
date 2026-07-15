@@ -1,7 +1,7 @@
 const { ChatGoogleGenerativeAI } = require('@langchain/google-genai');
 const { SystemMessage, HumanMessage, AIMessage } = require('@langchain/core/messages');
 const { z } = require('zod');
-const { getListByType, fetchPokemonDetail } = require('./pokeapi');
+const { fetchPokemonDetail, getStrongestOfType: getStrongestOfTypeRanked } = require('./pokeapi');
 const { VALID_STYLES, MAX_NAME_LENGTH, buildFallbackNames, sanitizeNames } = require('./teamNameFallback');
 
 // Only the most recent messages are sent — keeps token usage (and cost/
@@ -204,16 +204,16 @@ async function queryDescription(text, deps = {}) {
 
 // Always the real, current strongest Pokémon of a type from PokeAPI (via
 // the same cached service the Explorer/AI Assistant already use) — never
-// anything the model produced itself.
+// anything the model produced itself. Delegates the actual ranking to
+// services/pokeapi.js's cached, deduplicated, concurrency-limited
+// getStrongestOfType(type, limit) — this wrapper just asks for the top 1 and
+// re-fetches its full detail (a cache hit: every candidate's detail was
+// already fetched while building the ranking), keeping this function's own
+// external shape (one Pokémon or null) exactly as it was before.
 async function getStrongestOfType(type) {
-  const list = await getListByType(type);
-  if (!list) return null;
-
-  const detailed = await Promise.all(list.map((c) => fetchPokemonDetail(c.id).catch(() => null)));
-  const valid = detailed.filter(Boolean);
-  if (valid.length === 0) return null;
-
-  return valid.reduce((a, b) => (b.baseExperience > a.baseExperience ? b : a));
+  const ranked = await getStrongestOfTypeRanked(type, 1);
+  if (!ranked || ranked.length === 0) return null;
+  return fetchPokemonDetail(ranked[0].id);
 }
 
 // Honest, non-AI stand-in when Gemini itself doesn't answer in time — unlike

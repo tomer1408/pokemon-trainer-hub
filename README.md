@@ -143,7 +143,7 @@ npm test
 ```
 
 Server tests fall into two kinds:
-- **Service/utility tests** (`services/*.test.js`) — pure logic: age-range bucketing, the team-name fallback generator, the rate limiter, the Gemini-backed assistant service's fallback behavior (mocking the model call, never a real Gemini request).
+- **Service/utility tests** (`services/*.test.js`) — pure logic: age-range bucketing, the team-name fallback generator, the rate limiter, the Gemini-backed assistant service's fallback behavior (mocking the model call, never a real Gemini request), and the strongest-by-type ranking cache (tie-breaking, limit clamping, cache reuse, in-flight de-duplication, and retry-after-failure — stubbing `global.fetch` directly rather than a real PokeAPI call).
 - **Route-level tests** (`routes/*.test.js`) — exercise the real Express router and its error-code mapping through `supertest`, with `middleware/auth.js` and the relevant service module swapped for test doubles via Node's built-in module mocking (`node:test`'s `mock.module`, hence the `--experimental-test-module-mocks` flag baked into the `test` script) — so these never touch a real Auth0 tenant or a real database.
 
 ```bash
@@ -226,7 +226,7 @@ Response: `{ "status": "ok", "db": "ok" }`, or `503 { "status": "error", "db": "
 
 **`GET /api/pokemon`** — search/browse, proxied from PokeAPI with in-memory caching.
 
-Query params (all optional):
+Query params (all optional, except `type` for `sort=strongest` — see below):
 | Param | Values | Default |
 |---|---|---|
 | `search` | substring match on name | — |
@@ -234,8 +234,10 @@ Query params (all optional):
 | `sort` | `id` \| `name` \| `strongest` | `id` |
 | `page` | page number | `1` (20 results/page) |
 
+`sort=strongest` **requires** `type` — ranking needs a real detail fetch per candidate, and an unfiltered sort would mean ranking PokeAPI's entire dataset (1,300+ Pokémon) on every cold-cache request. The actual ranking is computed once per type and cached for 24h (`services/pokeapi.js`'s `getStrongestRankedList`/`getStrongestOfType`), with in-flight de-duplication (concurrent requests for the same uncached type share one computation) and a bounded concurrency limit (8 detail fetches in flight at a time, never one unbounded burst) — the same ranked-by-type data also backs the AI Trainer Assistant's "strongest of type" pick (see below).
+
 Response: `{ results: Pokemon[], page, pageSize, total }`
-Errors: `400` for an unknown `type`, `502` if PokeAPI is unreachable.
+Errors: `400` for an unknown `type`, or for `sort=strongest` without a `type`; `502` if PokeAPI is unreachable.
 
 **`GET /api/pokemon/:id`** — single Pokémon, by numeric id or name. Fuller shape than the list endpoint (adds flavor text, type weaknesses/resistances, ability descriptions, top moves) — this is what backs the Pokémon Detail Modal.
 
