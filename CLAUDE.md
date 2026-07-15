@@ -116,11 +116,15 @@ stale context from earlier in the conversation.
 - Manage My Team has its own separate, already-unforced "⇄ Compare" flow
   (per team-slot / favorite / bench card) — deliberately distinct from the
   Explorer/Home/Starter Quiz "Compare with My Team" entry point above; don't
-  merge the two. Its compare-swap only hits the real backend endpoint when
-  the anchor being compared is an actual, already-saved team/favorite state
-  — an item that's only sitting in the local unsaved drag draft (e.g. just
-  dragged onto the Bench, not yet Saved) gets the swap applied locally
-  instead, since the server doesn't know about the local change yet.
+  merge the two. Nothing on this page reaches the backend immediately
+  anymore — not a drag-to-trash removal (even after its own confirm dialog),
+  a Compare/Swap pick, or a Favorites toggle. Everything (team AND
+  favorites) is staged into draft state; only "Save Changes" commits
+  anything real, and "Revert" restores the exact team + favorites the
+  trainer had before this visit, even undoing already-confirmed removals.
+  The confirmation dialogs themselves (trash removal, Save, Revert, leaving
+  with unsaved changes) are unchanged — only the timing of the real
+  backend write moved to Save.
 - Trainer Profile edits are scoped to team/trainer-identity fields only
   (Trainer Name, Favorite Type, Experience Level, Team Name, Avatar) — first/
   last name, date of birth, and country are set once at onboarding and shown

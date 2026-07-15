@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, ElementRef, HostListener, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { Observable, forkJoin, map, of } from 'rxjs';
 import { TeamService } from '../../core/team';
 import { FavoritesService } from '../../core/favorites';
 import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
@@ -25,24 +25,27 @@ interface DragState {
   from: DragSource;
 }
 
-// This page follows a savedState / draftState pattern:
-//   - savedTeam  = the last state actually confirmed by the backend.
-//   - teamDraft  = the local, in-progress state the user is editing by
-//     dragging cards around. Nothing here is real until Save Changes.
-// hasUnsavedChanges() always compares the two by ORDERED pokemonId arrays —
-// never by object identity — so a pure reorder (same 5 members, different
-// order) is detected exactly the same way an add/remove is.
+// This page follows a savedState / draftState pattern, and — deliberately,
+// unlike every other page in the app — NOTHING here reaches the backend
+// immediately, not even a confirmed trash removal, a Compare/Swap pick, or a
+// favorite toggle. Everything is staged into draft state; only Save Changes
+// commits anything real. This is what makes Revert genuinely restore the
+// exact team (and favorites) the trainer had before this visit, no matter
+// how many confirmed edits happened in between:
+//   - savedTeam / savedFavorites = the last state actually confirmed by the
+//     backend (set once on load, and again only after a successful Save).
+//   - teamDraft / allFavorites   = the local, in-progress state the user is
+//     editing. Nothing here is real until Save Changes.
+// hasUnsavedChanges() compares teamDraft against savedTeam by ORDERED
+// pokemonId arrays (so a pure reorder is detected the same way as an add/
+// remove) and allFavorites against savedFavorites by unordered id set
+// (favorites have no meaningful order).
 //
-// Favorites are persisted to the backend the instant you drag onto the
-// Favorites pool (matching the "favorite toggle is instant" convention used
-// everywhere else in the app) — they are never part of the draft/Save flow.
 // The Bench is purely client-side and is never sent to the backend at all.
-//
 // The "Compare" action on a team slot / favorite card opens the shared
-// TeamSwapModal directly against the real backend (same swap endpoint the
-// Explorer/Home overflow flow uses) when its anchor is already-saved —
-// it is NOT staged through the draft/Save mechanism in that case, so a
-// successful compare-swap reloads fresh state from the server afterward.
+// TeamSwapModal with persistImmediately=false — it only ever reports the
+// pick back to this page's draft state, never touches the real swap
+// endpoint from here.
 @Component({
   selector: 'app-manage-team',
   imports: [PokemonDetailModal, LoadingScreen, TeamSwapModal],
@@ -78,6 +81,7 @@ export class ManageTeam implements AfterViewInit {
 
   // ---- savedState ----
   private readonly savedTeam = signal<ComparablePokemon[]>([]);
+  private readonly savedFavorites = signal<ComparablePokemon[]>([]);
 
   // ---- draftState ----
   protected readonly teamDraft = signal<ComparablePokemon[]>([]);
@@ -110,14 +114,12 @@ export class ManageTeam implements AfterViewInit {
   // Dropping here never deletes anything by itself — it only stages a
   // confirmation (pendingRemove). Dropping optimistically hides the card
   // from its team slot immediately (index kept so Cancel can put it back in
-  // the same spot) — only confirmRemove() actually calls the backend, and it
-  // does so immediately (the existing DELETE /api/team/:id, same endpoint
-  // Explorer's remove button already uses) rather than going through the
-  // draft/Save Changes flow, since a confirmed removal is a real, committed
-  // action, not a pending edit.
+  // the same spot). confirmRemove() only commits the removal to teamDraft —
+  // like every other change on this page (reorder/add/swap), it stays
+  // draft-only and never touches the backend until Save Changes runs. This
+  // is what lets Revert genuinely restore the exact previous team, even
+  // after a removal has already been confirmed here.
   protected readonly pendingRemove = signal<{ item: ComparablePokemon; index: number } | null>(null);
-  protected readonly isRemoving = signal(false);
-  protected readonly removeError = signal<string | null>(null);
   protected readonly showRemovedToast = signal(false);
 
   // ---- Head-to-Head comparison (reuses TeamSwapModal) ----
@@ -137,6 +139,7 @@ export class ManageTeam implements AfterViewInit {
       this.savedTeam.set(team);
       this.teamDraft.set(team);
       this.benchDraft.set([]);
+      this.savedFavorites.set(favorites);
       this.allFavorites.set(favorites);
       this.isLoading.set(false);
       // The loading screen and the real layout can render at slightly
@@ -165,12 +168,23 @@ export class ManageTeam implements AfterViewInit {
   // never object references — so both a pure reorder (same members, new
   // sequence) and a membership change (add/remove) are detected the same
   // way.
-  protected readonly hasUnsavedChanges = computed(() => {
+  private hasTeamChanges(): boolean {
     const draftOrder = this.teamDraft().map((m) => m.pokemonId);
     const savedOrder = this.savedTeam().map((m) => m.pokemonId);
     if (draftOrder.length !== savedOrder.length) return true;
     return draftOrder.some((id, i) => id !== savedOrder[i]);
-  });
+  }
+
+  // Favorites have no meaningful order, so this is a plain set comparison —
+  // unlike the team, an add and a remove are symmetric, not a sequence.
+  private hasFavoriteChanges(): boolean {
+    const draftIds = new Set(this.allFavorites().map((f) => f.pokemonId));
+    const savedIds = new Set(this.savedFavorites().map((f) => f.pokemonId));
+    if (draftIds.size !== savedIds.size) return true;
+    return [...draftIds].some((id) => !savedIds.has(id));
+  }
+
+  protected readonly hasUnsavedChanges = computed(() => this.hasTeamChanges() || this.hasFavoriteChanges());
 
   // Live preview of the draft team's stats — recomputed from teamDraft(),
   // not savedTeam(), using the exact same shared calculations as Home/My
@@ -190,13 +204,6 @@ export class ManageTeam implements AfterViewInit {
 
   isOnTeam(pokemonId: number): boolean {
     return this.teamDraft().some((m) => m.pokemonId === pokemonId);
-  }
-
-  // A team slot is only eligible for the real Compare & Swap flow once it's
-  // actually persisted server-side — a member that only exists in the local
-  // drag draft (not yet saved) can't be swapped via the real endpoint.
-  isSavedOnTeam(pokemonId: number): boolean {
-    return this.savedIds().has(pokemonId);
   }
 
   // ---- drag lifecycle ----
@@ -314,9 +321,9 @@ export class ManageTeam implements AfterViewInit {
     this.endDrag();
   }
 
-  // Dropping onto Favorites returns the card to the pool and guarantees it's
-  // marked as a favorite — calls the real API right away, not gated by Save
-  // (Favorites are a separate persisted concept from the team draft).
+  // Dropping onto Favorites returns the card to the pool and marks it as a
+  // favorite in the draft only — like every other change on this page, it's
+  // only committed to the backend when Save Changes runs.
   moveToFav(): void {
     const drag = this.drag();
     if (!drag) return;
@@ -326,9 +333,7 @@ export class ManageTeam implements AfterViewInit {
     this.endDrag();
 
     if (!this.isFavorite(drag.item.pokemonId)) {
-      this.favoritesService.addFavorite(drag.item.pokemonId).subscribe((ok) => {
-        if (ok) this.allFavorites.update((list) => [...list, drag.item]);
-      });
+      this.allFavorites.update((list) => [...list, drag.item]);
     }
   }
 
@@ -356,13 +361,11 @@ export class ManageTeam implements AfterViewInit {
     const index = this.teamDraft().findIndex((m) => m.pokemonId === drag.item.pokemonId);
     if (index === -1) return;
 
-    this.removeError.set(null);
     this.teamDraft.update((list) => list.filter((m) => m.pokemonId !== drag.item.pokemonId));
     this.pendingRemove.set({ item: drag.item, index });
   }
 
   cancelRemove(): void {
-    if (this.isRemoving()) return;
     const pending = this.pendingRemove();
     if (pending) {
       const idx = Math.min(pending.index, this.teamDraft().length);
@@ -371,31 +374,16 @@ export class ManageTeam implements AfterViewInit {
     this.pendingRemove.set(null);
   }
 
+  // Already gone from teamDraft since the drop itself — this only clears the
+  // pending-removal safety net. Draft-only, like every other change on this
+  // page: nothing reaches the backend until Save Changes runs, which is what
+  // lets Revert bring this Pokémon straight back if the user changes their
+  // mind later in the same session.
   confirmRemove(): void {
-    const pending = this.pendingRemove();
-    if (!pending) return;
-    const target = pending.item;
-
-    this.isRemoving.set(true);
-    this.removeError.set(null);
-
-    this.teamService.removeFromTeam(target.pokemonId).subscribe({
-      next: () => {
-        this.isRemoving.set(false);
-        // Already gone from teamDraft since the drop itself — just reconcile
-        // savedState now that the backend confirms it's really deleted, so
-        // hasUnsavedChanges() still correctly reflects only whatever OTHER
-        // reorder is pending.
-        this.savedTeam.update((list) => list.filter((m) => m.pokemonId !== target.pokemonId));
-        this.pendingRemove.set(null);
-        this.showRemovedToast.set(true);
-        setTimeout(() => this.showRemovedToast.set(false), 2400);
-      },
-      error: () => {
-        this.isRemoving.set(false);
-        this.removeError.set('Something went wrong removing this Pokémon. Please try again.');
-      },
-    });
+    if (!this.pendingRemove()) return;
+    this.pendingRemove.set(null);
+    this.showRemovedToast.set(true);
+    setTimeout(() => this.showRemovedToast.set(false), 2400);
   }
 
   openDetail(pokemonId: number): void {
@@ -406,33 +394,25 @@ export class ManageTeam implements AfterViewInit {
     this.selectedPokemonId.set(null);
   }
 
-  // Modal already confirmed with the user before emitting this — same real
-  // DELETE /api/team/:id endpoint the drag-to-trash flow above uses, applied
-  // directly to both teamDraft and savedTeam since this page's team state
-  // isn't refetched from the server like the other pages.
+  // Modal already confirmed with the user before emitting this. Draft-only,
+  // same as the drag-to-trash flow above — nothing here touches the backend
+  // until Save Changes runs.
   removeFromTeamModal(pokemonId: number): void {
-    this.teamService.removeFromTeam(pokemonId).subscribe(() => {
-      this.teamDraft.update((list) => list.filter((m) => m.pokemonId !== pokemonId));
-      this.savedTeam.update((list) => list.filter((m) => m.pokemonId !== pokemonId));
-      this.closeDetail();
-    });
+    this.teamDraft.update((list) => list.filter((m) => m.pokemonId !== pokemonId));
+    this.closeDetail();
   }
 
+  // Draft-only, same as every other change on this page — committed to the
+  // backend only when Save Changes runs.
   toggleFavoriteFromModal(pokemonId: number): void {
-    const obs = this.isFavorite(pokemonId)
-      ? this.favoritesService.removeFavorite(pokemonId)
-      : this.favoritesService.addFavorite(pokemonId);
-    obs.subscribe((ok) => {
-      if (!ok) return;
-      if (this.isFavorite(pokemonId)) {
-        this.allFavorites.update((list) => list.filter((f) => f.pokemonId !== pokemonId));
-      } else {
-        const fromTeam = this.teamDraft().find((m) => m.pokemonId === pokemonId);
-        const fromBench = this.benchDraft().find((m) => m.pokemonId === pokemonId);
-        const member = fromTeam ?? fromBench;
-        if (member) this.allFavorites.update((list) => [...list, member]);
-      }
-    });
+    if (this.isFavorite(pokemonId)) {
+      this.allFavorites.update((list) => list.filter((f) => f.pokemonId !== pokemonId));
+      return;
+    }
+    const fromTeam = this.teamDraft().find((m) => m.pokemonId === pokemonId);
+    const fromBench = this.benchDraft().find((m) => m.pokemonId === pokemonId);
+    const member = fromTeam ?? fromBench;
+    if (member) this.allFavorites.update((list) => [...list, member]);
   }
 
   // Adding straight from the Detail Modal stages the change the same way a
@@ -465,25 +445,74 @@ export class ManageTeam implements AfterViewInit {
   confirmSave(): void {
     const finalOrder = this.teamDraft().map((m) => m.pokemonId);
 
+    // Favorites diff: only entries that differ from the last saved snapshot
+    // need a real API call — everything else on the page was already true
+    // as of the last save.
+    const savedFavIds = new Set(this.savedFavorites().map((f) => f.pokemonId));
+    const draftFavorites = this.allFavorites();
+    const draftFavIds = new Set(draftFavorites.map((f) => f.pokemonId));
+    const toAdd = draftFavorites.filter((f) => !savedFavIds.has(f.pokemonId));
+    const toRemove = this.savedFavorites().filter((f) => !draftFavIds.has(f.pokemonId));
+
+    type FavoriteResult = { pokemon: ComparablePokemon; ok: boolean; kind: 'add' | 'remove' };
+    const favoriteCalls: Observable<FavoriteResult>[] = [
+      ...toAdd.map((f) =>
+        this.favoritesService.addFavorite(f.pokemonId).pipe(map((ok) => ({ pokemon: f, ok, kind: 'add' as const }))),
+      ),
+      ...toRemove.map((f) =>
+        this.favoritesService.removeFavorite(f.pokemonId).pipe(map((ok) => ({ pokemon: f, ok, kind: 'remove' as const }))),
+      ),
+    ];
+
     this.isSaving.set(true);
     this.saveError.set(null);
 
-    // One atomic backend call (add/remove/reorder together) instead of three
-    // separate requests — either the whole new team lands, or none of it
-    // does. `teamDraft` is left untouched until the server confirms success,
-    // so a failed save never pretends to have worked.
-    this.teamService.saveTeam(finalOrder).subscribe((result) => {
+    // Team save stays one atomic backend call (add/remove/reorder together)
+    // — either the whole new team lands, or none of it does. Favorite
+    // changes are independent (no cap, no ordering), so they run alongside
+    // it rather than being folded into the same endpoint.
+    forkJoin({
+      team: this.teamService.saveTeam(finalOrder),
+      favorites: favoriteCalls.length === 0 ? of([] as FavoriteResult[]) : forkJoin(favoriteCalls),
+    }).subscribe(({ team, favorites }) => {
       this.isSaving.set(false);
-      if (!result.ok) {
-        this.saveError.set(result.message);
+      if (!team.ok) {
+        this.saveError.set(team.message);
         return;
       }
-      this.showSaveConfirm.set(false);
-      // savedState comes from what the server actually persisted, not from
+
+      // savedTeam comes from what the server actually persisted, not from
       // the local draft — the two should match, but the server's response is
       // the authoritative one.
-      this.savedTeam.set(result.team);
-      this.teamDraft.set(result.team);
+      this.savedTeam.set(team.team);
+      this.teamDraft.set(team.team);
+
+      // Reconcile savedFavorites with whichever adds/removes actually
+      // succeeded — a failed favorite call just leaves that one entry as
+      // still "unsaved," so the next Save Changes retries only it, without
+      // undoing the team save that already succeeded above.
+      let nextSavedFavorites = this.savedFavorites();
+      for (const r of favorites) {
+        if (!r.ok) continue;
+        nextSavedFavorites =
+          r.kind === 'add'
+            ? [...nextSavedFavorites, r.pokemon]
+            : nextSavedFavorites.filter((f) => f.pokemonId !== r.pokemon.pokemonId);
+      }
+      this.savedFavorites.set(nextSavedFavorites);
+
+      // A favorite-call failure keeps the confirm dialog open with the
+      // error shown (same pattern as a team-save failure above) — the team
+      // save already succeeded and won't be retried, but "Save Changes"
+      // clicked again will only retry whichever favorite(s) are still
+      // unreconciled.
+      const failedFavorite = favorites.some((r) => !r.ok);
+      if (failedFavorite) {
+        this.saveError.set('Team saved, but some favorite changes could not be saved. Please try again.');
+        return;
+      }
+
+      this.showSaveConfirm.set(false);
       this.showSavedToast.set(true);
       setTimeout(() => this.showSavedToast.set(false), 2400);
     });
@@ -503,6 +532,7 @@ export class ManageTeam implements AfterViewInit {
   confirmRevert(): void {
     this.teamDraft.set(this.savedTeam());
     this.benchDraft.set([]);
+    this.allFavorites.set(this.savedFavorites());
     this.showRevertConfirm.set(false);
   }
 
@@ -524,6 +554,7 @@ export class ManageTeam implements AfterViewInit {
     this.showLeaveConfirm.set(false);
     this.teamDraft.set(this.savedTeam());
     this.benchDraft.set([]);
+    this.allFavorites.set(this.savedFavorites());
     this.router.navigateByUrl('/my-team');
   }
 
@@ -548,25 +579,11 @@ export class ManageTeam implements AfterViewInit {
     this.compareMode() === 'team-vs-favorites' ? this.favoriteCandidates() : this.savedTeamMembers(),
   );
 
-  // A team-vs-favorites comparison can only hit the real swap endpoint if
-  // its anchor is an actual, already-saved team member. If the anchor is
-  // only sitting in the local drag draft (just dragged in, not yet saved),
-  // there's nothing real to remove server-side yet — the modal is told to
-  // skip the backend call and just report the pick instead.
-  //
-  // The reverse case matters just as much for favorite-vs-team: the "⇄
-  // Compare" button on a Bench card is available for any favorited card,
-  // including one that's still a real saved team member the user only just
-  // dragged onto the Bench locally (not yet saved). Sending that anchor to
-  // the real swap endpoint as the "add" side fails server-side with a
-  // DUPLICATE 409 (it's already on the team in the database) — the modal
-  // never closes because the request never actually succeeds. So this must
-  // go local-only whenever the favorite anchor is already really on the team.
-  protected readonly comparePersistImmediately = computed(() => {
-    const id = this.compareAnchorId();
-    if (id === null) return true;
-    return this.compareMode() === 'team-vs-favorites' ? this.isSavedOnTeam(id) : !this.isSavedOnTeam(id);
-  });
+  // Always local-only on this page — like every other change here, a
+  // Compare/Swap pick is only staged into the draft and never touches the
+  // real swap endpoint. It's captured by the normal Save Changes flow later,
+  // same as a drag-and-drop reorder or a trash removal.
+  protected readonly comparePersistImmediately = computed(() => false);
 
   compareFavoriteAgainstTeam(pokemonId: number): void {
     this.compareMode.set('favorite-vs-team');
@@ -582,24 +599,13 @@ export class ManageTeam implements AfterViewInit {
     this.compareAnchorId.set(null);
   }
 
+  // Always draft-only (persistImmediately is always false on this page) —
+  // apply the swap locally, captured by the normal Save Changes flow later.
+  // The favorite being swapped in never leaves Favorites; it just moves out
+  // of the pool/bench into the team draft.
   onCompareSwapped(result: { removedPokemonId: number; addedPokemonId: number }): void {
-    const wasImmediate = this.comparePersistImmediately();
     this.compareAnchorId.set(null);
 
-    if (wasImmediate) {
-      // The swap already happened against the real backend (same endpoint
-      // as the Explorer/Home overflow flow) — reload authoritative
-      // state so the page reflects it. This intentionally discards any
-      // OTHER not-yet-saved local drag arrangement, since the server-side
-      // team just changed underneath it.
-      this.reloadFromServer();
-      return;
-    }
-
-    // The anchor was only a local, unsaved draft pick — apply the swap
-    // locally too (no backend call). It's captured by the normal Save
-    // Changes flow later. The favorite being swapped in never leaves
-    // Favorites; it just moves out of the pool/bench into the team draft.
     const incoming = this.allFavorites().find((f) => f.pokemonId === result.addedPokemonId);
     if (!incoming) return;
     this.teamDraft.update((list) =>

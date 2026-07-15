@@ -410,14 +410,9 @@
         <div class="confirm-card" (click)="$event.stopPropagation()">
           <h2 class="confirm-title">Remove this Pok&eacute;mon from your Dream Team?</h2>
           <p class="confirm-body">You can add it again later from the Explorer.</p>
-          @if (removeError()) {
-            <p class="confirm-error">{{ removeError() }}</p>
-          }
           <div class="confirm-actions">
-            <button type="button" class="confirm-cancel" [disabled]="isRemoving()" (click)="cancelRemove()">Cancel</button>
-            <button type="button" class="confirm-delete" [disabled]="isRemoving()" (click)="confirmRemove()">
-              {{ isRemoving() ? 'Removing…' : 'Remove Pokémon' }}
-            </button>
+            <button type="button" class="confirm-cancel" (click)="cancelRemove()">Cancel</button>
+            <button type="button" class="confirm-delete" (click)="confirmRemove()">Remove Pokémon</button>
           </div>
         </div>
       </div>
