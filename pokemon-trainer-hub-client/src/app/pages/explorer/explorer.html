@@ -12,11 +12,14 @@
 
     <div class="search-divider"></div>
 
-    <select class="sort-select" [ngModel]="sortBy()" (ngModelChange)="sortBy.set($event)">
-      <option value="name">Sort: Name (A&ndash;Z)</option>
-      <option value="power">Sort: Power (high&ndash;low)</option>
-      <option value="dex">Sort: Dex number</option>
-    </select>
+    <div class="sort-toggle" role="group" aria-label="Sort">
+      <button type="button" class="sort-btn" [class.active]="sortBy() === 'name'" (click)="sortBy.set('name')">
+        Name (A&ndash;Z)
+      </button>
+      <button type="button" class="sort-btn" [class.active]="sortBy() === 'dex'" (click)="sortBy.set('dex')">
+        Dex Number
+      </button>
+    </div>
 
     <button type="button" class="fav-toggle" (click)="toggleFavoritesOnly()">
       <span class="fav-label">Favorites only</span>

@@ -33,6 +33,16 @@ router.get('/', jwtCheck, async (req, res) => {
     return res.json({ results, page: 1, pageSize: results.length, total: results.length });
   }
 
+  // Sorting by strongest needs a real detail fetch for every candidate (see
+  // below) — on an unfiltered list that's up to the entire PokeAPI dataset
+  // (1,300+ concurrent requests on a cold cache). Requiring a type keeps the
+  // candidate set to one type's worth of Pokémon instead. The AI Trainer
+  // Assistant's "strongest of type" lookup always sends a type already, so
+  // it's unaffected — this only blocks an unfiltered direct call.
+  if (sort === 'strongest' && !type) {
+    return res.status(400).json({ message: 'Sorting by strongest requires a type filter.' });
+  }
+
   const pageNum = Math.max(1, parseInt(page, 10) || 1);
 
   let candidates;

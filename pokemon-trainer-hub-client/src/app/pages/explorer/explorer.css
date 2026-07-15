@@ -156,18 +156,29 @@
   flex-shrink: 0;
 }
 
-.sort-select {
-  background: var(--overlay-05);
-  border: 1px solid var(--border-soft);
+.sort-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.sort-btn {
+  background: var(--overlay-06);
+  color: var(--text-muted);
+  border: none;
   border-radius: 100px;
   padding: 10px 16px;
-  color: var(--text-body);
   font-size: 13px;
-  outline: none;
-  box-sizing: border-box;
-  appearance: none;
   font-weight: 600;
   font-family: 'Manrope', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sort-btn.active {
+  background: var(--violet-deep);
+  color: #fff;
 }
 
 .fav-toggle {

@@ -17,7 +17,7 @@ import { PokemonCompareModal } from '../../shared/pokemon-compare-modal/pokemon-
 import { PotdCard } from '../../shared/potd-card/potd-card';
 import { dayOfYearPokemonId } from '../../shared/pokemon-of-the-day';
 
-type SortBy = 'name' | 'power' | 'dex';
+type SortBy = 'name' | 'dex';
 
 const PAGE_SIZE = 4;
 const MAX_TEAM_SIZE = 5;
@@ -32,7 +32,6 @@ function matchesFavorite(fav: FavoritePokemon, search: string, type: string): bo
 function sortSummaries(list: PokemonSummary[], sort: SortBy): PokemonSummary[] {
   const copy = [...list];
   if (sort === 'name') return copy.sort((a, b) => a.name.localeCompare(b.name));
-  if (sort === 'power') return copy.sort((a, b) => b.baseExperience - a.baseExperience);
   return copy.sort((a, b) => a.id - b.id);
 }
 
@@ -143,7 +142,7 @@ export class Explorer {
         return this.pokemonService.search({
           search: q.search || undefined,
           type: q.type === 'all' ? undefined : q.type,
-          sort: q.sort === 'dex' ? 'id' : q.sort === 'power' ? 'strongest' : 'name',
+          sort: q.sort === 'dex' ? 'id' : 'name',
           page: q.page,
         });
       }),
