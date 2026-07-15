@@ -89,6 +89,12 @@ export class StarterQuiz {
     this.step.set(0);
     this.selectedAnswers.set(new Array(this.totalSteps).fill(null));
     this.phase.set('quiz');
+    // Starts loading the Gen 1 dataset now, so the fetch overlaps with the
+    // time spent answering the 6 questions instead of starting only after
+    // the last one. Also called on every retake — but since the service
+    // caches a successful load, this is a no-op HTTP-wise from the second
+    // call onward (see QuizRecommendationService.loadGen1Pool()).
+    this.quizRecommendation.prefetchGen1Pool();
   }
 
   // Only defers the redirect guard for this tab session — Home's own nudge
@@ -120,7 +126,10 @@ export class StarterQuiz {
   private finishQuiz(): void {
     this.phase.set('loading');
     const profile = buildPreferenceProfile(this.selectedAnswers());
-    this.quizRecommendation.getRecommendations(profile).subscribe({
+    // The quiz should never recommend a Pokémon the trainer already has —
+    // favorites are deliberately left untouched, only the current team.
+    const currentTeamIds = this.team().map((member) => member.pokemonId);
+    this.quizRecommendation.getRecommendations(profile, currentTeamIds).subscribe({
       next: (recs) => {
         this.recommendations.set(recs);
         // Real, server-side record tied to the logged-in user — waited on
