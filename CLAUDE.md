@@ -24,18 +24,24 @@ interview at Ness, given by Assaf.
   `/api/health`) validates it via `express-oauth2-jwt-bearer`. See the
   README's "Auth0 configuration" section for the exact setup steps if this
   ever needs to be redone (e.g. a new tenant).
-- **AI Trainer Assistant:** Implemented as a **rule-based/deterministic
-  simulation**, not a real LLM or LangGraph call — there is no AI API
-  integration anywhere in this project. "Analyze My Team" computes real
-  team stats (shared `getTeamPower`/`getStrongestMember` helpers) and fills
-  in canned sentence templates; "Find by Description" does simple keyword
-  matching (`TYPE_KEYWORDS` substring search) against free text, then looks
-  up a real strongest-Pokémon-of-that-type via the existing PokeAPI-backed
-  endpoint. A short artificial delay + typing-dots animation is the only
-  thing simulating "thinking." LangGraph was the original aspirational plan
-  (still true of the PRD text below) but was never actually built — be
-  ready to say so honestly if asked in the interview, and don't assume
-  LangGraph is wired up anywhere in the codebase.
+- **AI Trainer Assistant:** Real **LangChain + Google Gemini**
+  (`@langchain/google-genai`) integration, server-side only
+  (`services/assistantService.js`) — the client never talks to Gemini
+  directly or sends a Gemini key. It started as a rule-based/deterministic
+  simulation (keyword matching + canned templates) and was later replaced
+  with real model calls — don't assume the old simulation still describes
+  the current behavior. Powers three things: the AI Trainer Assistant
+  page's "Analyze My Team" / "Find by Description" (the model only ever
+  picks a Pokémon **type** and writes reasoning text; the actual Pokémon
+  returned is always looked up afterward from real PokeAPI data via the
+  existing strongest-of-type logic, never something the model invented),
+  the global floating chat widget mounted on every page (open-ended,
+  multi-turn Q&A), and AI-generated Dream Team name suggestions
+  (rate-limited to 5/trainer/hour, with a deterministic non-AI fallback
+  generator if Gemini fails/is rate-limited/unavailable). LangGraph (the
+  PRD's original aspirational plan) was never actually built — plain
+  LangChain is what's really wired up; be ready to say so honestly if
+  asked in the interview.
 
 ## Project structure
 ```
@@ -46,7 +52,8 @@ pokemon-trainer-hub/
 See the README's "Project Structure" section for the full file layout
 (pages, shared components, server routes/services). Current pages: landing,
 callback, onboarding, home, explorer, my-team, manage-team, profile,
-settings, ai-trainer-assistant, battle, starter-quiz, not-found.
+settings, support, ai-trainer-assistant, battle, battle-history,
+starter-quiz, whos-that-pokemon, not-found.
 
 ## Current status
 Core build is complete and deployed to production (Vercel + Render + Azure
@@ -127,12 +134,19 @@ stale context from earlier in the conversation.
   controls they share real services with) — only the marketing checkbox is
   gated behind the Save bar, since it's the only one with a real API call
   that can fail.
-- Nice-to-have backlog (build only 2-3, don't try all): Surprise Me button,
-  simplified Battle Simulation (vs. a randomly generated opponent team, no
-  turns/moves/HP — just a power comparison), Team Cover Image, Favorites
-  list, Starter Style Quiz, AI Trainer Assistant. Battle, Favorites, Starter
-  Quiz, and AI Trainer Assistant are all built; Team Cover Image and
-  Surprise Me are the remaining unbuilt items as of this writing.
+- Nice-to-have backlog (original list, build only 2-3, don't try all):
+  Surprise Me button, simplified Battle Simulation (vs. a randomly generated
+  opponent team, no turns/moves/HP — just a power comparison), Team Cover
+  Image, Favorites list, Starter Style Quiz, AI Trainer Assistant. Battle,
+  Favorites, Starter Quiz, and AI Trainer Assistant are all built (the AI
+  Assistant is now a real Gemini integration, not just simulated — see the
+  Tech Stack section above); Team Cover Image and Surprise Me are the
+  remaining unbuilt items from that original list. Beyond it, additional
+  extras were also built: Battle History (a persisted match log, its own
+  page), an AI Dream Team Name Generator, a daily "Who's That Pokémon?"
+  quiz, a curated/categorized Avatar Icon picker backed by its own DB
+  table (no more per-page-load PokeAPI calls for icons), and a Support page
+  with a DB-backed contact form.
 - Explicitly OUT of scope: a full battle engine (moves, turns, HP,
   accuracy/crits, status effects), social features, native mobile app.
 

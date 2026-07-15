@@ -2,7 +2,7 @@
 
 A web app for registering as a "Pokémon Trainer," exploring Pokémon (via [PokeAPI](https://pokeapi.co/)), and building a personal Dream Team of up to 5 creatures that persists across sessions.
 
-Beyond the core Dream Team, the app includes: an Explorer with search/type filter/sort, a Favorites list, drag-and-drop team management (Manage My Team) with a Head-to-Head comparison modal, a Trainer Profile, a Settings page (theme, colorblind mode, email preferences, privacy/consent record, account), a **real LangChain + Gemini-backed AI Trainer Assistant** (team analysis, "find by description", and a global floating chat widget available on every page), AI-generated Dream Team name suggestions, a Battle Simulation against a randomly-generated opponent (with animated round reveals), a Starter Quiz and a daily "Who's That Pokémon?" quiz, and a Support page with a DB-backed contact form. None of these use mock or hardcoded data — every screen is backed by real PokeAPI data and/or the user's own rows in SQL Server. Where a mockup implied fabricated data (e.g. a numeric Pokémon "level," invented rival trainers), the real version was built on the closest equivalent that actually exists (real Power/type stats, a randomly-generated real opponent) instead.
+Beyond the core Dream Team, the app includes: an Explorer with search/type filter/sort, a Favorites list, drag-and-drop team management (Manage My Team) with a Head-to-Head comparison modal, a Trainer Profile with a categorized Avatar Icon picker (DB-backed, no live PokeAPI call at picker-open time), a Settings page (theme, colorblind mode, email preferences, privacy/consent record, account), a **real LangChain + Gemini-backed AI Trainer Assistant** (team analysis, "find by description", and a global floating chat widget available on every page), AI-generated Dream Team name suggestions, a Battle Simulation against a randomly-generated opponent (with animated round reveals) plus a persisted Battle History log, a Starter Quiz and a daily "Who's That Pokémon?" quiz, and a Support page with a DB-backed contact form. None of these use mock or hardcoded data — every screen is backed by real PokeAPI data and/or the user's own rows in SQL Server. Where a mockup implied fabricated data (e.g. a numeric Pokémon "level," invented rival trainers), the real version was built on the closest equivalent that actually exists (real Power/type stats, a randomly-generated real opponent) instead.
 
 ## Tech Stack
 
@@ -35,28 +35,34 @@ The client never talks to PokeAPI or the database directly — everything goes t
 pokemon-trainer-hub-client/
   src/app/pages/                 landing, callback, onboarding, home, explorer,
                                   my-team, manage-team, profile, settings, support,
-                                  ai-trainer-assistant, battle, starter-quiz,
-                                  whos-that-pokemon, not-found
+                                  ai-trainer-assistant, battle, battle-history,
+                                  starter-quiz, whos-that-pokemon, not-found
   src/app/shared/                navbar, account-menu, assistant-chat (global floating
                                   chat widget), pokemon-detail-modal, pokemon-compare-modal,
                                   team-swap-modal, team-name-generator-modal, policy-modal,
-                                  potd-card, loading-screen, colorblind, app-settings,
-                                  team-power.ts / team-matchup.ts (shared calculations),
-                                  quiz/, guards, etc.
+                                  potd-card, loading-screen, colorblind, app-settings, theme,
+                                  avatar-categories.ts, team-power.ts / team-matchup.ts
+                                  (shared calculations), quiz/, guards, etc.
   src/app/core/                  HTTP services (team, favorites, profile, pokemon,
-                                  assistant, notes, quiz, support)
+                                  assistant, notes, quiz, support, avatar-icons,
+                                  battle-history)
   e2e/                           Playwright end-to-end tests (see e2e/README.md)
 
 pokemon-trainer-hub-server/
   server.js                     App setup, mounts routers
   routes/                       pokemon.js, team.js, favorites.js, profile.js, notes.js,
-                                 assistant.js, support.js, quiz.js
+                                 assistant.js, support.js, quiz.js, avatarIcons.js,
+                                 battleHistory.js
   services/                     prisma.js (DB client), pokeapi.js (fetch + cache),
                                  teamService.js, favoritesService.js, assistantService.js
                                  (LangChain/Gemini), rateLimiter.js, teamNameFallback.js,
-                                 ageRange.js
+                                 ageRange.js, serviceError.js
+  scripts/                      seed-avatar-icons.js (one-time import of the curated,
+                                 categorized avatar icon set into the AvatarIcon table)
   middleware/                   auth.js (jwtCheck)
-  prisma/                       schema.prisma, migrations/
+  prisma/                       schema.prisma (DreamTeamMember, Favorite, TrainerNote,
+                                 SupportRequest, BattleMatch, AvatarIcon, TrainerProfile),
+                                 migrations/
 ```
 
 ## Prerequisites
@@ -146,7 +152,7 @@ cd pokemon-trainer-hub-client
 npm test
 ```
 
-Client tests cover shared, framework-independent calculation logic (`shared/*.spec.ts`): Team Power/Tier/Type-Coverage math and the real-type-chart-driven Battle Readiness/Matchup Analysis formulas.
+Client tests cover shared, framework-independent calculation logic (`shared/*.spec.ts`): Team Power/Tier/Type-Coverage math, the real-type-chart-driven Battle Readiness/Matchup Analysis formulas, and the Starter Quiz's rule-based recommendation engine (`shared/quiz/*.spec.ts`) — preference-weight normalization, type/stat/balance scoring, the honest 0-100 Match Score, dual-type contribution capping, current-team exclusion, and the shared dataset cache's retry/dedup behavior.
 
 ```bash
 # Client — Playwright, a real Chromium against the real running app
@@ -330,3 +336,18 @@ Response: `201 { id, createdAt }`.
 **`GET /api/quiz/round`** — a fresh round: 1 real target Pokémon (the client silhouettes its real sprite) plus 3 real distractor options, shuffled together, all sourced from the same PokeAPI-backed master list every other screen uses. Nothing here is invented — every option resolves to an actual Pokémon.
 Response: `{ target: { id, name, types, spriteUrl, baseExperience }, options: [{ id, name, types }, ...] }` (4 options, target's id included among them).
 Errors: `502` if fewer than 4 valid Pokémon could be loaded from PokeAPI.
+
+### Avatar Icons
+
+**`GET /api/avatar-icons`** — the full curated, categorized set of profile-icon options, read straight from our own `AvatarIcon` table (seeded once via `scripts/seed-avatar-icons.js`) — no PokeAPI call at request time, unlike the picker's original per-page-load approach. 35 icons across 7 categories (Popular, Fire, Water, Electric, Grass, Normal, and a General category of real PokeAPI **item** sprites like Poké Ball variants, not creatures — those get negative sentinel ids so `TrainerProfile.avatarPokemonId` stays a plain Int with no schema change).
+Response: `{ pokemonId, name, category, spriteUrl, sortOrder }[]`, ordered by category then `sortOrder`.
+
+### Battle History
+
+Every completed Battle Simulation match, persisted so a trainer's win/loss record survives across sessions and devices (not just kept in the browser for the current match).
+
+**`GET /api/battle-history`** — the current user's matches, most recent first.
+Response: `{ id, opponentName, difficulty, rounds, roundsPlayed, opponentType, luckFactor, result, yourWins, oppWins, roundDetails, teamSnapshot, createdAt }[]` — `roundDetails`/`teamSnapshot` are stored server-side as serialized JSON (one flat table, no normalized round table — this app's scale doesn't need relational round queries) and parsed back into arrays here, so the client never has to know they're stored serialized.
+
+**`POST /api/battle-history`** — records one completed match, called once by the client when a Battle match is decided; never blocks the match-over screen if it fails.
+Body: `{ opponentName, difficulty, opponentType, luckFactor, rounds, roundsPlayed, yourWins, oppWins, result: "win" | "loss", roundDetails: object[], teamSnapshot: object[] }` — all required. `400` if any field is missing/malformed. `201 { id, createdAt }` on success.
