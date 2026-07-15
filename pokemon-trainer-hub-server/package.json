@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "postinstall": "prisma generate",
-    "test": "node --experimental-test-module-mocks --test"
+    "test": "node --experimental-test-module-mocks --test",
+    "test:contract": "node scripts/contract-test-pokeapi.js"
   },
   "keywords": [],
   "author": "",

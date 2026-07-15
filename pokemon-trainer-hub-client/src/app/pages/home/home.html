@@ -218,7 +218,7 @@
               }
             </div>
             <div class="potd-info">
-              <h3 class="potd-name">{{ p.name }}</h3>
+              <div class="potd-name">{{ p.name }}</div>
               @if (p.types[0]; as type) {
                 <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
                   <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
