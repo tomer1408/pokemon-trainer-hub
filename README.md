@@ -143,7 +143,7 @@ npm test
 ```
 
 Server tests fall into two kinds:
-- **Service/utility tests** (`services/*.test.js`) — pure logic: age-range bucketing, the team-name fallback generator, the rate limiter, the Gemini-backed assistant service's fallback behavior (mocking the model call, never a real Gemini request), and the strongest-by-type ranking cache (tie-breaking, limit clamping, cache reuse, in-flight de-duplication, and retry-after-failure — stubbing `global.fetch` directly rather than a real PokeAPI call).
+- **Service/utility tests** (`services/*.test.js`) — pure logic: age-range bucketing, the team-name fallback generator, the rate limiter, the Gemini-backed assistant service's fallback behavior (mocking the model call, never a real Gemini request), the strongest-by-type ranking cache (tie-breaking, limit clamping, cache reuse, in-flight de-duplication, and retry-after-failure — stubbing `global.fetch` directly rather than a real PokeAPI call), and `teamService.js` (duplicate detection, the 5-member cap, gap-safe slot position management, and the swap/reorder/save transactions — each with Prisma and PokeAPI swapped for test doubles via `mock.module`).
 - **Route-level tests** (`routes/*.test.js`) — exercise the real Express router and its error-code mapping through `supertest`, with `middleware/auth.js` and the relevant service module swapped for test doubles via Node's built-in module mocking (`node:test`'s `mock.module`, hence the `--experimental-test-module-mocks` flag baked into the `test` script) — so these never touch a real Auth0 tenant or a real database.
 
 ```bash

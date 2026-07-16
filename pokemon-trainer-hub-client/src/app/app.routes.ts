@@ -7,7 +7,6 @@ import { starterQuizGuard } from './shared/starter-quiz-guard';
 // SDK's official guard, which redirects unauthenticated visitors straight to
 // Auth0 login instead of just hiding UI.
 //
-// NOTE: most pages below still point at the generic Placeholder component.
 // Each one gets swapped for its real page one at a time as we build it —
 // see /Users/tomerrozental/.claude/plans/hazy-soaring-finch.md.
 export const routes: Routes = [
