@@ -33,8 +33,14 @@ export class App {
 
   // Navbar must never flicker: isAuthenticated$ already waits for the SDK's
   // initial isLoading$ check to finish before emitting, and it must stay
-  // hidden on Landing/Callback regardless of auth state.
-  protected readonly showNavbar = computed(
-    () => this.isAuthenticated() && !NAVBAR_HIDDEN_ON.includes(this.currentUrl()),
-  );
+  // hidden on Landing/Callback regardless of auth state. Also hidden on
+  // every /admin/** route — AdminLayout has its own header (breadcrumb,
+  // title, theme switcher) and sidebar; showing the regular app navbar
+  // above it stacked two navbars/two theme switchers on the same page,
+  // and mixed the Admin Console with the regular Home/Explorer/My Team
+  // navigation it's deliberately meant to be separate from.
+  protected readonly showNavbar = computed(() => {
+    const url = this.currentUrl();
+    return this.isAuthenticated() && !NAVBAR_HIDDEN_ON.includes(url) && !url.startsWith('/admin');
+  });
 }

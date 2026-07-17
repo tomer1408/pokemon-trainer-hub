@@ -95,16 +95,32 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/status/status').then((m) => m.Status),
   },
   {
-    // Phase 0 of the Admin Dashboard — a real permission check, not just a
-    // hidden UI link (see middleware/requirePermission.js on the server,
-    // which independently re-checks the same permission on every request).
-    // adminGuard is generic (reads `data.permission`, not hardcoded) so
-    // later admin routes (support/trainers/analytics/system/database) each
-    // just declare their own required permission and reuse this same guard.
+    // AdminLayout (sidebar+header) is a purely visual shell — it carries NO
+    // permission of its own (authGuardFn only), so it never blocks a
+    // future limited-scope Admin role. Each child below independently
+    // declares and enforces its own permission via adminGuard +
+    // data.permission — a real check re-verified server-side by
+    // middleware/requirePermission.js on every request, not just a hidden
+    // UI link. adminGuard is generic (reads data.permission, not
+    // hardcoded), so every child just declares what it needs and reuses
+    // the same guard.
     path: 'admin',
-    canActivate: [authGuardFn, adminGuard],
-    data: { permission: 'admin:read' },
-    loadComponent: () => import('./pages/admin/overview/overview').then((m) => m.AdminOverview),
+    canActivate: [authGuardFn],
+    loadComponent: () => import('./pages/admin/admin-layout/admin-layout').then((m) => m.AdminLayout),
+    children: [
+      {
+        path: '',
+        canActivate: [adminGuard],
+        data: { permission: 'admin:read' },
+        loadComponent: () => import('./pages/admin/overview/overview').then((m) => m.AdminOverview),
+      },
+      {
+        path: 'support',
+        canActivate: [adminGuard],
+        data: { permission: 'support:manage' },
+        loadComponent: () => import('./pages/admin/support/support').then((m) => m.AdminSupport),
+      },
+    ],
   },
   {
     // authGuardFn ONLY — deliberately not adminGuard, so a non-admin

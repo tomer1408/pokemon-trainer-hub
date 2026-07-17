@@ -51,10 +51,11 @@ model TrainerNote {
 }
 
 // A trainer's Contact Support submission — a running log (multiple per
-// user allowed, like TrainerNote), never edited after creation. There's no
-// admin UI for this yet, so rows are only ever reviewed directly in the
-// database — an honest, real (if minimal) alternative to faking a "request
-// sent" success message with nothing behind it.
+// user allowed, like TrainerNote). The original name/email/topic/message
+// are immutable after creation (see routes/adminSupport.js — never
+// accepted from a PATCH body); status/priority/adminNotes/assignedTo are
+// the real, admin-managed fields layered on top once the Admin Dashboard's
+// Support Requests page (Phase 1) exists.
 model SupportRequest {
   id          Int      @id @default(autoincrement())
   auth0UserId String
@@ -63,6 +64,30 @@ model SupportRequest {
   topic       String
   message     String
   createdAt   DateTime @default(now())
+  // No native Prisma `enum` support on this datasource (SQL Server) — both
+  // are validated String fields with a server-side allowlist instead (see
+  // services/adminSupportService.js), same treatment already used
+  // elsewhere in this schema for favoriteType/experienceLevel.
+  status      String    @default("open")
+  priority    String    @default("normal")
+  adminNotes  String?
+  assignedTo  String?
+  resolvedAt  DateTime?
+  updatedAt   DateTime  @updatedAt
+}
+
+// Records meaningful Admin actions (support status/priority changes,
+// account deletions, etc.) — read-only from the app's own perspective
+// (nothing ever updates or deletes a row here). detailsJson is a small,
+// non-sensitive summary — never secrets or full record payloads.
+model AdminAuditLog {
+  id               Int      @id @default(autoincrement())
+  adminAuth0UserId String
+  action           String
+  targetType       String
+  targetId         String?
+  detailsJson      String?
+  createdAt        DateTime @default(now())
 }
 
 // One row per completed Battle Simulation match — a running log (like

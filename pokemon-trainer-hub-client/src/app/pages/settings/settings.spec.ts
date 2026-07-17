@@ -166,15 +166,13 @@ describe('Settings', () => {
     expect(logout).toHaveBeenCalledWith({ logoutParams: { returnTo: window.location.origin } });
   });
 
-  it('requestDeleteAccount() opens the confirm dialog with a cleared text field', () => {
+  it('requestDeleteAccount() opens the confirm dialog', () => {
     const fixture = setup();
     const inst = fixture.componentInstance as any;
 
-    inst.deleteConfirmText.set('DELETE');
     fixture.componentInstance.requestDeleteAccount();
 
     expect(inst.showDeleteConfirm()).toBe(true);
-    expect(inst.deleteConfirmText()).toBe('');
   });
 
   it('cancelDeleteAccount() closes the dialog without calling the API', () => {
@@ -187,33 +185,11 @@ describe('Settings', () => {
     expect(deleteAccount).not.toHaveBeenCalled();
   });
 
-  it('canConfirmDelete() is only true once the exact word DELETE is typed', () => {
-    const fixture = setup();
-    const inst = fixture.componentInstance as any;
-
-    inst.deleteConfirmText.set('delete');
-    expect(inst.canConfirmDelete()).toBe(false);
-
-    inst.deleteConfirmText.set('DELET');
-    expect(inst.canConfirmDelete()).toBe(false);
-
-    inst.deleteConfirmText.set('DELETE');
-    expect(inst.canConfirmDelete()).toBe(true);
-  });
-
-  it('confirmDeleteAccount() is a no-op until the confirm text is exactly DELETE', () => {
-    const fixture = setup();
-    (fixture.componentInstance as any).deleteConfirmText.set('nope');
-
-    fixture.componentInstance.confirmDeleteAccount();
-
-    expect(deleteAccount).not.toHaveBeenCalled();
-  });
-
+  // The "type DELETE to confirm" gate itself now lives in the shared
+  // ConfirmDialog component (see confirm-dialog.spec.ts) — Settings only
+  // ever receives the already-gated `confirmed` event.
   it('confirmDeleteAccount() deletes the account then logs out, on success', () => {
     const fixture = setup();
-    const inst = fixture.componentInstance as any;
-    inst.deleteConfirmText.set('DELETE');
 
     fixture.componentInstance.confirmDeleteAccount();
 
@@ -234,12 +210,21 @@ describe('Settings', () => {
     const fixture = TestBed.createComponent(Settings);
     fixture.detectChanges();
     const inst = fixture.componentInstance as any;
-    inst.deleteConfirmText.set('DELETE');
 
     fixture.componentInstance.confirmDeleteAccount();
 
     expect(inst.deleteError()).toBe('Something went wrong deleting your account. Please try again.');
     expect(inst.deleting()).toBe(false);
     expect(localLogout).not.toHaveBeenCalled();
+  });
+
+  it('confirmDeleteAccount() does nothing while already deleting (prevents a double-submit)', () => {
+    const fixture = setup();
+    const inst = fixture.componentInstance as any;
+    inst.deleting.set(true);
+
+    fixture.componentInstance.confirmDeleteAccount();
+
+    expect(deleteAccount).not.toHaveBeenCalled();
   });
 });

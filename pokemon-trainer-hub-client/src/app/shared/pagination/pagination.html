@@ -1,0 +1,18 @@
+<div class="pagination-row" [class.light]="isLight()" [class.pikachu]="isPikachu()">
+  <button type="button" class="pager-btn" [disabled]="isFirstPage()" (click)="prev()">‹ Prev</button>
+
+  @for (n of pageNumbers(); track $index) {
+    @if (n === 'ellipsis') {
+      <span class="pager-ellipsis">…</span>
+    } @else {
+      <button
+        type="button"
+        class="pager-btn"
+        [class.active]="n === page()"
+        (click)="goTo(n)"
+      >{{ n }}</button>
+    }
+  }
+
+  <button type="button" class="pager-btn" [disabled]="isLastPage()" (click)="next()">Next ›</button>
+</div>

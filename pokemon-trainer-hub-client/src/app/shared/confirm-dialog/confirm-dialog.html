@@ -1,0 +1,36 @@
+<div class="confirm-overlay" [class.light]="isLight()" [class.pikachu]="isPikachu()" (click)="onCancel()">
+  <div class="confirm-card" (click)="$event.stopPropagation()">
+    <h2 class="confirm-title">{{ title() }}</h2>
+    <p class="confirm-body">{{ body() }}</p>
+
+    @if (requireTypedPhrase(); as phrase) {
+      <p class="confirm-body">
+        Type <strong>{{ phrase }}</strong> to confirm.
+      </p>
+      <input
+        type="text"
+        class="confirm-input"
+        [attr.aria-label]="'Type ' + phrase + ' to confirm'"
+        [placeholder]="phrase"
+        [value]="typedText()"
+        (input)="onTypedTextChange($any($event.target).value)"
+        autocomplete="off"
+      />
+    }
+
+    @if (error(); as err) {
+      <p class="confirm-error">{{ err }}</p>
+    }
+
+    <div class="confirm-actions">
+      <button type="button" class="confirm-cancel" [disabled]="busy()" (click)="onCancel()">{{ cancelLabel() }}</button>
+      <button
+        type="button"
+        class="confirm-confirm"
+        [class.destructive]="destructive()"
+        [disabled]="!canConfirm() || busy()"
+        (click)="onConfirm()"
+      >{{ confirmLabel() }}</button>
+    </div>
+  </div>
+</div>

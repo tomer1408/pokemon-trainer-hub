@@ -9,6 +9,7 @@ import { ThemeService } from '../../shared/theme';
 import { AppSettingsService } from '../../shared/app-settings';
 import { PolicyModal, PolicyType } from '../../shared/policy-modal/policy-modal';
 import { LoadingScreen } from '../../shared/loading-screen/loading-screen';
+import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
 import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
 import { clearStarterQuizSkip } from '../../shared/quiz/quiz-completion';
 
@@ -32,7 +33,7 @@ type ProfileFetchStatus = 'ok' | 'missing' | 'error';
 // don't appear here at all — same real-data-only approach as My Profile.
 @Component({
   selector: 'app-settings',
-  imports: [RouterLink, LoadingScreen, PolicyModal],
+  imports: [RouterLink, LoadingScreen, PolicyModal, ConfirmDialog],
   templateUrl: './settings.html',
   styleUrl: './settings.css',
 })
@@ -74,14 +75,12 @@ export class Settings {
   protected readonly openPolicyModal = signal<PolicyType | null>(null);
 
   // Delete My Account — the one truly irreversible action in the app, so it
-  // gets an extra safety net beyond every other confirm dialog in this
-  // codebase: typing the exact word DELETE before the destructive button
-  // enables at all.
+  // gets an extra safety net beyond a plain confirm: the shared
+  // ConfirmDialog's typed-phrase gate (type the exact word DELETE) before
+  // the destructive button enables at all.
   protected readonly showDeleteConfirm = signal(false);
-  protected readonly deleteConfirmText = signal('');
   protected readonly deleting = signal(false);
   protected readonly deleteError = signal<string | null>(null);
-  protected readonly canConfirmDelete = computed(() => this.deleteConfirmText() === 'DELETE');
 
   protected readonly isDirty = computed(() => {
     const p = this.profile();
@@ -165,7 +164,6 @@ export class Settings {
   }
 
   requestDeleteAccount(): void {
-    this.deleteConfirmText.set('');
     this.deleteError.set(null);
     this.showDeleteConfirm.set(true);
   }
@@ -175,7 +173,7 @@ export class Settings {
   }
 
   confirmDeleteAccount(): void {
-    if (!this.canConfirmDelete() || this.deleting()) return;
+    if (this.deleting()) return;
 
     this.deleting.set(true);
     this.deleteError.set(null);

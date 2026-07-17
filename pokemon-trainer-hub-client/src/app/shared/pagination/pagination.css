@@ -1,0 +1,66 @@
+:host {
+  --border-soft: var(--border-default-night);
+  --surface: var(--surface-primary-night);
+  --text-body: var(--text-primary-night);
+  --text-muted: var(--text-secondary-night);
+  --violet-deep: var(--primary-active-night);
+  --cyan: var(--accent-night);
+
+  display: block;
+}
+
+.pagination-row.light {
+  --border-soft: var(--border-default);
+  --surface: var(--surface-primary);
+  --text-body: var(--text-primary);
+  --text-muted: var(--text-secondary);
+  --violet-deep: var(--primary-active);
+  --cyan: var(--accent);
+}
+
+.pagination-row.pikachu {
+  --border-soft: var(--border-default-pikachu);
+  --surface: var(--surface-primary-pikachu);
+  --text-body: var(--text-primary-pikachu);
+  --text-muted: var(--text-secondary-pikachu);
+  --violet-deep: var(--primary-active-pikachu);
+  --cyan: var(--accent-pikachu);
+}
+
+.pagination-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pager-btn {
+  border: 1px solid var(--border-soft);
+  background: var(--surface);
+  color: var(--text-body);
+  border-radius: 8px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 10px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.pager-btn.active {
+  border-color: transparent;
+  background: linear-gradient(120deg, var(--violet-deep), var(--cyan));
+  color: #fff;
+}
+
+.pager-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.pager-ellipsis {
+  color: var(--text-muted);
+  font-size: 12.5px;
+  padding: 0 2px;
+}

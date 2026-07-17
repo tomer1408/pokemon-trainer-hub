@@ -1,0 +1,213 @@
+<div class="toolbar">
+  <div class="toolbar-left">
+    <span class="count-chip">{{ total() }} total</span>
+  </div>
+  <div class="toolbar-right">
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Search name or email…"
+      [value]="searchInput()"
+      (input)="searchInput.set($any($event.target).value)"
+    />
+    <select class="filter-select" [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
+      <option value="">All statuses</option>
+      @for (s of statusOptions; track s) {
+        <option [value]="s">{{ s }}</option>
+      }
+    </select>
+    <select class="filter-select" [value]="priorityFilter()" (change)="priorityFilter.set($any($event.target).value)">
+      <option value="">All priorities</option>
+      @for (p of priorityOptions; track p) {
+        <option [value]="p">{{ p }}</option>
+      }
+    </select>
+  </div>
+</div>
+
+<div class="table-card">
+  @if (isLoading()) {
+    <div class="state-block">Loading support requests…</div>
+  } @else if (loadError()) {
+    <div class="state-block error">Could not load support requests. Please try again.</div>
+  } @else if (requests().length === 0) {
+    <div class="state-block">No support requests match your filters.</div>
+  } @else {
+    <div class="table-scroll">
+      <div class="sup-table">
+        <div class="head-row">
+          <span>ID</span>
+          <span>User</span>
+          <span>Email</span>
+          <span>Topic</span>
+          <span>Message</span>
+          <span>Status</span>
+          <span>Priority</span>
+          <span>Assigned</span>
+          <span>Created</span>
+        </div>
+        @for (r of requests(); track r.id) {
+          <div class="body-row" (click)="openRequest(r.id)">
+            <span class="cell-id">#{{ r.id }}</span>
+            <span>{{ r.name }}</span>
+            <span class="cell-mono">{{ r.email }}</span>
+            <span>{{ r.topic }}</span>
+            <span class="cell-muted">{{ r.message.length > 60 ? (r.message.slice(0, 60) + '…') : r.message }}</span>
+            <span>
+              <app-status-badge
+                [label]="r.status"
+                [variant]="r.status === 'resolved' ? 'success' : r.status === 'in_progress' ? 'warning' : 'info'"
+                [isLight]="theme.isLight()"
+                [isPikachu]="theme.isPikachu()"
+              />
+            </span>
+            <span>
+              <app-status-badge
+                [label]="r.priority"
+                [variant]="r.priority === 'urgent' ? 'error' : r.priority === 'high' ? 'warning' : r.priority === 'normal' ? 'info' : 'neutral'"
+                [isLight]="theme.isLight()"
+                [isPikachu]="theme.isPikachu()"
+              />
+            </span>
+            <span class="cell-muted">{{ r.assignedTo || '—' }}</span>
+            <span class="cell-mono">{{ r.createdAt | date: 'MMM d, y' }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="pagination-footer">
+      <span class="page-info">Page {{ page() }} of {{ totalPages() }}</span>
+      <app-pagination [page]="page()" [totalPages]="totalPages()" [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" (pageChange)="setPage($event)" />
+    </div>
+  }
+</div>
+
+@if (selected(); as sel) {
+  <div class="drawer-overlay" (click)="closeDrawer()">
+    <div class="drawer" (click)="$event.stopPropagation()">
+      <div class="drawer-head">
+        <div class="drawer-head-left">
+          <span class="drawer-id">#{{ sel.id }}</span>
+          <app-status-badge
+            [label]="sel.status"
+            [variant]="sel.status === 'resolved' ? 'success' : sel.status === 'in_progress' ? 'warning' : 'info'"
+            [isLight]="theme.isLight()"
+            [isPikachu]="theme.isPikachu()"
+          />
+          <app-status-badge
+            [label]="sel.priority"
+            [variant]="sel.priority === 'urgent' ? 'error' : sel.priority === 'high' ? 'warning' : sel.priority === 'normal' ? 'info' : 'neutral'"
+            [isLight]="theme.isLight()"
+            [isPikachu]="theme.isPikachu()"
+          />
+        </div>
+        <button type="button" class="drawer-close" (click)="closeDrawer()" aria-label="Close">✕</button>
+      </div>
+
+      <div class="drawer-body">
+        <div class="identity-row">
+          <span class="identity-avatar">{{ sel.name.charAt(0).toUpperCase() }}</span>
+          <div class="identity-text">
+            <span class="identity-name">{{ sel.name }}</span>
+            <span class="identity-meta">{{ sel.email }}</span>
+          </div>
+          <button type="button" class="small-btn" (click)="emailTrainer(sel.email)">Email</button>
+        </div>
+
+        <div class="meta-grid">
+          <div class="meta-cell"><span class="meta-label">Topic</span><span class="meta-value">{{ sel.topic }}</span></div>
+          <div class="meta-cell"><span class="meta-label">Created</span><span class="meta-value">{{ sel.createdAt | date: 'medium' }}</span></div>
+          <div class="meta-cell"><span class="meta-label">Last updated</span><span class="meta-value">{{ sel.updatedAt | date: 'medium' }}</span></div>
+        </div>
+
+        <div class="section">
+          <div class="section-label-row">
+            <span class="section-label">Original message</span>
+            <span class="immutable-tag">🔒 Read-only</span>
+          </div>
+          <div class="message-box">{{ sel.message }}</div>
+        </div>
+
+        <div class="controls-row">
+          <div class="control-col">
+            <span class="meta-label">Status</span>
+            <div class="segment">
+              @for (s of statusOptions; track s) {
+                <button
+                  type="button"
+                  class="segment-btn"
+                  [class.active]="sel.status === s"
+                  [disabled]="savingStatusOrPriority()"
+                  (click)="setStatus(s)"
+                >{{ s }}</button>
+              }
+            </div>
+          </div>
+          <div class="control-col">
+            <span class="meta-label">Priority</span>
+            <div class="segment">
+              @for (p of priorityOptions; track p) {
+                <button
+                  type="button"
+                  class="segment-btn"
+                  [class.active]="sel.priority === p"
+                  [disabled]="savingStatusOrPriority()"
+                  (click)="setPriority(p)"
+                >{{ p }}</button>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-label-row">
+            <span class="section-label">Internal admin notes</span>
+            <span class="private-tag">Private — not visible to the trainer</span>
+          </div>
+          <textarea
+            class="notes-input"
+            rows="3"
+            placeholder="Add an internal note…"
+            [value]="notesDraft()"
+            (input)="notesDraft.set($any($event.target).value)"
+          ></textarea>
+          <input
+            type="text"
+            class="assigned-input"
+            placeholder="Assigned to (name)…"
+            [value]="assignedDraft()"
+            (input)="assignedDraft.set($any($event.target).value)"
+          />
+          <button type="button" class="save-notes-btn" [disabled]="savingNotes()" (click)="saveNotesAndAssignment()">
+            {{ savingNotes() ? 'Saving…' : 'Save notes & assignment' }}
+          </button>
+        </div>
+
+        @if (sel.history.length > 0) {
+          <div class="section">
+            <span class="section-label">History</span>
+            <div class="history-feed">
+              @for (h of sel.history; track h.id) {
+                <div class="history-row">
+                  <span class="history-dot"></span>
+                  <div class="history-body">
+                    <div class="history-text">{{ h.action }}</div>
+                    <div class="history-time">{{ h.createdAt | date: 'medium' }}</div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="drawer-footer">
+        <button type="button" class="foot-ghost" (click)="emailTrainer(sel.email)">Email trainer</button>
+        <button type="button" class="foot-primary" [disabled]="sel.status === 'resolved' || savingStatusOrPriority()" (click)="markResolved()">
+          Mark as resolved
+        </button>
+      </div>
+    </div>
+  </div>
+}

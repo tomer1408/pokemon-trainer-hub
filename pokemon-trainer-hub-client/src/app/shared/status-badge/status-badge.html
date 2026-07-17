@@ -1,0 +1,11 @@
+<span
+  class="status-badge"
+  [class]="variant()"
+  [class.light]="isLight()"
+  [class.pikachu]="isPikachu()"
+>
+  @if (showDot()) {
+    <span class="badge-dot"></span>
+  }
+  {{ label() }}
+</span>

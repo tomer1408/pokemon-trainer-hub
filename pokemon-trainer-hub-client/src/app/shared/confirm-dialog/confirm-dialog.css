@@ -1,0 +1,151 @@
+:host {
+  --surface: var(--surface-primary-night);
+  --border-soft: var(--border-default-night);
+  --text-body: var(--text-primary-night);
+  --text-muted: var(--text-secondary-night);
+  --violet: var(--primary-night);
+  --violet-deep: var(--primary-active-night);
+  --cyan: var(--accent-night);
+  --overlay-05: var(--overlay-05-night);
+  --danger: var(--error-night);
+
+  display: contents;
+}
+
+.confirm-overlay.light {
+  --surface: var(--surface-primary);
+  --border-soft: var(--border-default);
+  --text-body: var(--text-primary);
+  --text-muted: var(--text-secondary);
+  --violet: var(--primary);
+  --violet-deep: var(--primary-active);
+  --cyan: var(--accent);
+  --overlay-05: var(--overlay-05);
+  --danger: var(--error);
+}
+
+.confirm-overlay.pikachu {
+  --surface: var(--surface-primary-pikachu);
+  --border-soft: var(--border-default-pikachu);
+  --text-body: var(--text-primary-pikachu);
+  --text-muted: var(--text-secondary-pikachu);
+  --violet: var(--primary-pikachu);
+  --violet-deep: var(--primary-active-pikachu);
+  --cyan: var(--accent-pikachu);
+  --overlay-05: var(--overlay-05-pikachu);
+  --danger: var(--error-pikachu);
+}
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(5, 3, 15, 0.6);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.confirm-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
+}
+
+.confirm-title {
+  font-family: 'Bungee', sans-serif;
+  font-size: 18px;
+  color: var(--text-body);
+  margin: 0;
+  text-align: center;
+}
+
+.confirm-body {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.confirm-body strong {
+  color: var(--text-body);
+}
+
+.confirm-error {
+  font-size: 12.5px;
+  color: var(--danger);
+  margin: 0;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.confirm-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1.5px solid var(--border-soft);
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: var(--overlay-05);
+  color: var(--text-body);
+  font-family: 'Space Mono', monospace;
+  font-size: 14px;
+  text-align: center;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.confirm-cancel {
+  flex: 1;
+  border: 1px solid var(--border-soft);
+  background: transparent;
+  color: var(--text-body);
+  border-radius: 100px;
+  padding: 11px 14px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.confirm-cancel:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.confirm-confirm {
+  flex: 1;
+  border: none;
+  background: linear-gradient(120deg, var(--violet-deep), var(--cyan));
+  color: #fff;
+  border-radius: 100px;
+  padding: 11px 14px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.confirm-confirm.destructive {
+  background: var(--danger);
+}
+
+.confirm-confirm:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
