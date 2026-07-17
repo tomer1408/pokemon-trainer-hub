@@ -1,0 +1,96 @@
+:host {
+  --bg: var(--background-page-night);
+  --surface: var(--surface-primary-night);
+  --border-soft: var(--border-default-night);
+  --text-body: var(--text-primary-night);
+  --text-muted: var(--text-secondary-night);
+  --success: var(--success);
+  --danger: var(--error-night);
+
+  display: block;
+  min-height: 100vh;
+}
+
+.admin-overview.light {
+  --bg: var(--background-page);
+  --surface: var(--surface-primary);
+  --border-soft: var(--border-default);
+  --text-body: var(--text-primary);
+  --text-muted: var(--text-secondary);
+  --danger: var(--error);
+}
+
+.admin-overview.pikachu {
+  --bg: var(--background-page-pikachu);
+  --surface: var(--surface-primary-pikachu);
+  --border-soft: var(--border-default-pikachu);
+  --text-body: var(--text-primary-pikachu);
+  --text-muted: var(--text-secondary-pikachu);
+  --danger: var(--error-pikachu);
+}
+
+.admin-overview {
+  min-height: 100vh;
+  box-sizing: border-box;
+  background: var(--bg);
+  font-family: 'Manrope', sans-serif;
+}
+
+.content {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 40px 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-sizing: border-box;
+}
+
+.header-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.page-title {
+  font-family: 'Bungee', sans-serif;
+  font-size: 28px;
+  color: var(--text-body);
+  margin: 0;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  padding: 22px 24px;
+  box-sizing: border-box;
+}
+
+.status-line {
+  font-weight: 800;
+  font-size: 14.5px;
+  color: var(--text-body);
+  margin: 0;
+}
+
+.status-ok {
+  color: var(--success);
+}
+
+.status-error {
+  color: var(--danger);
+}
+
+.status-sub {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin: 8px 0 0;
+  line-height: 1.5;
+}

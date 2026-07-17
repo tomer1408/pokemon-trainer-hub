@@ -1,6 +1,7 @@
 import { Component, HostListener, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '@auth0/auth0-angular';
+import { AdminService } from '../../core/admin';
 import { ColorblindService, ColorblindMode, COLORBLIND_MODE_OPTIONS } from '../colorblind';
 import { clearStarterQuizSkip } from '../quiz/quiz-completion';
 
@@ -13,6 +14,7 @@ import { clearStarterQuizSkip } from '../quiz/quiz-completion';
 export class AccountMenu {
   private readonly auth = inject(AuthService);
   protected readonly colorblind = inject(ColorblindService);
+  protected readonly admin = inject(AdminService);
 
   readonly trainerName = input('Trainer');
   readonly email = input('');

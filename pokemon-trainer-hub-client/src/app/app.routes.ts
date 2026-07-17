@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuardFn } from '@auth0/auth0-angular';
 import { onboardingGuard } from './shared/onboarding-guard';
 import { starterQuizGuard } from './shared/starter-quiz-guard';
+import { adminGuard } from './shared/admin-guard';
 
 // Every route below (except '' and 'callback') is wrapped in authGuardFn — the
 // SDK's official guard, which redirects unauthenticated visitors straight to
@@ -92,6 +93,27 @@ export const routes: Routes = [
     // a broken login itself.
     path: 'status',
     loadComponent: () => import('./pages/status/status').then((m) => m.Status),
+  },
+  {
+    // Phase 0 of the Admin Dashboard — a real permission check, not just a
+    // hidden UI link (see middleware/requirePermission.js on the server,
+    // which independently re-checks the same permission on every request).
+    // adminGuard is generic (reads `data.permission`, not hardcoded) so
+    // later admin routes (support/trainers/analytics/system/database) each
+    // just declare their own required permission and reuse this same guard.
+    path: 'admin',
+    canActivate: [authGuardFn, adminGuard],
+    data: { permission: 'admin:read' },
+    loadComponent: () => import('./pages/admin/overview/overview').then((m) => m.AdminOverview),
+  },
+  {
+    // authGuardFn ONLY — deliberately not adminGuard, so a non-admin
+    // trainer redirected here by adminGuard can never be bounced into
+    // another redirect loop.
+    path: 'admin/access-denied',
+    canActivate: [authGuardFn],
+    loadComponent: () =>
+      import('./pages/admin/access-denied/access-denied').then((m) => m.AdminAccessDenied),
   },
   {
     // Not auth-guarded on purpose — a mistyped URL shouldn't force a

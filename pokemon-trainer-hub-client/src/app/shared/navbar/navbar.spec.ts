@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { AuthService } from '@auth0/auth0-angular';
 import { of } from 'rxjs';
+import { AdminService } from '../../core/admin';
 import { ProfileService, TrainerProfile } from '../../core/profile';
 import { PokemonService } from '../../core/pokemon';
 import { ThemeService } from '../theme';
@@ -15,6 +16,11 @@ describe('Navbar', () => {
         { provide: AuthService, useValue: { user$: of(options.authUser ?? null) } },
         { provide: ProfileService, useValue: { getProfile: () => of(options.profile ?? null) } },
         { provide: PokemonService, useValue: { getById: () => of(null) } },
+        // Navbar renders AccountMenu, which now checks AdminService for the
+        // conditional Admin link — mocked here so this file doesn't need to
+        // also stub AuthService's isLoading$/isAuthenticated$/token methods
+        // just to satisfy a dependency unrelated to what this file tests.
+        { provide: AdminService, useValue: { hasPermission: () => false } },
       ],
     });
     const fixture = TestBed.createComponent(Navbar);

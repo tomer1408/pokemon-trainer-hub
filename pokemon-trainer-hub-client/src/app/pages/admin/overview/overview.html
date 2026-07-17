@@ -1,0 +1,19 @@
+<div class="admin-overview" [class.light]="theme.isLight()" [class.pikachu]="theme.isPikachu()">
+  <div class="content">
+    <div class="header-block">
+      <h1 class="page-title">Admin</h1>
+      <p class="page-subtitle">Phase 0 — authorization foundation verification.</p>
+    </div>
+
+    <div class="card">
+      @if (checking()) {
+        <p class="status-line">Checking the Admin API…</p>
+      } @else if (error(); as err) {
+        <p class="status-line status-error">{{ err }}</p>
+      } @else if (message(); as msg) {
+        <p class="status-line status-ok">{{ msg }}</p>
+        <p class="status-sub">You reached this page because your Auth0 token carries the <code>admin:read</code> permission, and the server independently confirmed it too.</p>
+      }
+    </div>
+  </div>
+</div>

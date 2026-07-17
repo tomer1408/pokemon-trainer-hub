@@ -30,6 +30,10 @@
 
       <a routerLink="/support" class="item" (click)="close()"><span class="dot dot-cyan"></span>Support</a>
 
+      @if (admin.hasPermission('admin:read')) {
+        <a routerLink="/admin" class="item" (click)="close()"><span class="dot dot-violet"></span>Admin</a>
+      }
+
       <div class="divider"></div>
 
       <div class="cvd-label">Colorblind Mode</div>
