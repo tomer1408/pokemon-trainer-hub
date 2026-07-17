@@ -3,6 +3,7 @@ const prisma = require('../services/prisma');
 const jwtCheck = require('../middleware/auth');
 const { MIN_AGE, calculateAge, calculateAgeRange } = require('../services/ageRange');
 const { validateTeamNameValue } = require('../services/teamNameFallback');
+const accountService = require('../services/accountService');
 
 const router = express.Router();
 
@@ -224,6 +225,27 @@ router.patch('/whos-that-streak', jwtCheck, async (req, res) => {
   } catch (err) {
     res.status(404).json({ message: 'No profile found for this user.' });
   }
+});
+
+// Deletes every DB row this trainer owns AND their real Auth0 identity —
+// the one truly irreversible action in this app. auth0UserId always comes
+// from the verified JWT, never the body (see middleware/auth.js). Always
+// responds 200 once the DB transaction commits (that's what "delete my
+// data" actually demands); `warning` is only present if the Auth0 side of
+// the deletion failed after the DB half already succeeded — see
+// accountService.js for why that ordering is the safe one. Deliberately
+// doesn't use the ServiceError/STATUS_BY_CODE convention from routes/team.js
+// — there's no branching business-logic error here (every delete is
+// idempotent), only an unexpected-DB-error case, already handled by the
+// global error middleware in server.js like every other route.
+router.delete('/', jwtCheck, async (req, res) => {
+  const { auth0DeleteFailed } = await accountService.deleteAccount(req.auth.payload.sub);
+  res.status(200).json({
+    message: 'Your account and all your data have been deleted.',
+    ...(auth0DeleteFailed && {
+      warning: 'Your data was deleted, but there was an issue fully closing your login. Contact support if this persists.',
+    }),
+  });
 });
 
 module.exports = router;

@@ -1,0 +1,54 @@
+<div class="status-page" [class.light]="theme.isLight()" [class.pikachu]="theme.isPikachu()">
+  <div class="content">
+    <div class="header-block">
+      <h1 class="page-title">System Status</h1>
+      <p class="page-subtitle">Live, real-time health of Pok&eacute;mon Trainer Hub's server and database.</p>
+    </div>
+
+    <div class="banner" [class.up]="allUp()" [class.down]="!allUp()">
+      <span class="banner-dot"></span>
+      {{ allUp() ? 'All systems operational' : 'Something is down right now' }}
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">API Server</span>
+          @if (apiStatus(); as s) {
+            <span class="status-pill" [class.up]="s.up" [class.down]="!s.up">{{ s.up ? 'Up' : 'Down' }}</span>
+          }
+        </div>
+        @if (apiStatus(); as s) {
+          <p class="card-detail">{{ s.detail }}</p>
+          <p class="card-latency">{{ s.latencyMs }}ms</p>
+        } @else {
+          <p class="card-detail">Checking&hellip;</p>
+        }
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Database</span>
+          @if (dbStatus(); as s) {
+            <span class="status-pill" [class.up]="s.up" [class.down]="!s.up">{{ s.up ? 'Up' : 'Down' }}</span>
+          }
+        </div>
+        @if (dbStatus(); as s) {
+          <p class="card-detail">{{ s.detail }}</p>
+          <p class="card-latency">{{ s.latencyMs }}ms</p>
+        } @else {
+          <p class="card-detail">Checking&hellip;</p>
+        }
+      </div>
+    </div>
+
+    <div class="footer-row">
+      @if (lastChecked(); as t) {
+        <span class="last-checked">Last checked {{ t.toLocaleTimeString() }} &middot; auto-refreshes every 30s</span>
+      }
+      <button type="button" class="check-now-btn" [disabled]="checking()" (click)="checkNow()">
+        {{ checking() ? 'Checking…' : 'Check Now' }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -104,6 +104,12 @@ Create a `.env` file:
 DATABASE_URL="sqlserver://localhost:1433;database=PokemonTrainerHub;user=SA;password=<your-password>;trustServerCertificate=true"
 AUTH0_AUDIENCE="<API Identifier from step 2.1>"
 AUTH0_ISSUER_BASE_URL="https://<your-tenant-domain>/"
+# Optional — see "Delete My Account" below. Without these, account deletion
+# still removes all of a trainer's DB data; only the Auth0 identity survives.
+AUTH0_M2M_CLIENT_ID=
+AUTH0_M2M_CLIENT_SECRET=
+# Optional — see "Error tracking (Sentry)" below.
+SENTRY_DSN=
 ```
 
 Then run all migrations and start the server:
@@ -131,6 +137,26 @@ npx ng serve
 ```
 
 Client runs on `http://localhost:4200`.
+
+### 5. Delete My Account — Auth0 Management API (optional)
+
+Settings has a real "Delete My Account" action: it deletes every DB row a trainer owns in one transaction, then deletes their actual Auth0 identity via the Auth0 Management API. That second step needs its own Machine-to-Machine Application (separate from the SPA):
+
+1. Applications → Applications → Create Application → name it (e.g. "Pokemon Trainer Hub M2M") → type **Machine to Machine Applications**.
+2. When asked which API to authorize, select **Auth0 Management API**.
+3. Under scopes, check only **`delete:users`** (least privilege — this app never needs to read or write anything else via this API).
+4. Settings tab of the new application → copy **Client ID** and **Client Secret** into the server's `.env` as `AUTH0_M2M_CLIENT_ID` / `AUTH0_M2M_CLIENT_SECRET`.
+
+Without this, Delete My Account still deletes all of a trainer's DB data (the part that matters most) — the Auth0 side of the deletion just fails gracefully and the response includes a `warning` field instead of crashing.
+
+### 6. Error tracking (Sentry, optional)
+
+Both apps report real runtime errors to [Sentry](https://sentry.io) if configured — with no DSN set, both SDKs no-op safely (no code changes needed to disable it).
+
+1. Free sign-up at sentry.io.
+2. Create two projects: one **Node.js/Express** platform, one **Angular** platform.
+3. Each project → Settings → Client Keys (DSN) → copy it.
+4. Server DSN → `SENTRY_DSN` in the server's `.env`. Client DSN → `sentryDsn` in `pokemon-trainer-hub-client/src/environments/environment.ts` (local) and `environment.production.ts` (deployed) — a client-side DSN is meant to be public, same trust level as the Auth0 domain/clientId already hardcoded in `app.config.ts`.
 
 ## Testing
 
@@ -191,6 +217,8 @@ This means the network-level allowlist is broader than a dedicated IP would be �
 | `CORS_ORIGIN` | The deployed Vercel URL, so the API only accepts cross-origin requests from the real frontend |
 | `GOOGLE_API_KEY` | Same as local `.env` — without it, the AI Trainer Assistant/chat widget/AI team names degrade as described in the Tech Stack section above |
 | `GOOGLE_GEMINI_MODEL` | Optional, same as local `.env` |
+| `AUTH0_M2M_CLIENT_ID` / `AUTH0_M2M_CLIENT_SECRET` | Optional — same as local `.env`. Powers real Auth0-identity deletion in Delete My Account; see step 5 above |
+| `SENTRY_DSN` | Optional — same as local `.env`. Server-side error tracking; see step 6 above |
 
 Auth0's **Allowed Callback URLs**, **Logout URLs**, and **Web Origins** must include the Vercel URL alongside `localhost:4200` (not replacing it, so local dev keeps working).
 
@@ -209,6 +237,13 @@ The old GitHub Actions workflow is kept in the repo as a harmless secondary back
 ### Deployment health check
 
 **`GET /api/health/db`** confirms the deployed backend can actually reach the database (not just that the Node process is up) — see the Health section below.
+
+### Monitoring
+
+Three complementary layers, each doing a different job:
+- **UptimeRobot** (external, always-on) — pings `/api/health` and `/api/health/db` every 5 minutes, mainly to keep Render's free tier warm (see above).
+- **`/status`** (in-app, on-demand, public — no login required) — a real-time page showing both endpoints' live up/down state and actual client-measured latency, auto-refreshing every 30s. For a human to check right now, including exactly when something might be broken (deliberately not login-gated, since forcing a login first would be self-defeating if login itself is what's down).
+- **Sentry** (error tracking, both apps) — captures real unhandled exceptions client- and server-side; see "Error tracking (Sentry)" in Setup above for enabling it.
 
 ## API Reference
 
@@ -302,6 +337,8 @@ Consent fields: `acceptedPolicy` (boolean) is **required to be `true`** the firs
 **`PATCH /api/profile/team-name`** — body `{ name }`. Updates only the Dream Team's custom name, validated the same way regardless of source — used by the AI Team Name Generator (My Team page) so picking an AI suggestion doesn't require resending the whole profile. `400` if `name` fails validation (length/content), `404` if the trainer has no profile row yet.
 
 **`PATCH /api/profile/whos-that-streak`** — body `{ streak }` (non-negative integer). Records a new "Who's That Pokémon?" best streak, real and server-side (not browser storage). Only ever moves the stored best **up** — the server keeps `max(existing, submitted)`, so a stale/out-of-order request can never regress a trainer's real best. `400` if `streak` isn't a non-negative integer, `404` if the trainer has no profile row yet.
+
+**`DELETE /api/profile`** — deletes every DB row the trainer owns (Dream Team, favorites, notes, support requests, battle history, and the profile itself) in one transaction, then deletes their real Auth0 identity via the Management API (see "Delete My Account" in Setup above). Always `200` once the DB transaction commits; the response includes a `warning` field only if the Auth0 identity deletion failed afterward — the DB half is what's guaranteed, by design (see `services/accountService.js` for the ordering rationale).
 
 ### Trainer Notes
 

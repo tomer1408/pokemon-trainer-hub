@@ -98,4 +98,14 @@ export class ProfileService {
       catchError(() => of(false)),
     );
   }
+
+  // Deletes every DB row this trainer owns AND their real Auth0 identity
+  // (see routes/profile.js's DELETE / and services/accountService.js) — the
+  // one truly irreversible action in the app. `warning` is present only if
+  // the Auth0 side of the deletion failed after the DB half already
+  // succeeded; the caller (Settings) logs the trainer out either way, since
+  // their data is gone regardless.
+  deleteAccount(): Observable<{ message: string; warning?: string }> {
+    return this.http.delete<{ message: string; warning?: string }>(`${API_BASE}/profile`);
+  }
 }

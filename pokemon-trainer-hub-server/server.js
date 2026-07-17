@@ -1,6 +1,8 @@
+require('./instrument');
 require('dotenv').config({ quiet: true });
 const express = require('express');
 const cors = require('cors');
+const Sentry = require('@sentry/node');
 
 const jwtCheck = require('./middleware/auth');
 const prisma = require('./services/prisma');
@@ -47,6 +49,7 @@ app.get('/api/health/db', async (req, res) => {
     // Prisma error message, so nothing about the DB target ever ends up in
     // logs beyond "it failed."
     console.error('DB health check failed');
+    Sentry.captureException(err);
     res.status(503).json({ status: 'error', db: 'error' });
   }
 });
@@ -66,6 +69,11 @@ app.use('/api/support', supportRouter);
 app.use('/api/quiz', quizRouter);
 app.use('/api/battle-history', battleHistoryRouter);
 app.use('/api/avatar-icons', avatarIconsRouter);
+
+// Reports every error from the routes above to Sentry before the clean-JSON
+// handler below runs — this only captures and calls next(err), it never
+// sends its own response, so the existing error handling is unaffected.
+Sentry.setupExpressErrorHandler(app);
 
 // Catches every error from the routes above (including auth failures) and
 // always responds with clean JSON instead of Express's default HTML+stack-trace page.

@@ -86,6 +86,14 @@ export const routes: Routes = [
       import('./pages/whos-that-pokemon/whos-that-pokemon').then((m) => m.WhosThatPokemon),
   },
   {
+    // Not auth-guarded on purpose, same reasoning as '**' below: the two
+    // health endpoints it calls are already public, and a status page needs
+    // to be checkable precisely when something might be broken — including
+    // a broken login itself.
+    path: 'status',
+    loadComponent: () => import('./pages/status/status').then((m) => m.Status),
+  },
+  {
     // Not auth-guarded on purpose — a mistyped URL shouldn't force a
     // logged-out visitor through Auth0 login just to see "page not found".
     path: '**',

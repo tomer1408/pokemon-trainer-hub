@@ -144,6 +144,15 @@
         <button type="button" class="logout-btn" (click)="logOut()">Log Out</button>
       </div>
 
+      <!-- ===== 6. Danger Zone ===== -->
+      <div class="card danger-card">
+        <div class="card-head">
+          <span class="card-title">Danger Zone</span>
+          <span class="card-helper">Permanently delete your account and every piece of data tied to it.</span>
+        </div>
+        <button type="button" class="delete-account-btn" (click)="requestDeleteAccount()">Delete My Account</button>
+      </div>
+
       <!-- ===== SAVE BAR ===== -->
       <div class="save-bar">
         @if (saveError(); as err) {
@@ -164,5 +173,38 @@
 
   @if (openPolicyModal(); as t) {
     <app-policy-modal [type]="t" [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" (closed)="closePolicy()" />
+  }
+
+  @if (showDeleteConfirm()) {
+    <div class="confirm-overlay" (click)="cancelDeleteAccount()">
+      <div class="confirm-card" (click)="$event.stopPropagation()">
+        <h2 class="confirm-title">Delete your account?</h2>
+        <p class="confirm-body">
+          This permanently deletes your trainer profile, Dream Team, favorites, notes, support requests, and battle
+          history — and your login itself. This cannot be undone.
+        </p>
+        <p class="confirm-body">
+          Type <strong>DELETE</strong> to confirm.
+        </p>
+        <input
+          type="text"
+          class="confirm-input"
+          aria-label="Type DELETE to confirm account deletion"
+          placeholder="DELETE"
+          [value]="deleteConfirmText()"
+          (input)="deleteConfirmText.set($any($event.target).value)"
+          autocomplete="off"
+        />
+        @if (deleteError(); as err) {
+          <p class="confirm-error">{{ err }}</p>
+        }
+        <div class="confirm-actions">
+          <button type="button" class="confirm-cancel" [disabled]="deleting()" (click)="cancelDeleteAccount()">Cancel</button>
+          <button type="button" class="confirm-delete" [disabled]="!canConfirmDelete() || deleting()" (click)="confirmDeleteAccount()">
+            {{ deleting() ? 'Deleting…' : 'Delete My Account' }}
+          </button>
+        </div>
+      </div>
+    </div>
   }
 </div>

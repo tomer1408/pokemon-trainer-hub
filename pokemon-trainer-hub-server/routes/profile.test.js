@@ -9,6 +9,7 @@ const path = require('node:path');
 describe('routes/profile', () => {
   let request;
   let prisma;
+  let accountService;
   const FAKE_USER = 'auth0|test-user';
 
   const validSignup = {
@@ -40,6 +41,9 @@ describe('routes/profile', () => {
     };
     mock.module(path.resolve(__dirname, '../services/prisma.js'), { exports: { default: prisma } });
 
+    accountService = { deleteAccount: mock.fn(async () => ({ auth0DeleteFailed: false })) };
+    mock.module(path.resolve(__dirname, '../services/accountService.js'), { exports: accountService });
+
     const express = require('express');
     const supertest = require('supertest');
     const profileRouter = require('./profile');
@@ -57,6 +61,8 @@ describe('routes/profile', () => {
     prisma.trainerProfile.findUnique.mock.mockImplementation(async () => null);
     prisma.trainerProfile.upsert.mock.mockImplementation(async ({ create, update }) => ({ ...(create || update) }));
     prisma.trainerProfile.update.mock.mockImplementation(async ({ data }) => ({ ...data }));
+    accountService.deleteAccount.mock.resetCalls();
+    accountService.deleteAccount.mock.mockImplementation(async () => ({ auth0DeleteFailed: false }));
   });
 
   describe('GET /', () => {
@@ -244,6 +250,27 @@ describe('routes/profile', () => {
 
       assert.equal(res.status, 200);
       assert.equal(prisma.trainerProfile.update.mock.calls[0].arguments[0].data.whosThatBestStreak, 10);
+    });
+  });
+
+  describe('DELETE /', () => {
+    test('deletes the account for the JWT-identified user and returns 200', async () => {
+      const res = await request.delete('/api/profile');
+
+      assert.equal(res.status, 200);
+      assert.equal(accountService.deleteAccount.mock.calls.length, 1);
+      assert.equal(accountService.deleteAccount.mock.calls[0].arguments[0], FAKE_USER);
+      assert.ok(res.body.message);
+      assert.equal(res.body.warning, undefined);
+    });
+
+    test('includes a warning when the Auth0 side of the deletion failed', async () => {
+      accountService.deleteAccount.mock.mockImplementationOnce(async () => ({ auth0DeleteFailed: true }));
+
+      const res = await request.delete('/api/profile');
+
+      assert.equal(res.status, 200);
+      assert.ok(res.body.warning);
     });
   });
 });

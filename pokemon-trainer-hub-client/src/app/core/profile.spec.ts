@@ -108,4 +108,15 @@ describe('ProfileService', () => {
 
     expect(ok).toBe(true);
   });
+
+  it('deleteAccount() DELETEs the profile resource and surfaces the server response as-is', () => {
+    let result: { message: string; warning?: string } | undefined;
+    service.deleteAccount().subscribe((r) => (result = r));
+
+    const req = httpMock.expectOne(`${API_BASE}/profile`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush({ message: 'Your account and all your data have been deleted.', warning: 'Contact support.' });
+
+    expect(result).toEqual({ message: 'Your account and all your data have been deleted.', warning: 'Contact support.' });
+  });
 });

@@ -8,6 +8,7 @@ import { Settings } from './settings';
 describe('Settings', () => {
   let getProfileStrict: ReturnType<typeof vi.fn>;
   let saveProfile: ReturnType<typeof vi.fn>;
+  let deleteAccount: ReturnType<typeof vi.fn>;
   let logout: ReturnType<typeof vi.fn>;
 
   function profile(overrides: Partial<TrainerProfile> = {}): TrainerProfile {
@@ -33,12 +34,13 @@ describe('Settings', () => {
       options.profileError ? throwError(() => options.profileError) : of(options.profile ?? profile()),
     );
     saveProfile = vi.fn(() => of(profile()));
+    deleteAccount = vi.fn(() => of({ message: 'Your account and all your data have been deleted.' }));
     logout = vi.fn(() => of(undefined));
 
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        { provide: ProfileService, useValue: { getProfileStrict, saveProfile } },
+        { provide: ProfileService, useValue: { getProfileStrict, saveProfile, deleteAccount } },
         { provide: AuthService, useValue: { logout } },
       ],
     });
@@ -162,5 +164,82 @@ describe('Settings', () => {
 
     expect(sessionStorage.getItem('pth.starterQuizSkipped')).toBeNull();
     expect(logout).toHaveBeenCalledWith({ logoutParams: { returnTo: window.location.origin } });
+  });
+
+  it('requestDeleteAccount() opens the confirm dialog with a cleared text field', () => {
+    const fixture = setup();
+    const inst = fixture.componentInstance as any;
+
+    inst.deleteConfirmText.set('DELETE');
+    fixture.componentInstance.requestDeleteAccount();
+
+    expect(inst.showDeleteConfirm()).toBe(true);
+    expect(inst.deleteConfirmText()).toBe('');
+  });
+
+  it('cancelDeleteAccount() closes the dialog without calling the API', () => {
+    const fixture = setup();
+    fixture.componentInstance.requestDeleteAccount();
+
+    fixture.componentInstance.cancelDeleteAccount();
+
+    expect((fixture.componentInstance as any).showDeleteConfirm()).toBe(false);
+    expect(deleteAccount).not.toHaveBeenCalled();
+  });
+
+  it('canConfirmDelete() is only true once the exact word DELETE is typed', () => {
+    const fixture = setup();
+    const inst = fixture.componentInstance as any;
+
+    inst.deleteConfirmText.set('delete');
+    expect(inst.canConfirmDelete()).toBe(false);
+
+    inst.deleteConfirmText.set('DELET');
+    expect(inst.canConfirmDelete()).toBe(false);
+
+    inst.deleteConfirmText.set('DELETE');
+    expect(inst.canConfirmDelete()).toBe(true);
+  });
+
+  it('confirmDeleteAccount() is a no-op until the confirm text is exactly DELETE', () => {
+    const fixture = setup();
+    (fixture.componentInstance as any).deleteConfirmText.set('nope');
+
+    fixture.componentInstance.confirmDeleteAccount();
+
+    expect(deleteAccount).not.toHaveBeenCalled();
+  });
+
+  it('confirmDeleteAccount() deletes the account then logs out, on success', () => {
+    const fixture = setup();
+    const inst = fixture.componentInstance as any;
+    inst.deleteConfirmText.set('DELETE');
+
+    fixture.componentInstance.confirmDeleteAccount();
+
+    expect(deleteAccount).toHaveBeenCalledTimes(1);
+    expect(logout).toHaveBeenCalledWith({ logoutParams: { returnTo: window.location.origin } });
+  });
+
+  it('confirmDeleteAccount() surfaces an error and does not log out, on failure', () => {
+    deleteAccount = vi.fn(() => throwError(() => new Error('delete failed')));
+    const localLogout = vi.fn(() => of(undefined));
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: ProfileService, useValue: { getProfileStrict: () => of(profile()), saveProfile, deleteAccount } },
+        { provide: AuthService, useValue: { logout: localLogout } },
+      ],
+    });
+    const fixture = TestBed.createComponent(Settings);
+    fixture.detectChanges();
+    const inst = fixture.componentInstance as any;
+    inst.deleteConfirmText.set('DELETE');
+
+    fixture.componentInstance.confirmDeleteAccount();
+
+    expect(inst.deleteError()).toBe('Something went wrong deleting your account. Please try again.');
+    expect(inst.deleting()).toBe(false);
+    expect(localLogout).not.toHaveBeenCalled();
   });
 });

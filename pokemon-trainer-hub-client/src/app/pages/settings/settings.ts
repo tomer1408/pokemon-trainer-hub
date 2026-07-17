@@ -73,6 +73,16 @@ export class Settings {
   protected readonly showSavedToast = signal(false);
   protected readonly openPolicyModal = signal<PolicyType | null>(null);
 
+  // Delete My Account — the one truly irreversible action in the app, so it
+  // gets an extra safety net beyond every other confirm dialog in this
+  // codebase: typing the exact word DELETE before the destructive button
+  // enables at all.
+  protected readonly showDeleteConfirm = signal(false);
+  protected readonly deleteConfirmText = signal('');
+  protected readonly deleting = signal(false);
+  protected readonly deleteError = signal<string | null>(null);
+  protected readonly canConfirmDelete = computed(() => this.deleteConfirmText() === 'DELETE');
+
   protected readonly isDirty = computed(() => {
     const p = this.profile();
     const d = this.draftMarketing();
@@ -152,5 +162,36 @@ export class Settings {
   logOut(): void {
     clearStarterQuizSkip();
     this.auth.logout({ logoutParams: { returnTo: window.location.origin } }).subscribe();
+  }
+
+  requestDeleteAccount(): void {
+    this.deleteConfirmText.set('');
+    this.deleteError.set(null);
+    this.showDeleteConfirm.set(true);
+  }
+
+  cancelDeleteAccount(): void {
+    this.showDeleteConfirm.set(false);
+  }
+
+  confirmDeleteAccount(): void {
+    if (!this.canConfirmDelete() || this.deleting()) return;
+
+    this.deleting.set(true);
+    this.deleteError.set(null);
+
+    this.profileService.deleteAccount().subscribe({
+      next: () => {
+        // The account (and its data) is gone either way at this point —
+        // logging out is what makes that real for this browser tab, since
+        // the current Auth0 session token is now for a deleted user.
+        clearStarterQuizSkip();
+        this.auth.logout({ logoutParams: { returnTo: window.location.origin } }).subscribe();
+      },
+      error: () => {
+        this.deleting.set(false);
+        this.deleteError.set('Something went wrong deleting your account. Please try again.');
+      },
+    });
   }
 }
