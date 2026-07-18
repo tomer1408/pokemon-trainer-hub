@@ -1,5 +1,16 @@
 const prisma = require('./prisma');
 const { deleteAuth0User } = require('./auth0Management');
+const ServiceError = require('./serviceError');
+
+// No native Prisma enum on this datasource (SQL Server) — validated String
+// with a server-side allowlist, same treatment as favoriteType/
+// experienceLevel elsewhere in this schema. Every real caller sets this
+// server-side (never from client input) — routes/profile.js's DELETE always
+// passes 'self', routes/adminTrainers.js's DELETE always passes 'admin' —
+// this allowlist is defensive insurance, not a response to any untrusted
+// input that exists today.
+const VALID_DELETION_TYPES = ['self', 'admin'];
+const PURGE_WINDOW_DAYS = 30;
 
 // Deletes every row this trainer owns (one atomic transaction), then deletes
 // their real Auth0 identity. Order matters: DB rows are deleted FIRST. If the
@@ -38,4 +49,41 @@ async function deleteAccount(auth0UserId) {
   }
 }
 
-module.exports = { deleteAccount };
+// Marks a trainer account for deletion without touching a single row of
+// their real data — a single-row update on TrainerProfile, nothing else.
+// The other 5 user tables (DreamTeamMember, Favorite, TrainerNote,
+// SupportRequest, BattleMatch) are deliberately never touched here: a
+// soft-deleted trainer can never obtain a working session again (see
+// routes/profile.js's GET / gate), so those rows are simply unreachable
+// until either restoreAccount() or the 30-day purge sweep calls the real
+// deleteAccount() above. Auth0 is not touched either — deferred until the
+// purge, since Auth0 has no undelete and restore would otherwise be
+// meaningless.
+async function softDeleteAccount(auth0UserId, { deletedBy, deletionType }) {
+  if (!VALID_DELETION_TYPES.includes(deletionType)) {
+    throw new ServiceError('INVALID_DELETION_TYPE', `deletionType must be one of: ${VALID_DELETION_TYPES.join(', ')}.`);
+  }
+
+  const deletedAt = new Date();
+  const purgeAt = new Date(deletedAt);
+  purgeAt.setDate(purgeAt.getDate() + PURGE_WINDOW_DAYS);
+
+  await prisma.trainerProfile.update({
+    where: { auth0UserId },
+    data: { deletedAt, purgeAt, deletedBy, deletionType },
+  });
+}
+
+// Reverses softDeleteAccount() — clears all 4 fields in one update. There is
+// nothing else to restore: since the other 5 tables were never touched at
+// soft-delete time, the trainer's full account is intact the moment this
+// resolves. Only ever called from an admin-initiated restore action (see
+// routes/adminTrainers.js) — there is no self-service restore path.
+async function restoreAccount(auth0UserId) {
+  await prisma.trainerProfile.update({
+    where: { auth0UserId },
+    data: { deletedAt: null, purgeAt: null, deletedBy: null, deletionType: null },
+  });
+}
+
+module.exports = { deleteAccount, softDeleteAccount, restoreAccount };

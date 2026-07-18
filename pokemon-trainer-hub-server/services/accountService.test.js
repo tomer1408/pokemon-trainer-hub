@@ -18,7 +18,10 @@ describe('services/accountService', () => {
       supportRequest: { deleteMany: mock.fn(async () => ({ count: 1 })) },
       battleMatch: { deleteMany: mock.fn(async () => ({ count: 1 })) },
       dreamTeamMember: { deleteMany: mock.fn(async () => ({ count: 1 })) },
-      trainerProfile: { deleteMany: mock.fn(async () => ({ count: 1 })) },
+      trainerProfile: {
+        deleteMany: mock.fn(async () => ({ count: 1 })),
+        update: mock.fn(async () => ({})),
+      },
       $transaction: mock.fn(async (ops) => Promise.all(ops)),
     };
     mock.module(path.resolve(__dirname, './prisma.js'), { exports: { default: prisma } });
@@ -41,6 +44,8 @@ describe('services/accountService', () => {
       prisma[table].deleteMany.mock.resetCalls();
       prisma[table].deleteMany.mock.mockImplementation(async () => ({ count: 1 }));
     }
+    prisma.trainerProfile.update.mock.resetCalls();
+    prisma.trainerProfile.update.mock.mockImplementation(async () => ({}));
     prisma.$transaction.mock.resetCalls();
     prisma.$transaction.mock.mockImplementation(async (ops) => Promise.all(ops));
     auth0Management.deleteAuth0User.mock.resetCalls();
@@ -98,5 +103,58 @@ describe('services/accountService', () => {
 
     await assert.rejects(accountService.deleteAccount(USER));
     assert.equal(auth0Management.deleteAuth0User.mock.calls.length, 0);
+  });
+
+  describe('softDeleteAccount', () => {
+    test('updates only TrainerProfile — never touches the other 5 tables or Auth0', async () => {
+      await accountService.softDeleteAccount(USER, { deletedBy: USER, deletionType: 'self' });
+
+      assert.equal(prisma.trainerProfile.update.mock.calls.length, 1);
+      assert.equal(prisma.$transaction.mock.calls.length, 0);
+      assert.equal(auth0Management.deleteAuth0User.mock.calls.length, 0);
+      for (const table of ['trainerNote', 'favorite', 'supportRequest', 'battleMatch', 'dreamTeamMember']) {
+        assert.equal(prisma[table].deleteMany.mock.calls.length, 0);
+      }
+    });
+
+    test('sets deletedAt to now and purgeAt exactly 30 days later', async () => {
+      const before = Date.now();
+      await accountService.softDeleteAccount(USER, { deletedBy: USER, deletionType: 'self' });
+      const after = Date.now();
+
+      const data = prisma.trainerProfile.update.mock.calls[0].arguments[0].data;
+      assert.ok(data.deletedAt.getTime() >= before && data.deletedAt.getTime() <= after);
+      const diffDays = (data.purgeAt.getTime() - data.deletedAt.getTime()) / (1000 * 60 * 60 * 24);
+      assert.equal(diffDays, 30);
+    });
+
+    test('records the real acting user and deletion type', async () => {
+      await accountService.softDeleteAccount(USER, { deletedBy: 'auth0|admin-abc', deletionType: 'admin' });
+
+      const data = prisma.trainerProfile.update.mock.calls[0].arguments[0].data;
+      assert.equal(data.deletedBy, 'auth0|admin-abc');
+      assert.equal(data.deletionType, 'admin');
+    });
+
+    test('rejects an invalid deletionType before ever touching the database', async () => {
+      await assert.rejects(
+        accountService.softDeleteAccount(USER, { deletedBy: USER, deletionType: 'not-a-real-type' }),
+        (err) => err.code === 'INVALID_DELETION_TYPE',
+      );
+      assert.equal(prisma.trainerProfile.update.mock.calls.length, 0);
+    });
+  });
+
+  describe('restoreAccount', () => {
+    test('clears all 4 soft-delete fields in one update, nothing else', async () => {
+      await accountService.restoreAccount(USER);
+
+      assert.equal(prisma.trainerProfile.update.mock.calls.length, 1);
+      const call = prisma.trainerProfile.update.mock.calls[0].arguments[0];
+      assert.deepEqual(call.where, { auth0UserId: USER });
+      assert.deepEqual(call.data, { deletedAt: null, purgeAt: null, deletedBy: null, deletionType: null });
+      assert.equal(prisma.$transaction.mock.calls.length, 0);
+      assert.equal(auth0Management.deleteAuth0User.mock.calls.length, 0);
+    });
   });
 });

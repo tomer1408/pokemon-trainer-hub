@@ -169,4 +169,23 @@ model TrainerProfile {
   whosThatBestStreak Int @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  // Soft-delete state — all four null means "active, not deleted". Set
+  // together by softDeleteAccount(), cleared together by restoreAccount()
+  // (see services/accountService.js). Real hard deletion (accountService's
+  // original deleteAccount()) is unaffected by these fields — it always
+  // deletes the row outright, whether reached via the 30-day purge sweep or
+  // an admin's immediate "Delete Forever".
+  deletedAt   DateTime?
+  // When the automatic purge sweep is allowed to permanently delete this
+  // trainer — always deletedAt + 30 days, computed at soft-delete time.
+  purgeAt     DateTime?
+  // The acting auth0UserId — the trainer's own id for a self-delete, or the
+  // admin's id for an admin-initiated delete.
+  deletedBy   String?
+  // No native Prisma enum on this datasource (SQL Server) — validated
+  // String with a server-side allowlist, same treatment as
+  // favoriteType/experienceLevel elsewhere in this schema. "self" | "admin".
+  deletionType String?
+
+  @@index([purgeAt])
 }
