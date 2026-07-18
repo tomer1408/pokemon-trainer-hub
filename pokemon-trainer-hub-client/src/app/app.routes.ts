@@ -120,6 +120,19 @@ export const routes: Routes = [
         data: { permission: 'support:manage' },
         loadComponent: () => import('./pages/admin/support/support').then((m) => m.AdminSupport),
       },
+      {
+        path: 'trainers',
+        canActivate: [adminGuard],
+        data: { permission: 'users:manage' },
+        loadComponent: () => import('./pages/admin/trainers/trainers').then((m) => m.AdminTrainers),
+      },
+      {
+        path: 'trainers/:id',
+        canActivate: [adminGuard],
+        data: { permission: 'users:manage' },
+        loadComponent: () =>
+          import('./pages/admin/trainer-detail/trainer-detail').then((m) => m.AdminTrainerDetail),
+      },
     ],
   },
   {

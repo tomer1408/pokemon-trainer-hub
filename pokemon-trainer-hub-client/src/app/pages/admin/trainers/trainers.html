@@ -1,0 +1,57 @@
+<div class="toolbar">
+  <span class="count-chip">{{ total() }} total trainers</span>
+  <input
+    type="text"
+    class="search-input"
+    placeholder="Search by trainer name…"
+    [value]="searchInput()"
+    (input)="searchInput.set($any($event.target).value)"
+  />
+</div>
+
+<div class="table-card">
+  @if (isLoading()) {
+    <div class="state-block">Loading trainers…</div>
+  } @else if (loadError()) {
+    <div class="state-block error">Could not load trainers. Please try again.</div>
+  } @else if (trainers().length === 0) {
+    <div class="state-block">No trainers match your search.</div>
+  } @else {
+    <div class="table-scroll">
+      <div class="trainer-table">
+        <div class="head-row">
+          <span>Trainer</span>
+          <span>Country</span>
+          <span>Age</span>
+          <span>Favorite Type</span>
+          <span>Quiz</span>
+          <span>Team</span>
+          <span>Favorites</span>
+          <span>Battles</span>
+          <span>Joined</span>
+        </div>
+        @for (t of trainers(); track t.auth0UserId) {
+          <div class="body-row" (click)="openTrainer(t.auth0UserId)">
+            <span class="cell-name">
+              {{ t.trainerName }}
+              <span class="cell-id">{{ maskId(t.auth0UserId) }}</span>
+            </span>
+            <span>{{ t.country }}</span>
+            <span class="cell-muted">{{ t.ageRange || '—' }}</span>
+            <span class="cell-muted">{{ t.favoriteType }}</span>
+            <span>{{ t.hasCompletedStarterQuiz ? '✓' : '—' }}</span>
+            <span>{{ t.teamSize }}/5</span>
+            <span>{{ t.favoritesCount }}</span>
+            <span>{{ t.battleCount }}</span>
+            <span class="cell-mono">{{ t.createdAt | date: 'MMM d, y' }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="pagination-footer">
+      <span class="page-info">Page {{ page() }} of {{ totalPages() }}</span>
+      <app-pagination [page]="page()" [totalPages]="totalPages()" [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" (pageChange)="setPage($event)" />
+    </div>
+  }
+</div>

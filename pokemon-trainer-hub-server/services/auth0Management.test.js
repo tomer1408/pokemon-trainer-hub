@@ -105,4 +105,29 @@ describe('services/auth0Management', () => {
 
     await assert.rejects(auth0Management.deleteAuth0User('auth0|missing'));
   });
+
+  test('getAuth0User is a real GET (not a mutation) on the correctly-encoded user id with a Bearer token', async () => {
+    fetchMock.mock.mockImplementation(async (url) => {
+      if (String(url).includes('/oauth/token')) return tokenPayload({ expires_in: -1 });
+      return { ok: true, status: 200, json: async () => ({ email: 'ash@example.com', name: 'Ash' }) };
+    });
+
+    const user = await auth0Management.getAuth0User('auth0|abc123');
+
+    const getCall = fetchMock.mock.calls.find(({ arguments: [url] }) => !String(url).includes('/oauth/token'));
+    const [url, options] = getCall.arguments;
+    assert.equal(url, 'https://test-tenant.us.auth0.com/api/v2/users/auth0%7Cabc123');
+    assert.equal(options.method, undefined); // GET is the default, never DELETE/POST
+    assert.equal(options.headers.Authorization, 'Bearer test-token');
+    assert.deepEqual(user, { email: 'ash@example.com', name: 'Ash' });
+  });
+
+  test('getAuth0User throws when Auth0 responds with a non-ok status', async () => {
+    fetchMock.mock.mockImplementation(async (url) => {
+      if (String(url).includes('/oauth/token')) return tokenPayload({ expires_in: -1 });
+      return { ok: false, status: 404 };
+    });
+
+    await assert.rejects(auth0Management.getAuth0User('auth0|missing'));
+  });
 });

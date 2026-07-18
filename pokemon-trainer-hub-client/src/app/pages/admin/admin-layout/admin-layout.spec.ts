@@ -22,7 +22,15 @@ describe('AdminLayout', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([
-          { path: 'admin', children: [{ path: '', component: Dummy }, { path: 'support', component: Dummy }] },
+          {
+            path: 'admin',
+            children: [
+              { path: '', component: Dummy },
+              { path: 'support', component: Dummy },
+              { path: 'trainers', component: Dummy },
+              { path: 'trainers/:id', component: Dummy },
+            ],
+          },
           { path: 'home', component: Dummy },
         ]),
         { provide: AuthService, useValue: { user$: of(authUser) } },
@@ -91,6 +99,28 @@ describe('AdminLayout', () => {
     const inst = fixture.componentInstance as any;
     expect(inst.activePath()).toBe('support');
     expect(inst.currentItem().label).toBe('Support Requests');
+  });
+
+  it('the Trainers item is a real, enabled link — not the "Soon" placeholder', () => {
+    const fixture = setup();
+    const links: HTMLAnchorElement[] = fixture.nativeElement.querySelectorAll('a.nav-item');
+    const trainersLink = Array.from(links).find((a) => a.textContent?.includes('Trainers'));
+
+    expect(trainersLink).toBeTruthy();
+    expect(trainersLink!.getAttribute('href')).toBe('/admin/trainers');
+    expect(fixture.nativeElement.textContent).not.toMatch(/Trainers\s*Soon/);
+  });
+
+  it('a trainer detail sub-route still counts as being on the Trainers item (breadcrumb + active highlight)', async () => {
+    const fixture = setup();
+    const router = TestBed.inject(Router);
+
+    await router.navigateByUrl('/admin/trainers/auth0|abc123');
+    fixture.detectChanges();
+
+    const inst = fixture.componentInstance as any;
+    expect(inst.currentItem().label).toBe('Trainers');
+    expect(inst.isActive('trainers')).toBe(true);
   });
 
   it('does not render a nav item the trainer lacks the permission for', () => {

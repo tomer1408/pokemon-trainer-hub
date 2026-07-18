@@ -64,4 +64,21 @@ async function deleteAuth0User(auth0UserId) {
   }
 }
 
-module.exports = { getManagementToken, deleteAuth0User };
+// Fetches fresh Auth0 profile info for one user — a genuine read, nothing
+// persisted. Used by the Admin Trainer detail page's "Refresh Auth0 info"
+// action (a real GET, deliberately not a POST — it doesn't mutate anything).
+async function getAuth0User(auth0UserId) {
+  const token = await getManagementToken();
+
+  const response = await fetch(`https://${domain()}/api/v2/users/${encodeURIComponent(auth0UserId)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Auth0 user lookup failed with ${response.status}`);
+  }
+
+  return response.json();
+}
+
+module.exports = { getManagementToken, deleteAuth0User, getAuth0User };

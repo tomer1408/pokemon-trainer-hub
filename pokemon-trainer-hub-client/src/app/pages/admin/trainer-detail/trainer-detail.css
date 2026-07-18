@@ -1,0 +1,229 @@
+/* Relies on the theme tokens already defined by the parent AdminLayout
+   (.admin-shell) — same approach as pages/admin/support and
+   pages/admin/trainers. */
+
+:host {
+  display: block;
+}
+
+.state-block {
+  padding: 60px 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13.5px;
+}
+
+.state-block.error {
+  color: var(--danger);
+}
+
+.back-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+  padding: 0 0 12px;
+}
+
+.header-row {
+  margin-bottom: 16px;
+}
+
+.trainer-name {
+  font-family: 'Bungee', sans-serif;
+  font-size: 20px;
+  color: var(--text-body);
+  margin: 0 0 4px;
+}
+
+.trainer-id {
+  font-family: 'Space Mono', monospace;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  padding: 20px 22px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card.span-2 {
+  grid-column: span 2;
+}
+
+.card-title {
+  font-family: 'Bungee', sans-serif;
+  font-size: 14px;
+  color: var(--text-body);
+}
+
+.card-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.card-helper {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.small-btn {
+  border: 1px solid var(--border-soft);
+  background: transparent;
+  color: var(--text-body);
+  border-radius: 100px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.small-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.inline-error {
+  font-size: 12.5px;
+  color: var(--danger);
+  margin: 0;
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.meta-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.meta-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 9.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.meta-value {
+  font-size: 12.5px;
+  color: var(--text-body);
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 14px;
+}
+
+.stat-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-align: center;
+}
+
+.stat-value {
+  font-family: 'Bungee', sans-serif;
+  font-size: 18px;
+  color: var(--text-body);
+}
+
+.stat-label {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.team-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.team-chip {
+  background: var(--overlay-05);
+  border: 1px solid var(--border-soft);
+  border-radius: 100px;
+  padding: 5px 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-body);
+  text-transform: capitalize;
+}
+
+.support-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.support-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--text-body);
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.support-row:last-child {
+  border-bottom: none;
+}
+
+.cell-muted {
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+.danger-card {
+  border-color: var(--danger);
+}
+
+.delete-btn {
+  align-self: flex-start;
+  border: none;
+  background: var(--danger);
+  color: #fff;
+  border-radius: 100px;
+  padding: 11px 22px;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+@media (max-width: 800px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card.span-2 {
+    grid-column: span 1;
+  }
+}

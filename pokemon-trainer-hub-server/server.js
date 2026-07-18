@@ -18,6 +18,7 @@ const battleHistoryRouter = require('./routes/battleHistory');
 const avatarIconsRouter = require('./routes/avatarIcons');
 const adminRouter = require('./routes/admin');
 const adminSupportRouter = require('./routes/adminSupport');
+const adminTrainersRouter = require('./routes/adminTrainers');
 
 const app = express();
 // Render (and most hosts) assign the port via this env var — 3000 stays as
@@ -73,6 +74,7 @@ app.use('/api/battle-history', battleHistoryRouter);
 app.use('/api/avatar-icons', avatarIconsRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/admin/support', adminSupportRouter);
+app.use('/api/admin/trainers', adminTrainersRouter);
 
 // Reports every error from the routes above to Sentry before the clean-JSON
 // handler below runs — this only captures and calls next(err), it never

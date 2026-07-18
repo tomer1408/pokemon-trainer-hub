@@ -1,0 +1,112 @@
+@if (loading()) {
+  <div class="state-block">Loading trainer…</div>
+} @else if (loadError()) {
+  <div class="state-block error">Could not load this trainer. Please try again.</div>
+} @else if (detail(); as d) {
+  <button type="button" class="back-btn" (click)="backToList()">← Back to Trainers</button>
+
+  <div class="header-row">
+    <div>
+      <h2 class="trainer-name">{{ d.profile.trainerName }}</h2>
+      <span class="trainer-id">{{ maskId(d.profile.auth0UserId) }}</span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- Profile -->
+    <div class="card">
+      <span class="card-title">Profile</span>
+      <div class="meta-grid">
+        <div class="meta-cell"><span class="meta-label">Country</span><span class="meta-value">{{ d.profile.country }}</span></div>
+        <div class="meta-cell"><span class="meta-label">Age Range</span><span class="meta-value">{{ d.profile.ageRange || '—' }}</span></div>
+        <div class="meta-cell"><span class="meta-label">Favorite Type</span><span class="meta-value">{{ d.profile.favoriteType }}</span></div>
+        <div class="meta-cell"><span class="meta-label">Experience</span><span class="meta-value">{{ d.profile.experienceLevel }}</span></div>
+        <div class="meta-cell"><span class="meta-label">Marketing Opt-in</span><span class="meta-value">{{ d.profile.marketingEmailsOptIn ? 'Yes' : 'No' }}</span></div>
+        <div class="meta-cell"><span class="meta-label">Policy Accepted</span><span class="meta-value">{{ d.profile.acceptedPolicy ? ('v' + d.profile.policyVersion) : 'No' }}</span></div>
+      </div>
+    </div>
+
+    <!-- Auth0 info -->
+    <div class="card">
+      <div class="card-head-row">
+        <span class="card-title">Auth0 Account Info</span>
+        <button type="button" class="small-btn" [disabled]="loadingAuth0()" (click)="refreshAuth0Info()">
+          {{ loadingAuth0() ? 'Loading…' : 'Refresh Auth0 Info' }}
+        </button>
+      </div>
+      @if (auth0Error(); as err) {
+        <p class="inline-error">{{ err }}</p>
+      } @else if (auth0Info(); as info) {
+        <div class="meta-grid">
+          <div class="meta-cell"><span class="meta-label">Email</span><span class="meta-value">{{ info.email || '—' }}</span></div>
+          <div class="meta-cell"><span class="meta-label">Email Verified</span><span class="meta-value">{{ info.email_verified ? 'Yes' : 'No' }}</span></div>
+          <div class="meta-cell"><span class="meta-label">Logins</span><span class="meta-value">{{ info.logins_count ?? '—' }}</span></div>
+          <div class="meta-cell"><span class="meta-label">Last Login</span><span class="meta-value">{{ info.last_login || '—' }}</span></div>
+        </div>
+      } @else {
+        <p class="card-helper">Not fetched yet — click Refresh to pull live data from Auth0.</p>
+      }
+    </div>
+
+    <!-- Product activity -->
+    <div class="card span-2">
+      <span class="card-title">Product Activity</span>
+      <div class="stat-row">
+        <div class="stat-cell"><span class="stat-value">{{ d.team.length }}/5</span><span class="stat-label">Dream Team</span></div>
+        <div class="stat-cell"><span class="stat-value">{{ d.favoritesCount }}</span><span class="stat-label">Favorites</span></div>
+        <div class="stat-cell"><span class="stat-value">{{ d.battles.total }}</span><span class="stat-label">Battles</span></div>
+        <div class="stat-cell"><span class="stat-value">{{ d.battles.wins }}–{{ d.battles.losses }}</span><span class="stat-label">Win–Loss</span></div>
+        <div class="stat-cell"><span class="stat-value">{{ d.profile.whosThatBestStreak }}</span><span class="stat-label">Best Streak</span></div>
+        <div class="stat-cell"><span class="stat-value">{{ d.profile.hasCompletedStarterQuiz ? 'Yes' : 'No' }}</span><span class="stat-label">Quiz Done</span></div>
+      </div>
+
+      @if (d.team.length > 0) {
+        <div class="team-row">
+          @for (m of d.team; track m.pokemonId) {
+            <span class="team-chip">{{ m.pokemonName }}</span>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Support requests -->
+    <div class="card span-2">
+      <span class="card-title">Support Requests</span>
+      @if (d.supportRequests.length === 0) {
+        <p class="card-helper">No support requests from this trainer.</p>
+      } @else {
+        <div class="support-list">
+          @for (s of d.supportRequests; track s.id) {
+            <div class="support-row">
+              <span>#{{ s.id }} — {{ s.topic }}</span>
+              <span class="cell-muted">{{ s.status }} · {{ s.priority }}</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Danger zone -->
+    <div class="card danger-card span-2">
+      <span class="card-title">Danger Zone</span>
+      <p class="card-helper">Permanently delete this trainer's account and every piece of their data.</p>
+      <button type="button" class="delete-btn" (click)="requestDelete()">Delete This Account</button>
+    </div>
+  </div>
+
+  @if (showDeleteConfirm()) {
+    <app-confirm-dialog
+      title="Delete this trainer's account?"
+      body="This permanently deletes their trainer profile, Dream Team, favorites, notes, support requests, battle history, and their login itself. This cannot be undone and will be recorded in the audit log."
+      confirmLabel="Permanently Delete"
+      [requireTypedPhrase]="d.profile.trainerName"
+      [destructive]="true"
+      [busy]="deleting()"
+      [error]="deleteError()"
+      [isLight]="theme.isLight()"
+      [isPikachu]="theme.isPikachu()"
+      (confirmed)="confirmDelete()"
+      (cancelled)="cancelDelete()"
+    />
+  }
+}

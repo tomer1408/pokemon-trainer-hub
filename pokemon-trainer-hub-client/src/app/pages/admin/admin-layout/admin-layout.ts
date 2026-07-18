@@ -19,7 +19,7 @@ interface AdminNavItem {
 const NAV_ITEMS: AdminNavItem[] = [
   { path: '', label: 'Overview', permission: 'admin:read', built: true },
   { path: 'support', label: 'Support Requests', permission: 'support:manage', built: true },
-  { path: 'trainers', label: 'Trainers', permission: 'users:manage', built: false },
+  { path: 'trainers', label: 'Trainers', permission: 'users:manage', built: true },
   { path: 'analytics', label: 'Analytics', permission: 'admin:read', built: false },
   { path: 'system', label: 'System Health', permission: 'admin:read', built: false },
   { path: 'database', label: 'Database Explorer', permission: 'database:read', built: false },
@@ -59,8 +59,21 @@ export class AdminLayout {
     return url;
   });
 
+  // A sub-route like trainers/auth0|abc123 (a trainer's detail page) still
+  // counts as being "on" the Trainers item — both for the sidebar's active
+  // highlight and the header's breadcrumb/title.
+  private isOnItem(item: AdminNavItem): boolean {
+    const path = this.activePath();
+    return item.path === '' ? path === '' : path === item.path || path.startsWith(`${item.path}/`);
+  }
+
+  protected isActive(itemPath: string): boolean {
+    const item = this.navItems.find((i) => i.path === itemPath);
+    return !!item && this.isOnItem(item);
+  }
+
   protected readonly currentItem = computed(
-    () => this.navItems.find((i) => i.path === this.activePath()) ?? this.navItems[0],
+    () => this.navItems.find((i) => this.isOnItem(i)) ?? this.navItems[0],
   );
 
   private readonly authUser = toSignal(this.auth.user$, { initialValue: null });

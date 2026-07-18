@@ -1,0 +1,130 @@
+/* Relies on the theme tokens already defined by the parent AdminLayout
+   (.admin-shell) — same approach as pages/admin/support. */
+
+:host {
+  display: block;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.count-chip {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.search-input {
+  border: 1px solid var(--border-soft);
+  background: var(--surface);
+  color: var(--text-body);
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  min-width: 240px;
+}
+
+.table-card {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+.state-block {
+  padding: 60px 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13.5px;
+}
+
+.state-block.error {
+  color: var(--danger);
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.trainer-table {
+  min-width: 880px;
+}
+
+.head-row,
+.body-row {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 70px 1fr 60px 70px 90px 80px 110px;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 16px;
+}
+
+.head-row {
+  font-family: 'Space Mono', monospace;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.body-row {
+  font-size: 12.5px;
+  color: var(--text-body);
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.body-row:last-child {
+  border-bottom: none;
+}
+
+.body-row:hover {
+  background: var(--overlay-05);
+}
+
+.cell-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-weight: 700;
+}
+
+.cell-id {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.cell-muted {
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+.cell-mono {
+  font-family: 'Space Mono', monospace;
+  font-size: 11.5px;
+}
+
+.pagination-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px 8px;
+  flex-wrap: wrap;
+}
+
+.page-info {
+  font-size: 12px;
+  color: var(--text-muted);
+}

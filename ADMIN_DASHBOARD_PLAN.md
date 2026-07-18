@@ -12,8 +12,8 @@ anything said earlier in conversation.
 | Phase | What | Status |
 |---|---|---|
 | 0 | Admin authorization foundation | ✅ Done, tested, **committed locally** on `feature/admin-phase0-authorization` (not merged/pushed) |
-| 1 | Schema migration + Support Request management + AdminLayout/sidebar | ✅ Done, tested, **not yet committed** |
-| 2 | Trainer management | ⏳ Not started |
+| 1 | Schema migration + Support Request management + AdminLayout/sidebar | ✅ Done, tested, **committed locally** (`1648016`) |
+| 2 | Trainer management | ✅ Done, tested, **not yet committed** |
 | 3 | Admin Overview (real KPIs) | ⏳ Not started |
 | 4 | System Health | ⏳ Not started |
 | 5 | Analytics | ⏳ Not started |
@@ -60,10 +60,11 @@ anything said earlier in conversation.
 - Routing: `/admin` is now a parent route (`AdminLayout`, `authGuardFn` only — no permission of its own) with children `''` (Overview, `admin:read`) and `support` (`support:manage`), each independently guarded — never inheriting a blanket permission from the parent.
 - **Real bug found and fixed during this phase**: the app-wide `<app-navbar>` (Home/Explorer/My Team/My Profile + its own theme switcher) was still rendering on top of AdminLayout's own header/sidebar, since `/admin` wasn't in `app.ts`'s `NAVBAR_HIDDEN_ON` check — two stacked navbars and two theme switchers on the same page. Fixed by hiding the app-wide navbar (and the floating AI chat widget, which shares the same `@if`) on any `/admin`-prefixed route.
 
-## Phase 2 — Trainer management
+## Phase 2 — Trainer management ✅
 
-- Server: `services/adminTrainerService.js` (`list` paginates `TrainerProfile`, then per-page scoped `count`/`groupBy` on DreamTeamMember/Favorite/BattleMatch merged in JS — no relation exists to join on; `getDetail` reuses `teamService.getTeam()`, excludes `TrainerNote` content). `auth0Management.js` gains `getAuth0User` (a genuine read). `routes/adminTrainers.js`: `GET /`, `GET /:id`, `GET /:id/auth0` (a real `GET`, not the earlier-mistaken `POST refresh-auth0`), `DELETE /:id` (reuses the existing `accountService.deleteAccount`, audit-logged). All `users:manage`.
-- Client: trainers list + detail page. Auth0 ids masked everywhere (standing rule). Delete reuses the shared `ConfirmDialog` with "type the trainer's name to confirm."
+- Server: `services/adminTrainerService.js` (`list` paginates `TrainerProfile`, then exactly 3 scoped `groupBy` queries on DreamTeamMember/Favorite/BattleMatch merged in JS — never one query per row; `getDetail` reuses `teamService.getTeam()`, real win/loss/difficulty breakdown from `BattleMatch`, the trainer's own support requests (metadata only, no message body), excludes `TrainerNote` content entirely). `auth0Management.js` gained `getAuth0User` (a genuine read). `routes/adminTrainers.js`: `GET /`, `GET /:id`, `GET /:id/auth0` (a real `GET`, not the earlier-mistaken `POST refresh-auth0`), `DELETE /:id` (reuses the existing `accountService.deleteAccount` unmodified, audit-logged). All `users:manage`.
+- Client: `shared/mask-auth0-id.ts` — a real, reusable masking helper (new, since this is the first phase that needs to render Auth0 ids on screen at all) enforcing the standing rule everywhere an id is shown; Trainers list + detail page (Profile / Auth0 info-on-demand / Product Activity / Support Requests / Danger Zone sections). Delete reuses the shared `ConfirmDialog` with "type the trainer's name to confirm," exactly like the self-service flow. Trainers is now a real, enabled sidebar link (was "Soon" in Phase 1) — `AdminLayout`'s `currentItem`/active-highlight logic was extended so a trainer detail sub-route (`/admin/trainers/:id`) still counts as being on "Trainers", not just the exact list path.
+- List deliberately never shows email — `TrainerProfile` doesn't store it (Auth0 is the sole source of truth), and fetching it per row would mean one Management API call per trainer on every page load. It's available on demand per-trainer via the detail page's "Refresh Auth0 Info" action instead.
 
 ## Phase 3 — Admin Overview
 
