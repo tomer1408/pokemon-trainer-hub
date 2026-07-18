@@ -1,0 +1,114 @@
+@if (isLoading()) {
+  <div class="state-block">Crunching real numbers…</div>
+} @else if (loadError()) {
+  <div class="state-block error">Could not load Analytics. Please try again.</div>
+} @else if (analytics(); as a) {
+  <div class="scope-note">
+    Every number below comes from data this app already stores. DAU, MAU, retention, last-login/last-active and page-view metrics are <strong>not shown</strong> — this app has no event-tracking data source for them yet, and this dashboard never simulates a metric it can't back with a real query.
+  </div>
+
+  <div class="toolbar">
+    <span class="toolbar-meta">Trainer profile → first battle, over the selected period.</span>
+    <div class="day-track">
+      @for (opt of dayOptions; track opt.days) {
+        <button type="button" class="day-btn" [class.active]="daysFilter() === opt.days" (click)="setDays(opt.days)">{{ opt.label }}</button>
+      }
+    </div>
+  </div>
+
+  <!-- Funnel -->
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title">Activation Funnel</span>
+      <span class="card-sub">Trainer profile → first battle</span>
+    </div>
+    <div class="funnel-row">
+      @for (row of funnelRows(); track row.step) {
+        <div class="funnel-step">
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" [style.width.%]="row.pct">
+              <span class="funnel-pct">{{ row.pct }}%</span>
+            </div>
+          </div>
+          <span class="funnel-count">{{ row.count }}</span>
+          <span class="funnel-label">{{ row.step }}</span>
+          @if (row.dropFromPrevious !== null && row.dropFromPrevious > 0) {
+            <span class="funnel-drop">−{{ row.dropFromPrevious }}</span>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Growth -->
+  <div class="section">
+    <div class="section-head"><span class="section-dot"></span>Growth</div>
+    <div class="chart-grid">
+      <div class="card">
+        <div class="card-head"><span class="card-title">New Trainer Profiles</span><span class="card-sub">last {{ a.days }} days</span></div>
+        <app-mini-bar-chart [series]="a.overTime.profiles" [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" />
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Battles Fought</span><span class="card-sub">last {{ a.days }} days</span></div>
+        <app-mini-bar-chart [series]="a.overTime.battles" [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Battles -->
+  <div class="section">
+    <div class="section-head"><span class="section-dot"></span>Battles</div>
+    <div class="chart-grid">
+      <div class="card">
+        <div class="card-head"><span class="card-title">Win / Loss Ratio</span><span class="card-sub">all-time</span></div>
+        <app-donut-chart [segments]="resultSegments()" centerLabel="battles" [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" />
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">By Difficulty</span><span class="card-sub">all-time</span></div>
+        <app-hbar-list [items]="a.battleStats.byDifficulty" [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" />
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">By Opponent Type</span><span class="card-sub">all-time</span></div>
+        <app-hbar-list [items]="a.battleStats.byOpponentType" [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Pokémon Popularity -->
+  <div class="section">
+    <div class="section-head"><span class="section-dot"></span>Pokémon Popularity</div>
+    <div class="chart-grid">
+      <div class="card">
+        <div class="card-head"><span class="card-title">Most Added to Teams</span><span class="card-sub">all-time</span></div>
+        <app-hbar-list [items]="popularInTeamsItems()" [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" />
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Most Favorited</span><span class="card-sub">all-time</span></div>
+        <app-hbar-list [items]="popularFavoritedItems()" [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Support & Engagement -->
+  <div class="section">
+    <div class="section-head"><span class="section-dot"></span>Support &amp; Engagement</div>
+    <div class="chart-grid">
+      <div class="card">
+        <div class="card-head"><span class="card-title">Support by Topic</span><span class="card-sub">all-time</span></div>
+        <app-hbar-list [items]="a.supportStats.byTopic" [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" />
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Support by Status</span><span class="card-sub">all-time</span></div>
+        <app-hbar-list [items]="a.supportStats.byStatus" [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" />
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Who's That Pokémon?</span><span class="card-sub">real best-streak field</span></div>
+        <div class="stat-grid">
+          <div class="stat-cell"><span class="stat-value">{{ a.whosThatStats.averageBestStreak }}</span><span class="stat-label">Avg. Best Streak</span></div>
+          <div class="stat-cell"><span class="stat-value">{{ a.whosThatStats.highestBestStreak }}</span><span class="stat-label">Highest Streak</span></div>
+          <div class="stat-cell"><span class="stat-value">{{ a.whosThatStats.trainersWhoHavePlayed }}</span><span class="stat-label">Trainers Played</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+}

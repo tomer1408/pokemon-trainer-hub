@@ -1,0 +1,75 @@
+:host {
+  --text-body: var(--text-primary-night);
+  --text-muted: var(--text-secondary-night);
+  --overlay: var(--overlay-08-night);
+  --violet: var(--primary-night);
+  --cyan: var(--accent-night);
+
+  display: block;
+}
+
+.hbar-list.light {
+  --text-body: var(--text-primary);
+  --text-muted: var(--text-secondary);
+  --overlay: var(--overlay-08);
+  --violet: var(--primary);
+  --cyan: var(--accent);
+}
+
+.hbar-list.pikachu {
+  --text-body: var(--text-primary-pikachu);
+  --text-muted: var(--text-secondary-pikachu);
+  --overlay: var(--overlay-08-pikachu);
+  --violet: var(--primary-pikachu);
+  --cyan: var(--accent-pikachu);
+}
+
+.empty {
+  font-size: 12.5px;
+  color: var(--text-secondary-night);
+  margin: 0;
+  padding: 12px 0;
+}
+
+.hbar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hbar-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 34px;
+  align-items: center;
+  gap: 10px;
+}
+
+.hbar-label {
+  font-size: 12px;
+  color: var(--text-body);
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+
+.hbar-track {
+  height: 8px;
+  border-radius: 100px;
+  background: var(--overlay);
+  overflow: hidden;
+}
+
+.hbar-fill {
+  height: 100%;
+  border-radius: 100px;
+  background: linear-gradient(90deg, var(--violet), var(--cyan));
+}
+
+.hbar-value {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: right;
+}

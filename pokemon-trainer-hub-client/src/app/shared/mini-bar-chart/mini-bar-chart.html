@@ -1,0 +1,14 @@
+<div class="chart-wrap" [class.light]="isLight()" [class.pikachu]="isPikachu()">
+  <div class="chart-total">{{ total() }} total</div>
+  <div class="bars">
+    @for (bar of bars(); track bar.date) {
+      <div class="bar-col" [attr.title]="bar.date + ': ' + bar.count">
+        <div class="bar" [style.height.%]="bar.pctHeight"></div>
+      </div>
+    }
+  </div>
+  <div class="axis-row">
+    <span>{{ firstDate() }}</span>
+    <span>{{ lastDate() }}</span>
+  </div>
+</div>

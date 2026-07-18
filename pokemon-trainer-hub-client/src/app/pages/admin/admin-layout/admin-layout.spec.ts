@@ -30,6 +30,7 @@ describe('AdminLayout', () => {
               { path: 'trainers', component: Dummy },
               { path: 'trainers/:id', component: Dummy },
               { path: 'system', component: Dummy },
+              { path: 'analytics', component: Dummy },
             ],
           },
           { path: 'home', component: Dummy },
@@ -120,6 +121,16 @@ describe('AdminLayout', () => {
     expect(systemLink).toBeTruthy();
     expect(systemLink!.getAttribute('href')).toBe('/admin/system');
     expect(fixture.nativeElement.textContent).not.toMatch(/System Health\s*Soon/);
+  });
+
+  it('the Analytics item is a real, enabled link — not the "Soon" placeholder', () => {
+    const fixture = setup();
+    const links: HTMLAnchorElement[] = fixture.nativeElement.querySelectorAll('a.nav-item');
+    const analyticsLink = Array.from(links).find((a) => a.textContent?.includes('Analytics'));
+
+    expect(analyticsLink).toBeTruthy();
+    expect(analyticsLink!.getAttribute('href')).toBe('/admin/analytics');
+    expect(fixture.nativeElement.textContent).not.toMatch(/Analytics\s*Soon/);
   });
 
   it('a trainer detail sub-route still counts as being on the Trainers item (breadcrumb + active highlight)', async () => {

@@ -1,0 +1,230 @@
+/* Relies on the theme tokens (--surface, --border-soft, --text-body,
+   --text-muted, --violet, --cyan, --danger, --overlay-05) already defined
+   by the parent AdminLayout (.admin-shell) — same convention as
+   pages/admin/overview and pages/admin/system. */
+
+:host {
+  display: block;
+}
+
+.state-block {
+  padding: 60px 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13.5px;
+}
+
+.state-block.error {
+  color: var(--danger);
+}
+
+.scope-note {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  background: var(--overlay-05);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+}
+
+.scope-note strong {
+  color: var(--text-body);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.toolbar-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.day-track {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--overlay-05);
+  border-radius: 100px;
+}
+
+.day-btn {
+  border: none;
+  border-radius: 100px;
+  padding: 7px 14px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.day-btn.active {
+  background: linear-gradient(120deg, var(--violet), var(--cyan));
+  color: #fff;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  padding: 18px;
+  box-sizing: border-box;
+  margin-bottom: 16px;
+}
+
+.card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.card-title {
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--text-body);
+}
+
+.card-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ---- Funnel ---- */
+.funnel-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.funnel-step {
+  display: grid;
+  grid-template-columns: 1fr 50px 200px 60px;
+  align-items: center;
+  gap: 10px;
+}
+
+.funnel-bar-wrap {
+  grid-column: 1 / 2;
+  grid-row: 1;
+  height: 26px;
+  background: var(--overlay-05);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.funnel-bar {
+  height: 100%;
+  min-width: 30px;
+  background: linear-gradient(90deg, var(--violet), var(--cyan));
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+  box-sizing: border-box;
+}
+
+.funnel-pct {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.funnel-count {
+  font-family: 'Bungee', sans-serif;
+  font-size: 14px;
+  color: var(--text-body);
+  text-align: right;
+}
+
+.funnel-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.funnel-drop {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--danger);
+  text-align: right;
+}
+
+@media (max-width: 700px) {
+  .funnel-step {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+
+/* ---- Sections ---- */
+.section {
+  margin-bottom: 6px;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--text-body);
+  margin: 20px 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.section-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cyan);
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.chart-grid .card {
+  margin-bottom: 0;
+}
+
+/* ---- Who's That stat cells ---- */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.stat-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.stat-value {
+  font-family: 'Bungee', sans-serif;
+  font-size: 20px;
+  color: var(--text-body);
+}
+
+.stat-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}

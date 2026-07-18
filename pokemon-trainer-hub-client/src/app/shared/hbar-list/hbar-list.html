@@ -1,0 +1,15 @@
+@if (rows().length === 0) {
+  <p class="empty">{{ emptyLabel() }}</p>
+} @else {
+  <div class="hbar-list" [class.light]="isLight()" [class.pikachu]="isPikachu()">
+    @for (row of rows(); track row.label) {
+      <div class="hbar-row">
+        <span class="hbar-label">{{ row.label }}</span>
+        <div class="hbar-track">
+          <div class="hbar-fill" [style.width.%]="row.pct"></div>
+        </div>
+        <span class="hbar-value">{{ row.count }}</span>
+      </div>
+    }
+  </div>
+}

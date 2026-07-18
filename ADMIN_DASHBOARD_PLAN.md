@@ -16,9 +16,10 @@ anything said earlier in conversation.
 | 2 | Trainer management | ✅ Done, tested, **not yet committed** |
 | 3 | Admin Overview (real KPIs) | ✅ Done, tested, **not yet committed** |
 | 4 | System Health | ✅ Done, tested, **not yet committed** |
-| 5 | Analytics | ⏳ Not started |
+| 5 | Analytics | ✅ Done, tested, **not yet committed** |
 | 6 | Database Explorer | ⏳ Not started |
 | 7 | Tests/docs/final verification pass | ⏳ Not started |
+| 8 | Product Analytics Tracking (DAU/MAU/retention/page-views) | 🔭 Deferred — scoped below, **not approved, not started** |
 
 **Design source of truth:** Claude Design project `229f2acb-d143-4263-a151-ae50d008f03c`, file `Admin Dashboard.dc.html` (1,845 lines, covers all 6 areas + sidebar/header shell). Use it as the authoritative visual spec per phase — colors/spacing translated into this app's own existing CSS-variable system (`--bg/--surface/--text-body/--primary/--accent/--success/--error/--warning/--info`), not copied as raw hex.
 
@@ -75,10 +76,12 @@ anything said earlier in conversation.
 - `services/adminHealthService.js`: reuses the real in-process DB check + latency; a real PokeAPI ping; Gemini/Sentry reported as **"Configured"/"Not Configured"** from env var presence — deliberately never "Operational" (that would require a real paid call this page shouldn't make on every load). Surfaces `process.version`, `NODE_ENV`, latest migration folder name (real, via `fs.readdirSync`), `RENDER_GIT_COMMIT` if present else "unknown". `GET /api/admin/system` (`admin:read`).
 - Client: 4 visually separate sections (Runtime/Errors/Build/External deps) + a small constants file for external dashboard links (Sentry/Render/Vercel/UptimeRobot — bookmarks, not secrets).
 
-## Phase 5 — Analytics
+## Phase 5 — Analytics ✅
 
-- `services/adminAnalyticsService.js`: profiles/battles-over-time (bucketed in JS — this app's realistic data volume makes raw-SQL date-truncation unnecessary), the real funnel (profiles → quiz completed → ≥1 team member → =5 members → ≥1 battle), most-popular-Pokémon (`groupBy`), win/loss/difficulty/opponent-type distributions, Who's That streak stats, support-by-topic/status. `GET /api/admin/analytics` (`admin:read`).
-- Client: small hand-rolled SVG charts (no new charting library). Explicitly omits DAU/MAU/retention/last-login/page-views — not measurable with current data, never faked.
+- `services/adminAnalyticsService.js`: profiles/battles-over-time (bucketed in JS, UTC-anchored — this app's realistic data volume makes raw-SQL date-truncation unnecessary), the real funnel (profiles → quiz completed → ≥1 team member → =5 members → ≥1 battle), most-popular-Pokémon (`groupBy`), win/loss/difficulty/opponent-type distributions, Who's That streak stats, support-by-topic/status. `GET /api/admin/analytics?days=N` (`admin:read`).
+- Client: `shared/hbar-list`, `shared/mini-bar-chart`, `shared/donut-chart` — small hand-rolled SVG/CSS charts (no new charting library), reused across the page's 4 sections (Growth, Battles, Pokémon Popularity, Support & Engagement) plus the Activation Funnel.
+- **Explicit scope decision (confirmed with the user):** this phase only ever surfaces metrics computable from data the app already stores — profiles/quiz/team/battle counts and over-time series, popularity rankings, win/loss/difficulty/opponent-type distributions, Who's That streaks, support-by-topic/status, and the funnel above. It deliberately does **not** add or simulate DAU, MAU, retention, last-login/last-active, page views, session counts, or any not-yet-persisted feature/AI-usage counts — inferring these from incomplete data would violate this project's "no faked data" rule. Real infrastructure for those metrics is scoped separately below as **Phase 8**, deferred and not started. The Analytics page itself carries a short visible note saying the same thing, so this isn't just documented here.
+- Recent/ranked lists (Overview's Recent Support/Recent Activity, Analytics' popularity/distribution rankings) are deliberately capped at ~5-10 entries — this is intentional dashboard design (a glanceable summary, not an attempt to hide a "load more"), not a missing feature. Where a full paginated version of the same data already exists elsewhere (e.g. Support Requests), the capped list links out to it (Overview's "All requests →").
 
 ## Phase 6 — Database Explorer
 
@@ -89,3 +92,87 @@ anything said earlier in conversation.
 ## Phase 7 — Tests, docs, final verification
 
 - 401/403/200 coverage for every `/api/admin/*` family; service unit tests; whitelist/masking/page-cap tests; audit-log-creation tests. `adminGuard` allow/deny/redirect cases, nav visibility, loading/empty/error states, filters, pagination, confirm-before-delete on the frontend. README "Admin Dashboard" section. Full `npm test` both sides + production build + `prisma migrate diff` sanity check.
+
+## Phase 8 — Product Analytics Tracking (deferred — NOT approved, NOT started)
+
+Explicitly out of scope for the current 0-7 phase build. Complete and verify
+Phases 4-7 first. This is a new product/technical feature (real event
+collection infrastructure), not a small extension of Phase 5's Analytics
+page — before implementing any of it, present the design below back to the
+user for review and wait for separate explicit approval, same as every
+other phase.
+
+**Objective:** build the real data collection this app currently lacks, so
+Analytics can eventually show DAU, MAU, last-active/last-login, Day 1/7/30
+retention, page views, sessions, feature adoption, and AI request
+success/failure rates — none of which exist today (Phase 5 deliberately
+does not fake any of them).
+
+**Metric definitions (must be finalized and reviewed before any code):**
+- `DAU`: unique authenticated users with ≥1 approved activity event on a calendar day.
+- `MAU`: unique authenticated users with ≥1 approved activity event in the last 30 days.
+- `lastActiveAt`: most recent meaningful product action recorded for the trainer.
+- `lastLoginAt`: most recent Auth0 authentication time — not the same as last activity.
+- `page_view`: a recorded visit to an approved application page.
+- `retention`: % of a user cohort that returns and performs an approved event N days later.
+
+**Proposed schema (draft, subject to this repo's real Prisma/SQL Server constraints):**
+```prisma
+model AppEvent {
+  id           Int      @id @default(autoincrement())
+  auth0UserId  String?
+  eventType    String
+  pageName     String?
+  metadataJson String?
+  createdAt    DateTime @default(now())
+
+  @@index([auth0UserId])
+  @@index([eventType])
+  @@index([createdAt])
+}
+```
+Plus `TrainerProfile.lastActiveAt DateTime?`.
+
+**Approved event registry (strict server-side allowlist — no arbitrary client-sent event names):**
+`session_started`, `page_viewed`, `onboarding_completed`, `starter_quiz_completed`,
+`pokemon_added_to_team`, `dream_team_completed`, `battle_completed`,
+`whos_that_round_completed`, `ai_request_completed`, `ai_request_failed`,
+`support_request_created`. Final list reviewed before implementation.
+
+**Server-owned events** (generated server-side after the real action succeeds,
+never trusting the client as source of truth): `battle_completed` only after
+the battle is saved, `support_request_created` only after the DB insert,
+`pokemon_added_to_team` only after the DB insert, `ai_request_completed`/
+`ai_request_failed` from the real server-side result.
+
+**Client-owned events** (limited to page/session/navigation signals): every
+request server-validated — event type against the allowlist, page name
+against an allowlist, metadata against a strict schema, the acting user id
+taken from the verified token (never the request body), rate-limited,
+oversized/unexpected payloads rejected.
+
+**Privacy constraints — never stored in `AppEvent.metadataJson` or anywhere
+in this pipeline:** AI conversation content, Trainer Notes, full support
+messages, raw search queries, Access Tokens, client-supplied Auth0 ids,
+email addresses, DB credentials, full URLs with query params. Metadata stays
+minimal and purpose-specific (e.g. `{"difficulty":"hard","result":"win"}`,
+never a full payload dump).
+
+**`lastActiveAt` update strategy:** throttled (e.g. at most once per 15
+minutes per user), not on every click/request — avoids write amplification
+while still giving a useful recency signal.
+
+**Retention limitations:** DAU/MAU/retention/page-view metrics only become
+reliable from the moment this phase actually deploys — historic gaps are
+never backfilled or reconstructed. Existing historical timestamps
+(profile/battle/team-member/support-request `createdAt`) may power clearly
+labeled partial historical metrics only, never presented as historic page
+views, sessions, or active-user counts.
+
+**Required workflow when this phase is eventually picked up:** present
+metric definitions → present the full approved event registry → present the
+schema/migration plan → explain privacy/retention decisions → explain
+write-volume/performance implications → explain which events are
+server-owned vs. client-owned → present the testing plan → wait for
+explicit approval → implement as its own phase, its own commit, never
+folded into an existing Admin phase.

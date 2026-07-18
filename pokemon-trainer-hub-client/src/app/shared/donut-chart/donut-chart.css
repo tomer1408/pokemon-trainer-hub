@@ -1,0 +1,100 @@
+:host {
+  --text-body: var(--text-primary-night);
+  --text-muted: var(--text-secondary-night);
+  --overlay-08: var(--overlay-08-night);
+
+  display: block;
+}
+
+.donut-wrap.light {
+  --text-body: var(--text-primary);
+  --text-muted: var(--text-secondary);
+  --overlay-08: var(--overlay-08);
+}
+
+.donut-wrap.pikachu {
+  --text-body: var(--text-primary-pikachu);
+  --text-muted: var(--text-secondary-pikachu);
+  --overlay-08: var(--overlay-08-pikachu);
+}
+
+.empty {
+  font-size: 12.5px;
+  color: var(--text-secondary-night);
+  margin: 0;
+  padding: 12px 0;
+}
+
+.donut-wrap {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.donut {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  flex-shrink: 0;
+}
+
+.donut svg circle {
+  transition: stroke-dasharray 0.3s ease;
+}
+
+.donut-hole {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.donut-value {
+  font-family: 'Bungee', sans-serif;
+  font-size: 18px;
+  color: var(--text-body);
+}
+
+.donut-label {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 120px;
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-label {
+  font-size: 12px;
+  color: var(--text-body);
+  font-weight: 700;
+  text-transform: capitalize;
+  flex: 1;
+}
+
+.legend-val {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}

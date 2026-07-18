@@ -1,0 +1,37 @@
+@if (total() === 0) {
+  <p class="empty">No data yet.</p>
+} @else {
+  <div class="donut-wrap" [class.light]="isLight()" [class.pikachu]="isPikachu()">
+    <div class="donut">
+      <svg viewBox="0 0 100 100" width="100" height="100">
+        <circle cx="50" cy="50" [attr.r]="radius" fill="none" stroke="var(--overlay-08)" stroke-width="14" />
+        @for (arc of arcs(); track arc.label) {
+          <circle
+            cx="50"
+            cy="50"
+            [attr.r]="radius"
+            fill="none"
+            [attr.stroke]="arc.colorVar"
+            stroke-width="14"
+            [attr.stroke-dasharray]="arc.dasharray"
+            [attr.stroke-dashoffset]="arc.dashoffset"
+            transform="rotate(-90 50 50)"
+          />
+        }
+      </svg>
+      <div class="donut-hole">
+        <span class="donut-value">{{ total() }}</span>
+        <span class="donut-label">{{ centerLabel() }}</span>
+      </div>
+    </div>
+    <div class="legend">
+      @for (arc of arcs(); track arc.label) {
+        <div class="legend-row">
+          <span class="legend-dot" [style.background]="arc.colorVar"></span>
+          <span class="legend-label">{{ arc.label }}</span>
+          <span class="legend-val">{{ arc.count }} ({{ arc.pct }}%)</span>
+        </div>
+      }
+    </div>
+  </div>
+}

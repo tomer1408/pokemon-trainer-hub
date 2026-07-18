@@ -139,6 +139,12 @@ export const routes: Routes = [
         data: { permission: 'admin:read' },
         loadComponent: () => import('./pages/admin/system/system').then((m) => m.AdminSystem),
       },
+      {
+        path: 'analytics',
+        canActivate: [adminGuard],
+        data: { permission: 'admin:read' },
+        loadComponent: () => import('./pages/admin/analytics/analytics').then((m) => m.AdminAnalytics),
+      },
     ],
   },
   {

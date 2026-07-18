@@ -20,7 +20,7 @@ const NAV_ITEMS: AdminNavItem[] = [
   { path: '', label: 'Overview', permission: 'admin:read', built: true },
   { path: 'support', label: 'Support Requests', permission: 'support:manage', built: true },
   { path: 'trainers', label: 'Trainers', permission: 'users:manage', built: true },
-  { path: 'analytics', label: 'Analytics', permission: 'admin:read', built: false },
+  { path: 'analytics', label: 'Analytics', permission: 'admin:read', built: true },
   { path: 'system', label: 'System Health', permission: 'admin:read', built: true },
   { path: 'database', label: 'Database Explorer', permission: 'database:read', built: false },
 ];
