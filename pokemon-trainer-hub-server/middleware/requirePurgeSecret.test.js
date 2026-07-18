@@ -72,4 +72,32 @@ describe('middleware/requirePurgeSecret', () => {
     assert.equal(next.mock.calls.length, 1);
     assert.equal(res.statusCode, null);
   });
+
+  test('responds 401 (not a crash) when the header is the same length as the secret but different content — exercises the timingSafeEqual path, not just the length short-circuit', () => {
+    process.env.PURGE_SWEEP_SECRET = 'real-secret'; // 11 chars
+    const req = { get: () => 'reel-secret' }; // 11 chars, one char different
+    const res = fakeRes();
+    const next = mock.fn();
+
+    requirePurgeSecret(req, res, next);
+
+    assert.equal(res.statusCode, 401);
+    assert.equal(next.mock.calls.length, 0);
+  });
+
+  test('the 401 response is identical in shape whether the secret is missing, wrong, or unconfigured — never reveals which case occurred', () => {
+    const bodies = [];
+
+    delete process.env.PURGE_SWEEP_SECRET;
+    let res = fakeRes();
+    requirePurgeSecret({ get: () => undefined }, res, mock.fn());
+    bodies.push(res.body);
+
+    process.env.PURGE_SWEEP_SECRET = 'real-secret';
+    res = fakeRes();
+    requirePurgeSecret({ get: () => 'totally-wrong' }, res, mock.fn());
+    bodies.push(res.body);
+
+    assert.deepEqual(bodies[0], bodies[1]);
+  });
 });

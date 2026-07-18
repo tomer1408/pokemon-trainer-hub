@@ -77,12 +77,20 @@ describe('services/accountService', () => {
     await assert.doesNotReject(accountService.deleteAccount(USER));
   });
 
+  test('reports deletedProfileCount: 0 when the trainer row was already gone (idempotency signal for callers)', async () => {
+    prisma.trainerProfile.deleteMany.mock.mockImplementationOnce(async () => ({ count: 0 }));
+
+    const result = await accountService.deleteAccount(USER);
+
+    assert.equal(result.deletedProfileCount, 0);
+  });
+
   test('deletes the real Auth0 identity after the DB transaction commits', async () => {
     const result = await accountService.deleteAccount(USER);
 
     assert.equal(auth0Management.deleteAuth0User.mock.calls.length, 1);
     assert.equal(auth0Management.deleteAuth0User.mock.calls[0].arguments[0], USER);
-    assert.deepEqual(result, { auth0DeleteFailed: false });
+    assert.deepEqual(result, { auth0DeleteFailed: false, deletedProfileCount: 1 });
   });
 
   test('when the Auth0 deletion fails, the DB deletion still stands and the function does not throw', async () => {
@@ -93,7 +101,7 @@ describe('services/accountService', () => {
     const result = await accountService.deleteAccount(USER);
 
     assert.equal(prisma.$transaction.mock.calls.length, 1); // DB half already ran
-    assert.deepEqual(result, { auth0DeleteFailed: true });
+    assert.deepEqual(result, { auth0DeleteFailed: true, deletedProfileCount: 1 });
   });
 
   test('when the DB transaction itself rejects, Auth0 deletion is never attempted (proves the ordering)', async () => {

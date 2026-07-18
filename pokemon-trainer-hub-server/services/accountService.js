@@ -28,7 +28,7 @@ const PURGE_WINDOW_DAYS = 30;
 // idempotent like every other table here. AvatarIcon is untouched — it's
 // shared reference data (see schema.prisma), not user data.
 async function deleteAccount(auth0UserId) {
-  await prisma.$transaction([
+  const results = await prisma.$transaction([
     prisma.trainerNote.deleteMany({ where: { auth0UserId } }),
     prisma.favorite.deleteMany({ where: { auth0UserId } }),
     prisma.supportRequest.deleteMany({ where: { auth0UserId } }),
@@ -37,15 +37,21 @@ async function deleteAccount(auth0UserId) {
     prisma.trainerProfile.deleteMany({ where: { auth0UserId } }),
   ]);
 
+  // The trainerProfile deleteMany's own count — 0 means this auth0UserId
+  // had already been removed (e.g. a concurrent purge/force-delete), which
+  // callers that need idempotency (services/purgeSweepService.js) use to
+  // report an already-gone candidate as "skipped" rather than "purged".
+  const deletedProfileCount = results[5].count;
+
   try {
     await deleteAuth0User(auth0UserId);
-    return { auth0DeleteFailed: false };
+    return { auth0DeleteFailed: false, deletedProfileCount };
   } catch (err) {
     // The DB half of this already committed successfully — that's the part
     // that must never silently fail. This is logged, not rethrown, and
     // surfaced to the client as an honest warning (see routes/profile.js).
     console.error(`Auth0 user deletion failed for a trainer whose DB data was already deleted: ${err.message}`);
-    return { auth0DeleteFailed: true };
+    return { auth0DeleteFailed: true, deletedProfileCount };
   }
 }
 
