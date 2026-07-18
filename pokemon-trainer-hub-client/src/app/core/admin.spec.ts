@@ -1,9 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { AuthService } from '@auth0/auth0-angular';
 import { of, throwError } from 'rxjs';
-import { API_BASE } from './api-base';
 import { AdminService } from './admin';
 
 function base64url(obj: unknown): string {
@@ -15,8 +12,6 @@ function fakeToken(payload: unknown): string {
 }
 
 describe('AdminService', () => {
-  let httpMock: HttpTestingController;
-
   function setup(auth: {
     isLoading$?: unknown;
     isAuthenticated$?: unknown;
@@ -24,8 +19,6 @@ describe('AdminService', () => {
   }) {
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(),
-        provideHttpClientTesting(),
         {
           provide: AuthService,
           useValue: {
@@ -36,12 +29,8 @@ describe('AdminService', () => {
         },
       ],
     });
-    const service = TestBed.inject(AdminService);
-    httpMock = TestBed.inject(HttpTestingController);
-    return service;
+    return TestBed.inject(AdminService);
   }
-
-  afterEach(() => httpMock.verify());
 
   it('resolves the real permissions array from a valid token, once authenticated', () => {
     const service = setup({
@@ -89,17 +78,5 @@ describe('AdminService', () => {
     const service = setup({ getAccessTokenSilently: () => of('not-a-real-jwt') });
 
     expect(service.permissions()).toEqual([]);
-  });
-
-  it('ping() calls the real GET /api/admin/ping endpoint', () => {
-    const service = setup({});
-    let result: { status: string; message: string } | undefined;
-    service.ping().subscribe((r) => (result = r));
-
-    const req = httpMock.expectOne(`${API_BASE}/admin/ping`);
-    expect(req.request.method).toBe('GET');
-    req.flush({ status: 'ok', message: 'Admin API reachable.' });
-
-    expect(result).toEqual({ status: 'ok', message: 'Admin API reachable.' });
   });
 });

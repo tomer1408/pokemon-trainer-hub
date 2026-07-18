@@ -1,9 +1,7 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AuthService } from '@auth0/auth0-angular';
-import { Observable, catchError, filter, map, of, switchMap } from 'rxjs';
-import { API_BASE } from './api-base';
+import { catchError, filter, map, of, switchMap } from 'rxjs';
 import { decodeJwtPayload } from '../shared/jwt-decode';
 
 // Real Auth0 `permissions` (RBAC claim) for the current user — a UX
@@ -16,7 +14,6 @@ import { decodeJwtPayload } from '../shared/jwt-decode';
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private readonly auth = inject(AuthService);
-  private readonly http = inject(HttpClient);
 
   // Exposed as an Observable (not just the signal below) so adminGuard can
   // wait for the real async resolution — auth-loading state settling, the
@@ -46,13 +43,5 @@ export class AdminService {
 
   hasPermission(permission: string): boolean {
     return this.permissions().includes(permission);
-  }
-
-  // Phase 0 smoke check — proves the whole chain (real Bearer token -> real
-  // `permissions` claim -> requirePermission) works end to end. The
-  // AuthHttpInterceptor already attaches the token to this request the same
-  // way it does for every other /api call — no special handling needed here.
-  ping(): Observable<{ status: string; message: string }> {
-    return this.http.get<{ status: string; message: string }>(`${API_BASE}/admin/ping`);
   }
 }
