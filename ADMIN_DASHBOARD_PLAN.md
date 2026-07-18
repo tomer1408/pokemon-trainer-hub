@@ -14,7 +14,7 @@ anything said earlier in conversation.
 | 0 | Admin authorization foundation | ✅ Done, tested, **committed locally** on `feature/admin-phase0-authorization` (not merged/pushed) |
 | 1 | Schema migration + Support Request management + AdminLayout/sidebar | ✅ Done, tested, **committed locally** (`1648016`) |
 | 2 | Trainer management | ✅ Done, tested, **not yet committed** |
-| 3 | Admin Overview (real KPIs) | ⏳ Not started |
+| 3 | Admin Overview (real KPIs) | ✅ Done, tested, **not yet committed** |
 | 4 | System Health | ⏳ Not started |
 | 5 | Analytics | ⏳ Not started |
 | 6 | Database Explorer | ⏳ Not started |

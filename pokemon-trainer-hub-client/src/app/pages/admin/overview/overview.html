@@ -1,11 +1,73 @@
-<div class="card">
-  <p class="phase-note">Phase 0 authorization check, still surfaced here until Phase 3 replaces this page with real KPIs.</p>
-  @if (checking()) {
-    <p class="status-line">Checking the Admin API…</p>
-  } @else if (error(); as err) {
-    <p class="status-line status-error">{{ err }}</p>
-  } @else if (message(); as msg) {
-    <p class="status-line status-ok">{{ msg }}</p>
-    <p class="status-sub">You reached this page because your Auth0 token carries the <code>admin:read</code> permission, and the server independently confirmed it too.</p>
-  }
-</div>
+@if (isLoading()) {
+  <div class="state-block">Loading overview…</div>
+} @else if (loadError()) {
+  <div class="state-block error">Could not load the Admin Overview. Please try again.</div>
+} @else if (overview(); as o) {
+  <div class="kpi-grid">
+    @for (kpi of kpiCards(); track kpi.label) {
+      <div class="kpi-card">
+        <span class="kpi-label">{{ kpi.label }}</span>
+        <span class="kpi-value">{{ kpi.value }}</span>
+        <span class="kpi-sub">{{ kpi.sub }}</span>
+      </div>
+    }
+  </div>
+
+  <div class="ov-cols">
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">Recent Support Requests</span>
+        <a class="card-link" (click)="goToSupport()">All requests →</a>
+      </div>
+      @if (o.recentSupportRequests.length === 0) {
+        <div class="state-block small">No support requests yet.</div>
+      } @else {
+        <div class="mini-table">
+          <div class="mt-head">
+            <span>ID</span>
+            <span>Name</span>
+            <span>Topic</span>
+            <span>Status</span>
+            <span>Priority</span>
+            <span>Opened</span>
+          </div>
+          @for (r of o.recentSupportRequests; track r.id) {
+            <div class="mt-row" (click)="goToSupport()">
+              <span class="mt-id">#{{ r.id }}</span>
+              <span>{{ r.name }}</span>
+              <span class="mt-muted">{{ r.topic }}</span>
+              <span>
+                <app-status-badge [label]="r.status" [variant]="statusVariant(r.status)" [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" />
+              </span>
+              <span>
+                <app-status-badge [label]="r.priority" [variant]="priorityVariant(r.priority)" [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" />
+              </span>
+              <span class="mt-mono">{{ r.createdAt | date: 'MMM d' }}</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">Recent Activity</span>
+      </div>
+      @if (o.recentActivity.length === 0) {
+        <div class="state-block small">No activity yet.</div>
+      } @else {
+        <div class="feed">
+          @for (a of o.recentActivity; track a.createdAt + a.type + a.auth0UserId) {
+            <div class="feed-row">
+              <span class="feed-dot" [class]="a.type"></span>
+              <div class="feed-body">
+                <div class="feed-text">{{ activityText(a) }}</div>
+                <div class="feed-time">{{ a.createdAt | date: 'medium' }}</div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}

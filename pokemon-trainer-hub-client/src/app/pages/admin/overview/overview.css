@@ -1,44 +1,209 @@
 /* Relies on the theme tokens (--surface, --border-soft, --text-body,
-   --text-muted, --danger) already defined by the parent AdminLayout
-   (.admin-shell) — custom properties inherit through the DOM regardless of
-   Angular's per-component style encapsulation, so this page doesn't need
-   its own light/dark/pikachu block anymore. */
+   --text-muted, --violet, --cyan, --danger, --overlay-05) already defined
+   by the parent AdminLayout (.admin-shell) — custom properties inherit
+   through the DOM regardless of Angular's per-component style
+   encapsulation, so this page doesn't need its own light/dark/pikachu
+   block (same convention as pages/admin/support). */
+
+:host {
+  display: block;
+}
+
+.state-block {
+  padding: 60px 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13.5px;
+}
+
+.state-block.small {
+  padding: 30px 16px;
+}
+
+.state-block.error {
+  color: var(--danger);
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 18px;
+  padding: 16px 18px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kpi-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 10.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.kpi-value {
+  font-family: 'Bungee', sans-serif;
+  font-size: 26px;
+  color: var(--text-body);
+}
+
+.kpi-sub {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.ov-cols {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .ov-cols {
+    grid-template-columns: 1fr;
+  }
+}
 
 .card {
   background: var(--surface);
   border: 1px solid var(--border-soft);
   border-radius: 20px;
-  padding: 22px 24px;
+  padding: 18px;
   box-sizing: border-box;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.card-title {
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--text-body);
+}
+
+.card-link {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--violet);
+  cursor: pointer;
+}
+
+/* ---- Recent Support mini table ---- */
+.mini-table {
   display: flex;
   flex-direction: column;
+}
+
+.mt-head,
+.mt-row {
+  display: grid;
+  grid-template-columns: 50px 1fr 1fr 90px 90px 70px;
+  gap: 8px;
+  align-items: center;
+  padding: 9px 4px;
+}
+
+.mt-head {
+  font-family: 'Space Mono', monospace;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.mt-row {
+  font-size: 12px;
+  color: var(--text-body);
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.mt-row:last-child {
+  border-bottom: none;
+}
+
+.mt-row:hover {
+  background: var(--overlay-05);
+}
+
+.mt-id {
+  font-family: 'Space Mono', monospace;
+  color: var(--text-muted);
+}
+
+.mt-muted {
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mt-mono {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ---- Recent Activity feed ---- */
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.feed-row {
+  display: flex;
   gap: 10px;
 }
 
-.phase-note {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin: 0 0 4px;
+.feed-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
+  background: var(--cyan);
 }
 
-.status-line {
-  font-weight: 800;
-  font-size: 14.5px;
-  color: var(--text-body);
-  margin: 0;
+.feed-dot.support_request_created {
+  background: var(--warning);
 }
 
-.status-ok {
-  color: var(--success);
+.feed-dot.battle_completed {
+  background: var(--violet);
 }
 
-.status-error {
-  color: var(--danger);
+.feed-body {
+  min-width: 0;
 }
 
-.status-sub {
+.feed-text {
   font-size: 12.5px;
+  color: var(--text-body);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.feed-time {
+  font-size: 11px;
   color: var(--text-muted);
-  margin: 8px 0 0;
-  line-height: 1.5;
+  margin-top: 2px;
 }
