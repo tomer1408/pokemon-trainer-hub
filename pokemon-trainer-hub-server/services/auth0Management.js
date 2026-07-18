@@ -1,9 +1,15 @@
-// Thin wrapper around the Auth0 Management API — used only to delete the
-// Auth0 user record itself when a trainer deletes their account (see
-// accountService.js). Uses a separate Machine-to-Machine application
-// (AUTH0_M2M_CLIENT_ID/SECRET) authorized for the Management API with only
-// the `delete:users` scope — deliberately not the SPA's own client id, which
-// has no Management API access at all.
+// Thin wrapper around the Auth0 Management API — deletes the Auth0 user
+// record itself when a trainer deletes their account (see accountService.js)
+// and reads real Auth0 profile info (Admin "Refresh Auth0 info", and
+// routes/profile.js's restoration-request email lookup). Uses a separate
+// Machine-to-Machine application (AUTH0_M2M_CLIENT_ID/SECRET) authorized for
+// the Management API with the `delete:users` AND `read:users` scopes —
+// deliberately not the SPA's own client id, which has no Management API
+// access at all. Missing either scope fails closed with a real HTTP error
+// from Auth0 (403), never a silent no-op — see getManagementToken()'s
+// in-memory caching note below: a scope change in the Auth0 dashboard only
+// takes effect for *newly issued* tokens, so a long-running server process
+// needs restarting to pick it up.
 //
 // The domain is derived from the existing AUTH0_ISSUER_BASE_URL
 // (https://<tenant>.auth0.com/) instead of a second, redundant env var that
@@ -15,6 +21,13 @@ function domain() {
 // Module-level cache for the current Management API token — same "one
 // in-memory value, no library needed" idea as pokeapi.js's cache, just for a
 // single token instead of many keyed entries.
+//
+// Gotcha this bit us once for real: a scope added to the M2M application in
+// the Auth0 dashboard only applies to tokens issued *after* that change — a
+// token cached here from before the change keeps working with its old,
+// narrower scope for its full lifetime (up to 24h). After changing scopes in
+// Auth0, the running server process must be restarted to actually pick up
+// the new permissions, not just the dashboard change saved.
 let cachedToken = null;
 let cachedTokenExpiresAt = 0;
 

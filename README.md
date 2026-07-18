@@ -138,16 +138,16 @@ npx ng serve
 
 Client runs on `http://localhost:4200`.
 
-### 5. Delete My Account — Auth0 Management API (optional)
+### 5. Delete My Account & Auth0 profile lookups — Auth0 Management API (optional)
 
-Settings has a real "Delete My Account" action: it deletes every DB row a trainer owns in one transaction, then deletes their actual Auth0 identity via the Auth0 Management API. That second step needs its own Machine-to-Machine Application (separate from the SPA):
+Settings has a real "Delete My Account" action: it deletes every DB row a trainer owns in one transaction, then deletes their actual Auth0 identity via the Auth0 Management API. The Admin Trainer Detail page's "Refresh Auth0 info" action and the soft-delete feature's `POST /api/profile/restoration-request` (which looks up the caller's real email to attach to the support request) also go through this same API, as a real read rather than a delete. All three need their own Machine-to-Machine Application (separate from the SPA):
 
 1. Applications → Applications → Create Application → name it (e.g. "Pokemon Trainer Hub M2M") → type **Machine to Machine Applications**.
 2. When asked which API to authorize, select **Auth0 Management API**.
-3. Under scopes, check only **`delete:users`** (least privilege — this app never needs to read or write anything else via this API).
+3. Under scopes, check **both `delete:users` and `read:users`** (least privilege beyond that — this app never needs to write/create users or touch anything else via this API). Missing `read:users` doesn't break account deletion, but does break both of the read-only features above with a 502.
 4. Settings tab of the new application → copy **Client ID** and **Client Secret** into the server's `.env` as `AUTH0_M2M_CLIENT_ID` / `AUTH0_M2M_CLIENT_SECRET`.
 
-Without this, Delete My Account still deletes all of a trainer's DB data (the part that matters most) — the Auth0 side of the deletion just fails gracefully and the response includes a `warning` field instead of crashing.
+Without `delete:users`, Delete My Account still deletes all of a trainer's DB data (the part that matters most) — the Auth0 side of the deletion just fails gracefully and the response includes a `warning` field instead of crashing. **If you add a scope to an already-configured M2M application later** (e.g. adding `read:users` to an app that only had `delete:users`), the running server process must be restarted before it takes effect — `services/auth0Management.js` caches the Management API token in memory for its full lifetime (up to 24h), and a token issued before the scope change keeps working with the old, narrower scope until a fresh one is requested.
 
 ### 6. Error tracking (Sentry, optional)
 
