@@ -29,7 +29,10 @@ describe('routes/adminTrainers', () => {
     auth0Management = { getAuth0User: mock.fn(async () => ({ email: 'ash@example.com' })) };
     mock.module(path.resolve(__dirname, '../services/auth0Management.js'), { exports: auth0Management });
 
-    accountService = { deleteAccount: mock.fn(async () => ({ auth0DeleteFailed: false })) };
+    accountService = {
+      deleteAccount: mock.fn(async () => ({ auth0DeleteFailed: false })),
+      softDeleteAccount: mock.fn(async () => {}),
+    };
     mock.module(path.resolve(__dirname, '../services/accountService.js'), { exports: accountService });
 
     adminAudit = { logAdminAction: mock.fn(async () => {}) };
@@ -51,11 +54,13 @@ describe('routes/adminTrainers', () => {
     adminTrainerService.getDetail.mock.resetCalls();
     auth0Management.getAuth0User.mock.resetCalls();
     accountService.deleteAccount.mock.resetCalls();
+    accountService.softDeleteAccount.mock.resetCalls();
     adminAudit.logAdminAction.mock.resetCalls();
     adminTrainerService.list.mock.mockImplementation(async () => ({ results: [], page: 1, pageSize: 20, total: 0 }));
     adminTrainerService.getDetail.mock.mockImplementation(async () => null);
     auth0Management.getAuth0User.mock.mockImplementation(async () => ({ email: 'ash@example.com' }));
     accountService.deleteAccount.mock.mockImplementation(async () => ({ auth0DeleteFailed: false }));
+    accountService.softDeleteAccount.mock.mockImplementation(async () => {});
   });
 
   test('returns 401 when no token is present', async () => {
@@ -128,11 +133,21 @@ describe('routes/adminTrainers', () => {
   });
 
   describe('DELETE /:id', () => {
-    test('reuses accountService.deleteAccount — not a new deletion path', async () => {
+    test('soft-deletes via accountService.softDeleteAccount — the same function self-service deletion uses', async () => {
       const res = await request.delete('/api/admin/trainers/auth0%7Cabc123');
 
       assert.equal(res.status, 200);
-      assert.equal(accountService.deleteAccount.mock.calls[0].arguments[0], 'auth0|abc123');
+      assert.equal(accountService.softDeleteAccount.mock.calls[0].arguments[0], 'auth0|abc123');
+      assert.deepEqual(accountService.softDeleteAccount.mock.calls[0].arguments[1], {
+        deletedBy: 'auth0|admin',
+        deletionType: 'admin',
+      });
+    });
+
+    test('never calls the real (permanent) deleteAccount', async () => {
+      await request.delete('/api/admin/trainers/auth0%7Cabc123');
+
+      assert.equal(accountService.deleteAccount.mock.calls.length, 0);
     });
 
     test('writes a real audit log entry with the acting admin from the JWT (never client-sent)', async () => {
@@ -141,18 +156,9 @@ describe('routes/adminTrainers', () => {
       assert.equal(adminAudit.logAdminAction.mock.calls.length, 1);
       const [adminId, action, targetType, targetId] = adminAudit.logAdminAction.mock.calls[0].arguments;
       assert.equal(adminId, 'auth0|admin');
-      assert.equal(action, 'trainer.deleted');
+      assert.equal(action, 'trainer.softDeleted');
       assert.equal(targetType, 'TrainerProfile');
       assert.equal(targetId, 'auth0|abc123');
-    });
-
-    test('includes a warning when the Auth0 side of the deletion failed, same as self-service deletion', async () => {
-      accountService.deleteAccount.mock.mockImplementationOnce(async () => ({ auth0DeleteFailed: true }));
-
-      const res = await request.delete('/api/admin/trainers/auth0%7Cabc123');
-
-      assert.equal(res.status, 200);
-      assert.ok(res.body.warning);
     });
   });
 });

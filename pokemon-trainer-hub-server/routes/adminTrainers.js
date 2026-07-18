@@ -39,23 +39,22 @@ router.get('/:id/auth0', async (req, res) => {
   }
 });
 
-// DELETE /api/admin/trainers/:id — reuses the EXISTING self-service deletion
-// logic (services/accountService.js) for an admin-initiated deletion of an
-// arbitrary trainer, not a second deletion path. Audit-logged regardless of
-// whether the Auth0 side succeeds, since the DB half (the part that's
-// guaranteed) always completes if this responds successfully.
+// DELETE /api/admin/trainers/:id — soft-deletes an arbitrary trainer
+// (services/accountService.js's softDeleteAccount, the same function
+// self-service deletion now uses in routes/profile.js — not a second
+// deletion path). Auth0 is untouched; the trainer is blocked for 30 days
+// and can be restored by an admin (PATCH /:id/restore, added in a later
+// phase) or permanently removed early (DELETE /:id/permanent).
 router.delete('/:id', async (req, res) => {
-  const { auth0DeleteFailed } = await accountService.deleteAccount(req.params.id);
-
-  await logAdminAction(req.auth.payload.sub, 'trainer.deleted', 'TrainerProfile', req.params.id, {
-    auth0DeleteFailed,
+  await accountService.softDeleteAccount(req.params.id, {
+    deletedBy: req.auth.payload.sub,
+    deletionType: 'admin',
   });
 
+  await logAdminAction(req.auth.payload.sub, 'trainer.softDeleted', 'TrainerProfile', req.params.id, {});
+
   res.status(200).json({
-    message: 'This trainer account and all their data have been deleted.',
-    ...(auth0DeleteFailed && {
-      warning: 'Their data was deleted, but there was an issue fully closing their login.',
-    }),
+    message: 'This trainer account has been deleted. It can be restored within 30 days.',
   });
 });
 

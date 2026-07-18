@@ -41,7 +41,10 @@ describe('routes/profile', () => {
     };
     mock.module(path.resolve(__dirname, '../services/prisma.js'), { exports: { default: prisma } });
 
-    accountService = { deleteAccount: mock.fn(async () => ({ auth0DeleteFailed: false })) };
+    accountService = {
+      deleteAccount: mock.fn(async () => ({ auth0DeleteFailed: false })),
+      softDeleteAccount: mock.fn(async () => {}),
+    };
     mock.module(path.resolve(__dirname, '../services/accountService.js'), { exports: accountService });
 
     const express = require('express');
@@ -63,6 +66,8 @@ describe('routes/profile', () => {
     prisma.trainerProfile.update.mock.mockImplementation(async ({ data }) => ({ ...data }));
     accountService.deleteAccount.mock.resetCalls();
     accountService.deleteAccount.mock.mockImplementation(async () => ({ auth0DeleteFailed: false }));
+    accountService.softDeleteAccount.mock.resetCalls();
+    accountService.softDeleteAccount.mock.mockImplementation(async () => {});
   });
 
   describe('GET /', () => {
@@ -82,6 +87,36 @@ describe('routes/profile', () => {
       assert.equal(res.status, 200);
       assert.equal(res.body.trainerName, 'Ash');
       assert.ok(res.body.ageRange);
+    });
+
+    test('returns 403 ACCOUNT_DELETED with the real deletionType when the trainer is soft-deleted', async () => {
+      prisma.trainerProfile.findUnique.mock.mockImplementationOnce(async () => ({
+        trainerName: 'Ash',
+        dateOfBirth: new Date('2000-01-01'),
+        deletedAt: new Date(),
+        deletionType: 'admin',
+      }));
+
+      const res = await request.get('/api/profile');
+
+      assert.equal(res.status, 403);
+      assert.equal(res.body.code, 'ACCOUNT_DELETED');
+      assert.equal(res.body.deletionType, 'admin');
+    });
+
+    test('never leaks deletedAt/deletionType into a normal (non-deleted) response', async () => {
+      prisma.trainerProfile.findUnique.mock.mockImplementationOnce(async () => ({
+        trainerName: 'Ash',
+        dateOfBirth: new Date('2000-01-01'),
+        deletedAt: null,
+        deletionType: null,
+      }));
+
+      const res = await request.get('/api/profile');
+
+      assert.equal(res.status, 200);
+      assert.equal('deletedAt' in res.body, false);
+      assert.equal('deletionType' in res.body, false);
     });
   });
 
@@ -166,6 +201,25 @@ describe('routes/profile', () => {
 
       assert.equal(res.status, 200);
       assert.equal(prisma.trainerProfile.upsert.mock.calls[0].arguments[0].update.marketingEmailsOptIn, false);
+    });
+
+    test('rejects with 403 ACCOUNT_DELETED instead of resurrecting a soft-deleted profile', async () => {
+      prisma.trainerProfile.findUnique.mock.mockImplementationOnce(async () => ({
+        acceptedPolicy: true,
+        acceptedPolicyAt: new Date('2025-01-01'),
+        policyVersion: 'v1',
+        marketingEmailsOptIn: true,
+        experienceLevel: 'Beginner',
+        deletedAt: new Date(),
+        deletionType: 'self',
+      }));
+
+      const res = await request.post('/api/profile').send(validSignup);
+
+      assert.equal(res.status, 403);
+      assert.equal(res.body.code, 'ACCOUNT_DELETED');
+      assert.equal(res.body.deletionType, 'self');
+      assert.equal(prisma.trainerProfile.upsert.mock.calls.length, 0);
     });
 
     test('defaults avatarPokemonId to null and trims/nulls an empty teamName', async () => {
@@ -254,23 +308,23 @@ describe('routes/profile', () => {
   });
 
   describe('DELETE /', () => {
-    test('deletes the account for the JWT-identified user and returns 200', async () => {
+    test('soft-deletes the account for the JWT-identified user and returns 200', async () => {
       const res = await request.delete('/api/profile');
 
       assert.equal(res.status, 200);
-      assert.equal(accountService.deleteAccount.mock.calls.length, 1);
-      assert.equal(accountService.deleteAccount.mock.calls[0].arguments[0], FAKE_USER);
+      assert.equal(accountService.softDeleteAccount.mock.calls.length, 1);
+      assert.equal(accountService.softDeleteAccount.mock.calls[0].arguments[0], FAKE_USER);
+      assert.deepEqual(accountService.softDeleteAccount.mock.calls[0].arguments[1], {
+        deletedBy: FAKE_USER,
+        deletionType: 'self',
+      });
       assert.ok(res.body.message);
-      assert.equal(res.body.warning, undefined);
     });
 
-    test('includes a warning when the Auth0 side of the deletion failed', async () => {
-      accountService.deleteAccount.mock.mockImplementationOnce(async () => ({ auth0DeleteFailed: true }));
+    test('never calls the real (permanent) deleteAccount for a self-service delete', async () => {
+      await request.delete('/api/profile');
 
-      const res = await request.delete('/api/profile');
-
-      assert.equal(res.status, 200);
-      assert.ok(res.body.warning);
+      assert.equal(accountService.deleteAccount.mock.calls.length, 0);
     });
   });
 });

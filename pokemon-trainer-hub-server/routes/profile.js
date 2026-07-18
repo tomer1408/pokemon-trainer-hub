@@ -36,18 +36,33 @@ function withAgeRange(profile) {
   return { ...profile, ageRange: calculateAgeRange(new Date(profile.dateOfBirth)) };
 }
 
-// Returns the current user's Trainer Profile, or 404 if not created yet
+// Returns the current user's Trainer Profile, or 404 if not created yet.
+// Also the single account-status gate every login flow depends on
+// (pages/callback/callback.ts, shared/onboarding-guard.ts on the client):
+// a soft-deleted trainer (deletedAt set — see accountService.softDeleteAccount)
+// gets 403 ACCOUNT_DELETED instead of their profile, for the full 30-day
+// window, regardless of who deleted them. deletionType tells the client
+// which of the two restoration-request screens to show.
 router.get('/', jwtCheck, async (req, res) => {
   const profile = await prisma.trainerProfile.findUnique({
     where: { auth0UserId: req.auth.payload.sub },
-    select: PROFILE_SELECT,
+    select: { ...PROFILE_SELECT, deletedAt: true, deletionType: true },
   });
 
   if (!profile) {
     return res.status(404).json({ message: 'No profile found for this user.' });
   }
 
-  res.json(withAgeRange(profile));
+  if (profile.deletedAt) {
+    return res.status(403).json({
+      code: 'ACCOUNT_DELETED',
+      deletionType: profile.deletionType,
+      message: 'This account has been deleted.',
+    });
+  }
+
+  const { deletedAt, deletionType, ...safeProfile } = profile;
+  res.json(withAgeRange(safeProfile));
 });
 
 // Creates or updates the current user's Trainer Profile
@@ -93,8 +108,24 @@ router.post('/', jwtCheck, async (req, res) => {
       policyVersion: true,
       marketingEmailsOptIn: true,
       experienceLevel: true,
+      deletedAt: true,
+      deletionType: true,
     },
   });
+
+  // Defensive guard: without this, a stale-tokened soft-deleted trainer
+  // could resurrect their own row via a generic profile save while it's
+  // still flagged deletedAt — a real correctness bug, not just a UX gap.
+  // GET / above is the primary gate every login flow already respects;
+  // this closes the same hole on the one other route that can touch this
+  // row while deletedAt is set.
+  if (existing?.deletedAt) {
+    return res.status(403).json({
+      code: 'ACCOUNT_DELETED',
+      deletionType: existing.deletionType,
+      message: 'This account has been deleted.',
+    });
+  }
 
   let consentData;
   if (!existing) {
@@ -227,24 +258,22 @@ router.patch('/whos-that-streak', jwtCheck, async (req, res) => {
   }
 });
 
-// Deletes every DB row this trainer owns AND their real Auth0 identity —
-// the one truly irreversible action in this app. auth0UserId always comes
-// from the verified JWT, never the body (see middleware/auth.js). Always
-// responds 200 once the DB transaction commits (that's what "delete my
-// data" actually demands); `warning` is only present if the Auth0 side of
-// the deletion failed after the DB half already succeeded — see
-// accountService.js for why that ordering is the safe one. Deliberately
-// doesn't use the ServiceError/STATUS_BY_CODE convention from routes/team.js
-// — there's no branching business-logic error here (every delete is
-// idempotent), only an unexpected-DB-error case, already handled by the
-// global error middleware in server.js like every other route.
+// Soft-deletes the account — no data is actually touched, and Auth0 isn't
+// touched at all (see accountService.softDeleteAccount). auth0UserId always
+// comes from the verified JWT, never the body (see middleware/auth.js).
+// The trainer is blocked from the app for 30 days (GET / above); if they
+// log back in during that window they can submit a restoration request
+// (POST /restoration-request, added in a later phase) — only an admin can
+// actually restore the account. If untouched for 30 days, the account and
+// all its data are permanently purged by the automatic sweep.
 router.delete('/', jwtCheck, async (req, res) => {
-  const { auth0DeleteFailed } = await accountService.deleteAccount(req.auth.payload.sub);
+  await accountService.softDeleteAccount(req.auth.payload.sub, {
+    deletedBy: req.auth.payload.sub,
+    deletionType: 'self',
+  });
   res.status(200).json({
-    message: 'Your account and all your data have been deleted.',
-    ...(auth0DeleteFailed && {
-      warning: 'Your data was deleted, but there was an issue fully closing your login. Contact support if this persists.',
-    }),
+    message:
+      'Your account has been deleted. You have 30 days to request restoration by logging back in — after that, it is permanently removed.',
   });
 });
 

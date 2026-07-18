@@ -118,6 +118,15 @@ describe('services/adminAnalyticsService', () => {
       assert.equal(analytics.funnel[4].count, 1);
     });
 
+    test('funnel and overTime queries exclude soft-deleted trainers', async () => {
+      await service.getAnalytics(30);
+
+      for (const call of prisma.trainerProfile.count.mock.calls) {
+        assert.equal(call.arguments[0].where.deletedAt, null);
+      }
+      assert.equal(prisma.trainerProfile.findMany.mock.calls[0].arguments[0].where.deletedAt, null);
+    });
+
     test('popularPokemon comes from real groupBy on DreamTeamMember and Favorite', async () => {
       // dreamTeamMember.groupBy is also called by getFunnel() (grouped by
       // auth0UserId, concurrently) — branch on the real `by` field instead
@@ -170,6 +179,7 @@ describe('services/adminAnalyticsService', () => {
       assert.equal(analytics.whosThatStats.averageBestStreak, 4.7);
       assert.equal(analytics.whosThatStats.highestBestStreak, 12);
       assert.equal(analytics.whosThatStats.trainersWhoHavePlayed, 9);
+      assert.equal(prisma.trainerProfile.aggregate.mock.calls[0].arguments[0].where.deletedAt, null);
     });
 
     test('supportStats comes from real topic/status groupBys', async () => {

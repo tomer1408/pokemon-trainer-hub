@@ -53,7 +53,11 @@ async function list(filters = {}) {
   const sortBy = SORTABLE_FIELDS.includes(filters.sortBy) ? filters.sortBy : 'createdAt';
   const sortDirection = filters.sortDirection === 'asc' ? 'asc' : 'desc';
 
-  const where = {};
+  // Soft-deleted trainers (see accountService.softDeleteAccount) never show
+  // up in the normal Trainers list — they live in the separate Recently
+  // Deleted view instead (adminTrainerService.listDeleted, added in a later
+  // phase).
+  const where = { deletedAt: null };
   if (filters.search) where.trainerName = { contains: filters.search };
   if (filters.country) where.country = filters.country;
   if (filters.hasCompletedStarterQuiz !== undefined) {
@@ -90,6 +94,10 @@ async function list(filters = {}) {
 // reimplemented) for the real, PokeAPI-enriched Dream Team. Deliberately
 // excludes TrainerNote content (private by design, same standing rule as
 // the Database Explorer later). Returns null if no profile exists.
+// Deliberately NOT filtered by deletedAt — a soft-deleted trainer's own
+// detail page still needs to load (to show the "scheduled for deletion"
+// banner with Restore/Delete Forever, added in a later phase), so the 4
+// soft-delete fields are passed straight through in `profile` below.
 async function getDetail(auth0UserId) {
   const profile = await prisma.trainerProfile.findUnique({ where: { auth0UserId } });
   if (!profile) return null;
@@ -128,6 +136,10 @@ async function getDetail(auth0UserId) {
       hasCompletedStarterQuiz: profile.hasCompletedStarterQuiz,
       whosThatBestStreak: profile.whosThatBestStreak,
       createdAt: profile.createdAt,
+      deletedAt: profile.deletedAt,
+      purgeAt: profile.purgeAt,
+      deletedBy: profile.deletedBy,
+      deletionType: profile.deletionType,
     },
     team,
     favoritesCount,

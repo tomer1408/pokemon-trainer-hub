@@ -48,7 +48,7 @@ function bucketByDay(timestamps, since, days) {
 
 async function getOverTime(since, days) {
   const [profiles, battles] = await Promise.all([
-    prisma.trainerProfile.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } }),
+    prisma.trainerProfile.findMany({ where: { deletedAt: null, createdAt: { gte: since } }, select: { createdAt: true } }),
     prisma.battleMatch.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } }),
   ]);
 
@@ -68,8 +68,8 @@ async function getOverTime(since, days) {
 // a flat .count().
 async function getFunnel() {
   const [totalProfiles, quizCompleted, teamGroups, battleGroups] = await Promise.all([
-    prisma.trainerProfile.count(),
-    prisma.trainerProfile.count({ where: { hasCompletedStarterQuiz: true } }),
+    prisma.trainerProfile.count({ where: { deletedAt: null } }),
+    prisma.trainerProfile.count({ where: { deletedAt: null, hasCompletedStarterQuiz: true } }),
     prisma.dreamTeamMember.groupBy({ by: ['auth0UserId'], _count: { _all: true } }),
     prisma.battleMatch.groupBy({ by: ['auth0UserId'], _count: { _all: true } }),
   ]);
@@ -133,8 +133,12 @@ async function getBattleStats() {
 // this app doesn't store.
 async function getWhosThatStats() {
   const [aggregate, playedCount] = await Promise.all([
-    prisma.trainerProfile.aggregate({ _avg: { whosThatBestStreak: true }, _max: { whosThatBestStreak: true } }),
-    prisma.trainerProfile.count({ where: { whosThatBestStreak: { gt: 0 } } }),
+    prisma.trainerProfile.aggregate({
+      where: { deletedAt: null },
+      _avg: { whosThatBestStreak: true },
+      _max: { whosThatBestStreak: true },
+    }),
+    prisma.trainerProfile.count({ where: { deletedAt: null, whosThatBestStreak: { gt: 0 } } }),
   ]);
 
   return {

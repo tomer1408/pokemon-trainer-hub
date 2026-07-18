@@ -23,10 +23,10 @@ async function getKpis() {
 
   const [totalTrainers, newTrainersLast7Days, openSupportRequests, quizCompletedCount, teamGroups, battlesLast7Days] =
     await Promise.all([
-      prisma.trainerProfile.count(),
-      prisma.trainerProfile.count({ where: { createdAt: { gte: since } } }),
+      prisma.trainerProfile.count({ where: { deletedAt: null } }),
+      prisma.trainerProfile.count({ where: { deletedAt: null, createdAt: { gte: since } } }),
       prisma.supportRequest.count({ where: { status: 'open' } }),
-      prisma.trainerProfile.count({ where: { hasCompletedStarterQuiz: true } }),
+      prisma.trainerProfile.count({ where: { deletedAt: null, hasCompletedStarterQuiz: true } }),
       prisma.dreamTeamMember.groupBy({ by: ['auth0UserId'], _count: { _all: true } }),
       prisma.battleMatch.count({ where: { createdAt: { gte: since } } }),
     ]);
@@ -57,6 +57,7 @@ async function getRecentSupportRequests() {
 async function getRecentActivity() {
   const [newTrainers, teamAdditions, battles, supportRequests] = await Promise.all([
     prisma.trainerProfile.findMany({
+      where: { deletedAt: null },
       orderBy: { createdAt: 'desc' },
       take: PER_TABLE_FETCH_LIMIT,
       select: { auth0UserId: true, trainerName: true, createdAt: true },

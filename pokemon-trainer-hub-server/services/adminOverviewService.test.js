@@ -79,6 +79,15 @@ describe('services/adminOverviewService', () => {
       assert.ok(daysAgo > 6.9 && daysAgo < 7.1);
     });
 
+    test('totalTrainers, newTrainersLast7Days and quizCompletedCount all exclude soft-deleted trainers', async () => {
+      await service.getOverview();
+
+      const [totalCall, newCall, quizCall] = prisma.trainerProfile.count.mock.calls;
+      assert.equal(totalCall.arguments[0].where.deletedAt, null);
+      assert.equal(newCall.arguments[0].where.deletedAt, null);
+      assert.equal(quizCall.arguments[0].where.deletedAt, null);
+    });
+
     test('openSupportRequests counts only status: open', async () => {
       await service.getOverview();
 
@@ -111,6 +120,13 @@ describe('services/adminOverviewService', () => {
       await service.getOverview();
 
       assert.equal(prisma.supportRequest.findMany.mock.calls[0].arguments[0].take, 5);
+    });
+
+    test('the "recently joined" feed excludes soft-deleted trainers', async () => {
+      await service.getOverview();
+
+      const joinedCall = prisma.trainerProfile.findMany.mock.calls.find((c) => c.arguments[0]?.orderBy?.createdAt);
+      assert.equal(joinedCall.arguments[0].where.deletedAt, null);
     });
 
     test('recentActivity merges events from all 4 tables sorted by real timestamp, capped at 10', async () => {

@@ -25,6 +25,10 @@ describe('services/adminTrainerService', () => {
       hasCompletedStarterQuiz: true,
       whosThatBestStreak: 5,
       createdAt: new Date('2025-01-01'),
+      deletedAt: null,
+      purgeAt: null,
+      deletedBy: null,
+      deletionType: null,
       ...overrides,
     };
   }
@@ -127,6 +131,12 @@ describe('services/adminTrainerService', () => {
         contains: 'ash',
       });
     });
+
+    test('excludes soft-deleted trainers — they live in the separate Recently Deleted view', async () => {
+      await service.list({});
+      assert.equal(prisma.trainerProfile.findMany.mock.calls[0].arguments[0].where.deletedAt, null);
+      assert.equal(prisma.trainerProfile.count.mock.calls[0].arguments[0].where.deletedAt, null);
+    });
   });
 
   describe('getDetail', () => {
@@ -158,6 +168,24 @@ describe('services/adminTrainerService', () => {
       assert.equal(detail.battles.wins, 2);
       assert.equal(detail.battles.losses, 1);
       assert.deepEqual(detail.battles.difficultyBreakdown, { easy: 2, hard: 1 });
+    });
+
+    test('passes the real soft-delete fields through unfiltered, so a deleted trainer\'s own detail page still loads', async () => {
+      prisma.trainerProfile.findUnique.mock.mockImplementationOnce(async () =>
+        profileRow({
+          deletedAt: new Date('2026-07-01'),
+          purgeAt: new Date('2026-07-31'),
+          deletedBy: 'auth0|admin-xyz',
+          deletionType: 'admin',
+        }),
+      );
+
+      const detail = await service.getDetail(USER_A);
+
+      assert.deepEqual(detail.profile.deletedAt, new Date('2026-07-01'));
+      assert.deepEqual(detail.profile.purgeAt, new Date('2026-07-31'));
+      assert.equal(detail.profile.deletedBy, 'auth0|admin-xyz');
+      assert.equal(detail.profile.deletionType, 'admin');
     });
 
     test('never includes TrainerNote content — not queried at all', async () => {
