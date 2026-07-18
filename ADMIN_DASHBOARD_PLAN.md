@@ -17,7 +17,7 @@ anything said earlier in conversation.
 | 3 | Admin Overview (real KPIs) | ✅ Done, tested, **not yet committed** |
 | 4 | System Health | ✅ Done, tested, **not yet committed** |
 | 5 | Analytics | ✅ Done, tested, **not yet committed** |
-| 6 | Database Explorer | ⏳ Not started |
+| 6 | Database Explorer | ✅ Done, tested, **not yet committed** |
 | 7 | Tests/docs/final verification pass | ⏳ Not started |
 | 8 | Product Analytics Tracking (DAU/MAU/retention/page-views) | 🔭 Deferred — scoped below, **not approved, not started** |
 
@@ -83,11 +83,14 @@ anything said earlier in conversation.
 - **Explicit scope decision (confirmed with the user):** this phase only ever surfaces metrics computable from data the app already stores — profiles/quiz/team/battle counts and over-time series, popularity rankings, win/loss/difficulty/opponent-type distributions, Who's That streaks, support-by-topic/status, and the funnel above. It deliberately does **not** add or simulate DAU, MAU, retention, last-login/last-active, page views, session counts, or any not-yet-persisted feature/AI-usage counts — inferring these from incomplete data would violate this project's "no faked data" rule. Real infrastructure for those metrics is scoped separately below as **Phase 8**, deferred and not started. The Analytics page itself carries a short visible note saying the same thing, so this isn't just documented here.
 - Recent/ranked lists (Overview's Recent Support/Recent Activity, Analytics' popularity/distribution rankings) are deliberately capped at ~5-10 entries — this is intentional dashboard design (a glanceable summary, not an attempt to hide a "load more"), not a missing feature. Where a full paginated version of the same data already exists elsewhere (e.g. Support Requests), the capped list links out to it (Overview's "All requests →").
 
-## Phase 6 — Database Explorer
+## Phase 6 — Database Explorer ✅
 
-- `services/adminDatabaseRegistry.js`: hardcoded whitelist, one entry per real model (`trainerProfiles, dreamTeamMembers, favorites, trainerNotes, supportRequests, battleMatches, avatarIcons, adminAuditLogs`).
-- Masking, stricter than "gated by `database:read` is enough": `dateOfBirth` → `ageRange` only; `auth0UserId` masked everywhere; **`TrainerNote.text` never returned at all**, in list or detail (only `id`/masked owner/`createdAt`/`textLength`); **`SupportRequest.message`/`name`/`email`** show only a safe preview + metadata — full content stays exclusive to the Phase 1 Support page.
+- `services/adminDatabaseRegistry.js`: hardcoded whitelist, one entry per real model (`trainerProfiles, dreamTeamMembers, favorites, trainerNotes, supportRequests, battleMatches, avatarIcons, adminAuditLogs`) — pure metadata (no Prisma import of its own; `modelName` is looked up dynamically at query time in `adminDatabaseService.js`).
+- Masking, stricter than "gated by `database:read` is enough", and applied **server-side** (a new `services/maskAuth0Id.js` — a server-side port of the client's `shared/mask-auth0-id.ts`, since this phase's masking must happen before the response ever leaves the API, not left to the client to render safely like Phase 2): `TrainerProfile.dateOfBirth`/`firstName`/`lastName` → `ageRange` only, never raw; `auth0UserId`/`adminAuth0UserId` masked on every table that has one; **`TrainerNote.text` never returned at all**, list or detail (only `id`/masked owner/`pokemonId`/`createdAt`/`textLength`); **`SupportRequest.message`/`name`/`email`** never returned — only a short `messagePreview` + metadata; `BattleMatch.roundsJson`/`teamSnapshotJson` are list-excluded but included in the detail shape (`toSafeDetail` override) for the client's JSON pretty-printer.
 - Routes are **all `GET`**, hard constraint: no raw SQL, no arbitrary Prisma query construction, no create/update/delete/truncate, `:table` validated against the whitelist (404 if not listed, never passed through to Prisma), `pageSize` capped at 100.
+- **Real bug found and fixed during this phase**: `getTableEntry()`'s original `REGISTRY[tableKey] ?? null` resolved `'__proto__'` to the real (inherited) `Object.prototype` instead of `null`, since `REGISTRY` is a plain object literal — a request for `/api/admin/database/__proto__` would have incorrectly passed the "is this a known table" check. Fixed with an explicit `Object.prototype.hasOwnProperty.call(REGISTRY, tableKey)` guard. Caught by a real test, not manually.
+- Client: `core/admin-database.ts`, a genuinely model-agnostic `shared/admin-data-table` (columns derived from the real union of keys across the current rows — the one place in this feature that needs a fully dynamic grid, unlike Support/Trainers' fixed-column tables), and `pages/admin/database` — table-selector sidebar (real per-table counts), search, pagination, and a record-details drawer with prev/next navigation within the loaded page and a small JSON pretty-printer for any field whose value looks like a JSON string (used by `BattleMatch.roundsJson`/`teamSnapshotJson`). Database Explorer is now a real, enabled sidebar link.
+- Note: unlike Phase 2's Trainers page, there's no "Copy real ID" action here — the raw `auth0UserId` never reaches the client at all in this phase (masked server-side before the response leaves the API), so there's no unmasked value left to copy.
 
 ## Phase 7 — Tests, docs, final verification
 

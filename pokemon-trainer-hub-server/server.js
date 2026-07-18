@@ -22,6 +22,7 @@ const adminTrainersRouter = require('./routes/adminTrainers');
 const adminOverviewRouter = require('./routes/adminOverview');
 const adminSystemRouter = require('./routes/adminSystem');
 const adminAnalyticsRouter = require('./routes/adminAnalytics');
+const adminDatabaseRouter = require('./routes/adminDatabase');
 
 const app = express();
 // Render (and most hosts) assign the port via this env var — 3000 stays as
@@ -81,6 +82,7 @@ app.use('/api/admin/trainers', adminTrainersRouter);
 app.use('/api/admin/overview', adminOverviewRouter);
 app.use('/api/admin/system', adminSystemRouter);
 app.use('/api/admin/analytics', adminAnalyticsRouter);
+app.use('/api/admin/database', adminDatabaseRouter);
 
 // Reports every error from the routes above to Sentry before the clean-JSON
 // handler below runs — this only captures and calls next(err), it never

@@ -1,0 +1,91 @@
+<div class="db-layout">
+  <aside class="db-side">
+    <div class="db-side-head">
+      <span class="db-side-title">Tables</span>
+      <span class="read-only-pill">Read-only</span>
+    </div>
+    @if (tablesLoading()) {
+      <p class="side-state">Loading…</p>
+    } @else {
+      <div class="table-list">
+        @for (t of tables(); track t.key) {
+          <div class="table-item" [class.active]="selectedTable() === t.key" (click)="selectTable(t.key)">
+            <div class="table-item-text">
+              <span class="table-item-name">{{ t.label }}</span>
+              <span class="table-item-desc">{{ t.description }}</span>
+            </div>
+            <span class="table-item-count">{{ t.count }}</span>
+          </div>
+        }
+      </div>
+    }
+  </aside>
+
+  <div class="db-main">
+    @if (currentTableMeta(); as meta) {
+      <div class="db-main-head">
+        <div class="db-title-row">
+          <h2 class="db-title">{{ meta.label }}</h2>
+          <span class="read-only-pill">🔒 Read-only view</span>
+        </div>
+        <p class="db-desc">{{ meta.description }}</p>
+      </div>
+    }
+
+    <div class="db-controls">
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Search rows…"
+        [value]="searchInput()"
+        (input)="searchInput.set($any($event.target).value)"
+      />
+      <span class="count-chip">{{ total() }} rows</span>
+    </div>
+
+    <div class="table-card">
+      @if (isLoading()) {
+        <div class="state-block">Loading rows…</div>
+      } @else if (loadError()) {
+        <div class="state-block error">Could not load this table. Please try again.</div>
+      } @else {
+        <app-admin-data-table [rows]="rows()" [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" (rowClick)="openRecord($event)" />
+        <div class="pagination-footer">
+          <span class="page-info">Page {{ page() }} of {{ totalPages() }}</span>
+          <app-pagination [page]="page()" [totalPages]="totalPages()" [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" (pageChange)="setPage($event)" />
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+@if (selectedIndex() !== null) {
+  <div class="drawer-overlay" (click)="closeDrawer()">
+    <div class="drawer" (click)="$event.stopPropagation()">
+      <div class="drawer-head">
+        <span class="drawer-title">Record Details</span>
+        <div class="drawer-head-actions">
+          <button type="button" class="nav-btn" (click)="navigateDetail(-1)" aria-label="Previous record">‹ Prev</button>
+          <button type="button" class="nav-btn" (click)="navigateDetail(1)" aria-label="Next record">Next ›</button>
+          <button type="button" class="drawer-close" (click)="closeDrawer()" aria-label="Close">✕</button>
+        </div>
+      </div>
+      <div class="drawer-body">
+        @if (loadingDetail()) {
+          <p class="side-state">Loading…</p>
+        } @else {
+          @for (f of detailFields(); track f.key) {
+            <div class="detail-row">
+              <span class="detail-key">{{ f.key }}</span>
+              @if (f.isJson) {
+                <pre class="detail-json">{{ f.value }}</pre>
+              } @else {
+                <span class="detail-value">{{ f.value }}</span>
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </div>
+}

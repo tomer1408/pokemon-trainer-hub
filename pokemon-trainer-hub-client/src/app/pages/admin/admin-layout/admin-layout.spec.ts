@@ -31,6 +31,7 @@ describe('AdminLayout', () => {
               { path: 'trainers/:id', component: Dummy },
               { path: 'system', component: Dummy },
               { path: 'analytics', component: Dummy },
+              { path: 'database', component: Dummy },
             ],
           },
           { path: 'home', component: Dummy },
@@ -131,6 +132,16 @@ describe('AdminLayout', () => {
     expect(analyticsLink).toBeTruthy();
     expect(analyticsLink!.getAttribute('href')).toBe('/admin/analytics');
     expect(fixture.nativeElement.textContent).not.toMatch(/Analytics\s*Soon/);
+  });
+
+  it('the Database Explorer item is a real, enabled link — not the "Soon" placeholder', () => {
+    const fixture = setup();
+    const links: HTMLAnchorElement[] = fixture.nativeElement.querySelectorAll('a.nav-item');
+    const dbLink = Array.from(links).find((a) => a.textContent?.includes('Database Explorer'));
+
+    expect(dbLink).toBeTruthy();
+    expect(dbLink!.getAttribute('href')).toBe('/admin/database');
+    expect(fixture.nativeElement.textContent).not.toMatch(/Database Explorer\s*Soon/);
   });
 
   it('a trainer detail sub-route still counts as being on the Trainers item (breadcrumb + active highlight)', async () => {

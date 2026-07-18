@@ -22,7 +22,7 @@ const NAV_ITEMS: AdminNavItem[] = [
   { path: 'trainers', label: 'Trainers', permission: 'users:manage', built: true },
   { path: 'analytics', label: 'Analytics', permission: 'admin:read', built: true },
   { path: 'system', label: 'System Health', permission: 'admin:read', built: true },
-  { path: 'database', label: 'Database Explorer', permission: 'database:read', built: false },
+  { path: 'database', label: 'Database Explorer', permission: 'database:read', built: true },
 ];
 
 // Purely a visual shell (sidebar + header) — carries NO permission of its

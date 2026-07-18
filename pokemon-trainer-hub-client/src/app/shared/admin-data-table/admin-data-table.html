@@ -1,0 +1,24 @@
+@if (rows().length === 0) {
+  <p class="empty">No rows match.</p>
+} @else {
+  <div class="table-scroll">
+    <table class="grid" [class.light]="isLight()" [class.pikachu]="isPikachu()">
+      <thead>
+        <tr>
+          @for (col of columns(); track col) {
+            <th>{{ col }}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track rowKey(row, $index)) {
+          <tr (click)="onRowClick(row)">
+            @for (col of columns(); track col) {
+              <td>{{ formatCell(row[col]) }}</td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
