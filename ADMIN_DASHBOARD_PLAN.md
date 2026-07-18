@@ -15,7 +15,7 @@ anything said earlier in conversation.
 | 1 | Schema migration + Support Request management + AdminLayout/sidebar | ✅ Done, tested, **committed locally** (`1648016`) |
 | 2 | Trainer management | ✅ Done, tested, **not yet committed** |
 | 3 | Admin Overview (real KPIs) | ✅ Done, tested, **not yet committed** |
-| 4 | System Health | ⏳ Not started |
+| 4 | System Health | ✅ Done, tested, **not yet committed** |
 | 5 | Analytics | ⏳ Not started |
 | 6 | Database Explorer | ⏳ Not started |
 | 7 | Tests/docs/final verification pass | ⏳ Not started |

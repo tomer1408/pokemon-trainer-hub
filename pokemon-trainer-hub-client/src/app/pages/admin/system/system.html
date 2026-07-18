@@ -1,0 +1,70 @@
+@if (isLoading()) {
+  <div class="state-block">Running real health checks…</div>
+} @else if (loadError()) {
+  <div class="state-block error">Could not load System Health. Please try again.</div>
+} @else if (health(); as h) {
+  <div class="toolbar">
+    <span class="toolbar-meta">Live checks against the real database and PokeAPI — not cached.</span>
+    <button type="button" class="refresh-btn" (click)="load()">↻ Re-run checks</button>
+  </div>
+
+  <div class="health-grid">
+    <!-- Runtime -->
+    <div class="card">
+      <div class="card-head"><span class="dot dot-info"></span><span class="card-title">Runtime</span></div>
+      <div class="info-list">
+        <div class="info-row"><span class="info-label">Node.js version</span><span class="info-value mono">{{ h.runtime.nodeVersion }}</span></div>
+        <div class="info-row"><span class="info-label">Environment</span><span class="info-value mono">{{ h.runtime.nodeEnv }}</span></div>
+        <div class="info-row"><span class="info-label">Server uptime</span><span class="info-value mono">{{ formatUptime(h.runtime.uptimeSeconds) }}</span></div>
+      </div>
+    </div>
+
+    <!-- External Dependencies -->
+    <div class="card">
+      <div class="card-head"><span class="dot dot-info"></span><span class="card-title">External Dependencies</span></div>
+      <div class="dep-list">
+        @for (dep of h.dependencies; track dep.name) {
+          <div class="dep-row">
+            <span class="dep-dot" [class.ok]="dep.status === 'operational' || dep.status === 'configured'" [class.bad]="dep.status === 'down'"></span>
+            <span class="dep-name">{{ dep.name }}</span>
+            <span class="dep-status">{{ dep.status.replace('_', ' ') }}</span>
+            @if (dep.latencyMs !== undefined) {
+              <span class="dep-latency">{{ dep.latencyMs }}ms</span>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Errors & Issues -->
+    <div class="card">
+      <div class="card-head"><span class="dot" [class.dot-ok]="h.errors.sentryStatus === 'configured'" [class.dot-bad]="h.errors.sentryStatus === 'not_configured'"></span><span class="card-title">Errors & Issues</span></div>
+      <p class="errors-note">
+        This app doesn't aggregate error counts in-house — real-time error tracking lives in Sentry.
+      </p>
+      <div class="info-row">
+        <span class="info-label">Sentry</span>
+        <span class="info-value mono">{{ h.errors.sentryStatus.replace('_', ' ') }}</span>
+      </div>
+    </div>
+
+    <!-- Build & Deployment -->
+    <div class="card">
+      <div class="card-head"><span class="dot dot-info"></span><span class="card-title">Build & Deployment</span></div>
+      <div class="info-list">
+        <div class="info-row"><span class="info-label">App version</span><span class="info-value mono">{{ h.build.appVersion }}</span></div>
+        <div class="info-row"><span class="info-label">Latest migration</span><span class="info-value mono">{{ h.build.latestMigration }}</span></div>
+        <div class="info-row"><span class="info-label">Deployed commit</span><span class="info-value mono">{{ h.build.gitCommit }}</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card links-card">
+    <div class="card-head"><span class="card-title">External Dashboards</span></div>
+    <div class="links-row">
+      @for (link of externalLinks; track link.label) {
+        <a [href]="link.url" target="_blank" rel="noopener noreferrer" class="ext-link">{{ link.label }} ↗</a>
+      }
+    </div>
+  </div>
+}

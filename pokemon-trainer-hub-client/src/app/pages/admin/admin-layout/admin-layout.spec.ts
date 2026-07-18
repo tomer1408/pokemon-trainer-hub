@@ -29,6 +29,7 @@ describe('AdminLayout', () => {
               { path: 'support', component: Dummy },
               { path: 'trainers', component: Dummy },
               { path: 'trainers/:id', component: Dummy },
+              { path: 'system', component: Dummy },
             ],
           },
           { path: 'home', component: Dummy },
@@ -109,6 +110,16 @@ describe('AdminLayout', () => {
     expect(trainersLink).toBeTruthy();
     expect(trainersLink!.getAttribute('href')).toBe('/admin/trainers');
     expect(fixture.nativeElement.textContent).not.toMatch(/Trainers\s*Soon/);
+  });
+
+  it('the System Health item is a real, enabled link — not the "Soon" placeholder', () => {
+    const fixture = setup();
+    const links: HTMLAnchorElement[] = fixture.nativeElement.querySelectorAll('a.nav-item');
+    const systemLink = Array.from(links).find((a) => a.textContent?.includes('System Health'));
+
+    expect(systemLink).toBeTruthy();
+    expect(systemLink!.getAttribute('href')).toBe('/admin/system');
+    expect(fixture.nativeElement.textContent).not.toMatch(/System Health\s*Soon/);
   });
 
   it('a trainer detail sub-route still counts as being on the Trainers item (breadcrumb + active highlight)', async () => {

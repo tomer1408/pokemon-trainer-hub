@@ -133,6 +133,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/admin/trainer-detail/trainer-detail').then((m) => m.AdminTrainerDetail),
       },
+      {
+        path: 'system',
+        canActivate: [adminGuard],
+        data: { permission: 'admin:read' },
+        loadComponent: () => import('./pages/admin/system/system').then((m) => m.AdminSystem),
+      },
     ],
   },
   {
