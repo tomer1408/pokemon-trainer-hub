@@ -16,6 +16,14 @@ router.get('/', async (req, res) => {
   res.json(result);
 });
 
+// GET /api/admin/trainers/deleted — the Recently Deleted list. MUST be
+// registered before GET /:id below, or Express would match the literal
+// segment "deleted" against the :id param instead of this route.
+router.get('/deleted', async (req, res) => {
+  const result = await adminTrainerService.listDeleted(req.query);
+  res.json(result);
+});
+
 // GET /api/admin/trainers/:id — :id is a real Auth0 user id (e.g.
 // "auth0|64f2..."), url-decoded by Express automatically from the path
 // segment.
@@ -56,6 +64,38 @@ router.delete('/:id', async (req, res) => {
   res.status(200).json({
     message: 'This trainer account has been deleted. It can be restored within 30 days.',
   });
+});
+
+// DELETE /api/admin/trainers/:id/permanent — the real, irreversible
+// deletion (accountService.deleteAccount, unmodified), bypassing the
+// 30-day process entirely. Works whether the trainer was already
+// soft-deleted (an early "Delete Forever" from the Recently Deleted list)
+// or still active (a direct force-delete from Trainer Detail) — the
+// function itself doesn't care either way.
+router.delete('/:id/permanent', async (req, res) => {
+  const { auth0DeleteFailed } = await accountService.deleteAccount(req.params.id);
+
+  await logAdminAction(req.auth.payload.sub, 'trainer.permanentlyDeleted', 'TrainerProfile', req.params.id, {
+    auth0DeleteFailed,
+  });
+
+  res.status(200).json({
+    message: 'This trainer account and all their data have been permanently deleted.',
+    ...(auth0DeleteFailed && {
+      warning: 'Their data was deleted, but there was an issue fully closing their login.',
+    }),
+  });
+});
+
+// PATCH /api/admin/trainers/:id/restore — the only way a soft-deleted
+// account ever comes back (see accountService.restoreAccount) — never
+// automatic, never self-service, regardless of who deleted them.
+router.patch('/:id/restore', async (req, res) => {
+  await accountService.restoreAccount(req.params.id);
+
+  await logAdminAction(req.auth.payload.sub, 'trainer.restored', 'TrainerProfile', req.params.id, {});
+
+  res.status(200).json({ message: 'This trainer account has been restored.' });
 });
 
 module.exports = router;

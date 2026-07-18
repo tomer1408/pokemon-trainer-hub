@@ -22,6 +22,7 @@ describe('routes/adminTrainers', () => {
 
     adminTrainerService = {
       list: mock.fn(async () => ({ results: [], page: 1, pageSize: 20, total: 0 })),
+      listDeleted: mock.fn(async () => ({ results: [], page: 1, pageSize: 20, total: 0 })),
       getDetail: mock.fn(async () => null),
     };
     mock.module(path.resolve(__dirname, '../services/adminTrainerService.js'), { exports: adminTrainerService });
@@ -32,6 +33,7 @@ describe('routes/adminTrainers', () => {
     accountService = {
       deleteAccount: mock.fn(async () => ({ auth0DeleteFailed: false })),
       softDeleteAccount: mock.fn(async () => {}),
+      restoreAccount: mock.fn(async () => {}),
     };
     mock.module(path.resolve(__dirname, '../services/accountService.js'), { exports: accountService });
 
@@ -51,16 +53,20 @@ describe('routes/adminTrainers', () => {
   beforeEach(() => {
     authPayload = { sub: 'auth0|admin', permissions: ['users:manage'] };
     adminTrainerService.list.mock.resetCalls();
+    adminTrainerService.listDeleted.mock.resetCalls();
     adminTrainerService.getDetail.mock.resetCalls();
     auth0Management.getAuth0User.mock.resetCalls();
     accountService.deleteAccount.mock.resetCalls();
     accountService.softDeleteAccount.mock.resetCalls();
+    accountService.restoreAccount.mock.resetCalls();
     adminAudit.logAdminAction.mock.resetCalls();
     adminTrainerService.list.mock.mockImplementation(async () => ({ results: [], page: 1, pageSize: 20, total: 0 }));
+    adminTrainerService.listDeleted.mock.mockImplementation(async () => ({ results: [], page: 1, pageSize: 20, total: 0 }));
     adminTrainerService.getDetail.mock.mockImplementation(async () => null);
     auth0Management.getAuth0User.mock.mockImplementation(async () => ({ email: 'ash@example.com' }));
     accountService.deleteAccount.mock.mockImplementation(async () => ({ auth0DeleteFailed: false }));
     accountService.softDeleteAccount.mock.mockImplementation(async () => {});
+    accountService.restoreAccount.mock.mockImplementation(async () => {});
   });
 
   test('returns 401 when no token is present', async () => {
@@ -93,6 +99,29 @@ describe('routes/adminTrainers', () => {
 
       assert.equal(res.status, 200);
       assert.equal(res.body.total, 1);
+    });
+  });
+
+  describe('GET /deleted', () => {
+    test('returns the real Recently Deleted list', async () => {
+      adminTrainerService.listDeleted.mock.mockImplementationOnce(async () => ({
+        results: [{ auth0UserId: 'auth0|a', deletionType: 'self' }],
+        page: 1,
+        pageSize: 20,
+        total: 1,
+      }));
+
+      const res = await request.get('/api/admin/trainers/deleted');
+
+      assert.equal(res.status, 200);
+      assert.equal(res.body.total, 1);
+    });
+
+    test('is matched before GET /:id — "deleted" is never treated as an id', async () => {
+      await request.get('/api/admin/trainers/deleted');
+
+      assert.equal(adminTrainerService.listDeleted.mock.calls.length, 1);
+      assert.equal(adminTrainerService.getDetail.mock.calls.length, 0);
     });
   });
 
@@ -157,6 +186,59 @@ describe('routes/adminTrainers', () => {
       const [adminId, action, targetType, targetId] = adminAudit.logAdminAction.mock.calls[0].arguments;
       assert.equal(adminId, 'auth0|admin');
       assert.equal(action, 'trainer.softDeleted');
+      assert.equal(targetType, 'TrainerProfile');
+      assert.equal(targetId, 'auth0|abc123');
+    });
+  });
+
+  describe('DELETE /:id/permanent', () => {
+    test('calls the real, unmodified deleteAccount — an actual irreversible delete', async () => {
+      const res = await request.delete('/api/admin/trainers/auth0%7Cabc123/permanent');
+
+      assert.equal(res.status, 200);
+      assert.equal(accountService.deleteAccount.mock.calls[0].arguments[0], 'auth0|abc123');
+    });
+
+    test('never calls softDeleteAccount — this is not the 30-day path', async () => {
+      await request.delete('/api/admin/trainers/auth0%7Cabc123/permanent');
+
+      assert.equal(accountService.softDeleteAccount.mock.calls.length, 0);
+    });
+
+    test('writes a real audit log entry as trainer.permanentlyDeleted', async () => {
+      await request.delete('/api/admin/trainers/auth0%7Cabc123/permanent');
+
+      const [adminId, action, targetType, targetId] = adminAudit.logAdminAction.mock.calls[0].arguments;
+      assert.equal(adminId, 'auth0|admin');
+      assert.equal(action, 'trainer.permanentlyDeleted');
+      assert.equal(targetType, 'TrainerProfile');
+      assert.equal(targetId, 'auth0|abc123');
+    });
+
+    test('includes a warning when the Auth0 side of the deletion failed', async () => {
+      accountService.deleteAccount.mock.mockImplementationOnce(async () => ({ auth0DeleteFailed: true }));
+
+      const res = await request.delete('/api/admin/trainers/auth0%7Cabc123/permanent');
+
+      assert.equal(res.status, 200);
+      assert.ok(res.body.warning);
+    });
+  });
+
+  describe('PATCH /:id/restore', () => {
+    test('calls the real restoreAccount for the target trainer', async () => {
+      const res = await request.patch('/api/admin/trainers/auth0%7Cabc123/restore');
+
+      assert.equal(res.status, 200);
+      assert.equal(accountService.restoreAccount.mock.calls[0].arguments[0], 'auth0|abc123');
+    });
+
+    test('writes a real audit log entry as trainer.restored', async () => {
+      await request.patch('/api/admin/trainers/auth0%7Cabc123/restore');
+
+      const [adminId, action, targetType, targetId] = adminAudit.logAdminAction.mock.calls[0].arguments;
+      assert.equal(adminId, 'auth0|admin');
+      assert.equal(action, 'trainer.restored');
       assert.equal(targetType, 'TrainerProfile');
       assert.equal(targetId, 'auth0|abc123');
     });

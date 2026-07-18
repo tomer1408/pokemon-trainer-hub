@@ -139,6 +139,56 @@ describe('services/adminTrainerService', () => {
     });
   });
 
+  describe('listDeleted', () => {
+    test('only queries soft-deleted trainers (deletedAt not null)', async () => {
+      await service.listDeleted({});
+
+      assert.deepEqual(prisma.trainerProfile.findMany.mock.calls[0].arguments[0].where, {
+        deletedAt: { not: null },
+      });
+      assert.deepEqual(prisma.trainerProfile.count.mock.calls[0].arguments[0].where, {
+        deletedAt: { not: null },
+      });
+    });
+
+    test('defaults to sorting by deletedAt desc', async () => {
+      await service.listDeleted({});
+
+      assert.deepEqual(prisma.trainerProfile.findMany.mock.calls[0].arguments[0].orderBy, { deletedAt: 'desc' });
+    });
+
+    test('rejects a non-whitelisted sortBy, falling back to the default', async () => {
+      await service.listDeleted({ sortBy: 'whosThatBestStreak' });
+
+      assert.deepEqual(prisma.trainerProfile.findMany.mock.calls[0].arguments[0].orderBy, { deletedAt: 'desc' });
+    });
+
+    test('computes a real daysUntilPurge from the real purgeAt, never a hardcoded 30', async () => {
+      const purgeAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+      prisma.trainerProfile.findMany.mock.mockImplementationOnce(async () => [
+        profileRow({ deletedAt: new Date(), purgeAt, deletedBy: USER_B, deletionType: 'admin' }),
+      ]);
+
+      const result = await service.listDeleted({});
+
+      assert.equal(result.results[0].daysUntilPurge, 3);
+      assert.equal(result.results[0].deletionType, 'admin');
+    });
+
+    test('never enriches with team/favorite/battle counts — not meaningful for a deleted account', async () => {
+      const result = await service.listDeleted({});
+
+      assert.equal('teamSize' in result.results[0], false);
+      assert.equal('favoritesCount' in result.results[0], false);
+      assert.equal('battleCount' in result.results[0], false);
+    });
+
+    test('caps an excessive pageSize at 100', async () => {
+      await service.listDeleted({ pageSize: 9999 });
+      assert.equal(prisma.trainerProfile.findMany.mock.calls[0].arguments[0].take, 100);
+    });
+  });
+
   describe('getDetail', () => {
     test('returns null when no profile exists', async () => {
       prisma.trainerProfile.findUnique.mock.mockImplementationOnce(async () => null);

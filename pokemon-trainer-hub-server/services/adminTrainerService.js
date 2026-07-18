@@ -3,8 +3,10 @@ const { getTeam } = require('./teamService');
 const { calculateAgeRange } = require('./ageRange');
 
 const SORTABLE_FIELDS = ['createdAt', 'trainerName', 'country'];
+const DELETED_SORTABLE_FIELDS = ['deletedAt', 'purgeAt', 'trainerName'];
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
 function clampPageSize(pageSize) {
   const n = parseInt(pageSize, 10);
@@ -90,6 +92,45 @@ async function list(filters = {}) {
   return { results, page, pageSize, total };
 }
 
+// Mirrors list() above but for the Recently Deleted view — only
+// soft-deleted trainers, sorted by deletedAt desc by default. Deliberately
+// skips the team/favorite/battle count enrichment list() does (not
+// meaningful for a deleted account's admin summary) in favor of the 4
+// soft-delete fields plus a server-computed daysUntilPurge, so the client
+// never has to do its own date math against purgeAt.
+async function listDeleted(filters = {}) {
+  const page = normalizePage(filters.page);
+  const pageSize = clampPageSize(filters.pageSize);
+  const sortBy = DELETED_SORTABLE_FIELDS.includes(filters.sortBy) ? filters.sortBy : 'deletedAt';
+  const sortDirection = filters.sortDirection === 'asc' ? 'asc' : 'desc';
+
+  const where = { deletedAt: { not: null } };
+  if (filters.search) where.trainerName = { contains: filters.search };
+
+  const [profiles, total] = await Promise.all([
+    prisma.trainerProfile.findMany({
+      where,
+      orderBy: { [sortBy]: sortDirection },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.trainerProfile.count({ where }),
+  ]);
+
+  const now = Date.now();
+  const results = profiles.map((p) => ({
+    auth0UserId: p.auth0UserId,
+    trainerName: p.trainerName,
+    deletedAt: p.deletedAt,
+    purgeAt: p.purgeAt,
+    deletedBy: p.deletedBy,
+    deletionType: p.deletionType,
+    daysUntilPurge: Math.max(0, Math.ceil((new Date(p.purgeAt).getTime() - now) / MS_PER_DAY)),
+  }));
+
+  return { results, page, pageSize, total };
+}
+
 // Full detail for one trainer — reuses teamService.getTeam() (not
 // reimplemented) for the real, PokeAPI-enriched Dream Team. Deliberately
 // excludes TrainerNote content (private by design, same standing rule as
@@ -162,4 +203,4 @@ async function getDetail(auth0UserId) {
   };
 }
 
-module.exports = { list, getDetail };
+module.exports = { list, listDeleted, getDetail };
