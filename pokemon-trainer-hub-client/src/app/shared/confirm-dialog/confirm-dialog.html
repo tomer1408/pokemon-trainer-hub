@@ -11,7 +11,7 @@
         type="text"
         class="confirm-input"
         [attr.aria-label]="'Type ' + phrase + ' to confirm'"
-        [placeholder]="phrase"
+        placeholder="Type here"
         [value]="typedText()"
         (input)="onTypedTextChange($any($event.target).value)"
         autocomplete="off"
