@@ -4,12 +4,23 @@ const jwtCheck = require('../middleware/auth');
 const { MIN_AGE, calculateAge, calculateAgeRange } = require('../services/ageRange');
 const { validateTeamNameValue } = require('../services/teamNameFallback');
 const accountService = require('../services/accountService');
+const { getAuth0User } = require('../services/auth0Management');
 
 const router = express.Router();
 
 // Server-authoritative — never trust a client-sent policyVersion for a
 // compliance-relevant field.
 const CURRENT_POLICY_VERSION = 'v1';
+
+// The restoration-request SupportRequest's topic is always derived from the
+// caller's own real deletionType — never accepted from the client — so a
+// self-deleted trainer's genuine "please restore me" request is always
+// distinguishable, in the Admin's Support Requests queue, from an
+// admin-deleted trainer's "you blocked me, here's my message" contact.
+const RESTORATION_TOPIC_BY_DELETION_TYPE = {
+  self: 'account_restoration',
+  admin: 'account_blocked_contact',
+};
 
 // Only safe, user-facing fields are ever sent to the client — never the
 // internal row id or the Auth0 subject/user id.
@@ -275,6 +286,56 @@ router.delete('/', jwtCheck, async (req, res) => {
     message:
       'Your account has been deleted. You have 30 days to request restoration by logging back in — after that, it is permanently removed.',
   });
+});
+
+// Submits a restoration request while soft-deleted — the entry point a
+// soft-deleted trainer reaches by logging back in during their 30-day
+// window (see pages/restore-account/ on the client). Reuses the existing
+// SupportRequest table/Admin Support Requests page unmodified rather than
+// building a new model/admin UI: `topic` is always derived server-side from
+// the caller's own real `deletionType` (RESTORATION_TOPIC_BY_DELETION_TYPE
+// above), never accepted from the client. Only an admin can act on this —
+// submitting it never restores anything by itself (see
+// routes/adminTrainers.js's PATCH /:id/restore, added in a later phase).
+router.post('/restoration-request', jwtCheck, async (req, res) => {
+  const message = typeof req.body.message === 'string' ? req.body.message.trim() : '';
+  if (!message) {
+    return res.status(400).json({ message: 'A message is required.' });
+  }
+
+  const profile = await prisma.trainerProfile.findUnique({
+    where: { auth0UserId: req.auth.payload.sub },
+    select: { trainerName: true, deletedAt: true, deletionType: true },
+  });
+
+  // Never trust a client claim of "I'm deleted" — only a genuinely
+  // soft-deleted account (deletedAt set) can submit this. An active
+  // trainer, or one with no profile at all, gets a plain 400/404.
+  if (!profile) {
+    return res.status(404).json({ message: 'No profile found for this user.' });
+  }
+  if (!profile.deletedAt) {
+    return res.status(400).json({ message: 'This account is not currently deleted.' });
+  }
+
+  let email;
+  try {
+    email = (await getAuth0User(req.auth.payload.sub)).email;
+  } catch (err) {
+    return res.status(502).json({ message: 'Could not reach Auth0 to submit your request. Please try again.' });
+  }
+
+  const request = await prisma.supportRequest.create({
+    data: {
+      auth0UserId: req.auth.payload.sub,
+      name: profile.trainerName,
+      email,
+      topic: RESTORATION_TOPIC_BY_DELETION_TYPE[profile.deletionType],
+      message,
+    },
+  });
+
+  res.status(201).json({ id: request.id, createdAt: request.createdAt });
 });
 
 module.exports = router;

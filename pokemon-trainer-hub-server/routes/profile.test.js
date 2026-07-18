@@ -10,6 +10,7 @@ describe('routes/profile', () => {
   let request;
   let prisma;
   let accountService;
+  let auth0Management;
   const FAKE_USER = 'auth0|test-user';
 
   const validSignup = {
@@ -38,6 +39,9 @@ describe('routes/profile', () => {
         upsert: mock.fn(async ({ create, update }) => ({ ...(create || update) })),
         update: mock.fn(async ({ data }) => ({ ...data })),
       },
+      supportRequest: {
+        create: mock.fn(async ({ data }) => ({ id: 1, createdAt: new Date(), ...data })),
+      },
     };
     mock.module(path.resolve(__dirname, '../services/prisma.js'), { exports: { default: prisma } });
 
@@ -46,6 +50,9 @@ describe('routes/profile', () => {
       softDeleteAccount: mock.fn(async () => {}),
     };
     mock.module(path.resolve(__dirname, '../services/accountService.js'), { exports: accountService });
+
+    auth0Management = { getAuth0User: mock.fn(async () => ({ email: 'ash@example.com' })) };
+    mock.module(path.resolve(__dirname, '../services/auth0Management.js'), { exports: auth0Management });
 
     const express = require('express');
     const supertest = require('supertest');
@@ -68,6 +75,10 @@ describe('routes/profile', () => {
     accountService.deleteAccount.mock.mockImplementation(async () => ({ auth0DeleteFailed: false }));
     accountService.softDeleteAccount.mock.resetCalls();
     accountService.softDeleteAccount.mock.mockImplementation(async () => {});
+    prisma.supportRequest.create.mock.resetCalls();
+    prisma.supportRequest.create.mock.mockImplementation(async ({ data }) => ({ id: 1, createdAt: new Date(), ...data }));
+    auth0Management.getAuth0User.mock.resetCalls();
+    auth0Management.getAuth0User.mock.mockImplementation(async () => ({ email: 'ash@example.com' }));
   });
 
   describe('GET /', () => {
@@ -325,6 +336,93 @@ describe('routes/profile', () => {
       await request.delete('/api/profile');
 
       assert.equal(accountService.deleteAccount.mock.calls.length, 0);
+    });
+  });
+
+  describe('POST /restoration-request', () => {
+    test('rejects a missing/empty message before ever touching the database', async () => {
+      const res = await request.post('/api/profile/restoration-request').send({ message: '   ' });
+
+      assert.equal(res.status, 400);
+      assert.equal(prisma.trainerProfile.findUnique.mock.calls.length, 0);
+    });
+
+    test('returns 404 when the caller has no profile at all', async () => {
+      const res = await request.post('/api/profile/restoration-request').send({ message: 'please restore me' });
+
+      assert.equal(res.status, 404);
+    });
+
+    test('rejects with 400 when the caller\'s account is not actually deleted — never trusts a client claim', async () => {
+      prisma.trainerProfile.findUnique.mock.mockImplementationOnce(async () => ({
+        trainerName: 'Ash',
+        deletedAt: null,
+        deletionType: null,
+      }));
+
+      const res = await request.post('/api/profile/restoration-request').send({ message: 'please restore me' });
+
+      assert.equal(res.status, 400);
+      assert.equal(prisma.supportRequest.create.mock.calls.length, 0);
+    });
+
+    test('a self-deleted trainer creates a real SupportRequest with topic "account_restoration"', async () => {
+      prisma.trainerProfile.findUnique.mock.mockImplementationOnce(async () => ({
+        trainerName: 'Ash',
+        deletedAt: new Date(),
+        deletionType: 'self',
+      }));
+
+      const res = await request.post('/api/profile/restoration-request').send({ message: 'I made a mistake, please restore my account.' });
+
+      assert.equal(res.status, 201);
+      const data = prisma.supportRequest.create.mock.calls[0].arguments[0].data;
+      assert.equal(data.auth0UserId, FAKE_USER);
+      assert.equal(data.name, 'Ash');
+      assert.equal(data.email, 'ash@example.com');
+      assert.equal(data.topic, 'account_restoration');
+      assert.equal(data.message, 'I made a mistake, please restore my account.');
+    });
+
+    test('an admin-deleted trainer creates a real SupportRequest with topic "account_blocked_contact"', async () => {
+      prisma.trainerProfile.findUnique.mock.mockImplementationOnce(async () => ({
+        trainerName: 'Ash',
+        deletedAt: new Date(),
+        deletionType: 'admin',
+      }));
+
+      const res = await request.post('/api/profile/restoration-request').send({ message: 'Why was my account blocked?' });
+
+      assert.equal(res.status, 201);
+      assert.equal(prisma.supportRequest.create.mock.calls[0].arguments[0].data.topic, 'account_blocked_contact');
+    });
+
+    test('never accepts a client-sent topic — only the real deletionType decides it', async () => {
+      prisma.trainerProfile.findUnique.mock.mockImplementationOnce(async () => ({
+        trainerName: 'Ash',
+        deletedAt: new Date(),
+        deletionType: 'self',
+      }));
+
+      await request.post('/api/profile/restoration-request').send({ message: 'hi', topic: 'not-a-real-topic' });
+
+      assert.equal(prisma.supportRequest.create.mock.calls[0].arguments[0].data.topic, 'account_restoration');
+    });
+
+    test('returns 502 when Auth0 is unreachable, rather than crashing or faking an email', async () => {
+      prisma.trainerProfile.findUnique.mock.mockImplementationOnce(async () => ({
+        trainerName: 'Ash',
+        deletedAt: new Date(),
+        deletionType: 'self',
+      }));
+      auth0Management.getAuth0User.mock.mockImplementationOnce(async () => {
+        throw new Error('network down');
+      });
+
+      const res = await request.post('/api/profile/restoration-request').send({ message: 'please restore me' });
+
+      assert.equal(res.status, 502);
+      assert.equal(prisma.supportRequest.create.mock.calls.length, 0);
     });
   });
 });
