@@ -49,6 +49,14 @@ describe('routes/adminSupport', () => {
     adminSupportService.getById.mock.mockImplementation(async () => null);
   });
 
+  test('returns 401 when no token is present', async () => {
+    authPayload = undefined;
+
+    const res = await request.get('/api/admin/support');
+
+    assert.equal(res.status, 401);
+  });
+
   test('returns 403 when the token lacks support:manage', async () => {
     authPayload = { sub: 'auth0|trainer', permissions: ['admin:read'] };
 

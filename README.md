@@ -390,3 +390,47 @@ Response: `{ id, opponentName, difficulty, rounds, roundsPlayed, opponentType, l
 
 **`POST /api/battle-history`** — records one completed match, called once by the client when a Battle match is decided; never blocks the match-over screen if it fails.
 Body: `{ opponentName, difficulty, opponentType, luckFactor, rounds, roundsPlayed, yourWins, oppWins, result: "win" | "loss", roundDetails: object[], teamSnapshot: object[] }` — all required. `400` if any field is missing/malformed. `201 { id, createdAt }` on success.
+
+## Admin Dashboard
+
+A separate, real-permission-gated area at `/admin` (client) and `/api/admin/*` (server) for the app's own operators — Support Request management, Trainer management, an Overview of real KPIs, System Health, Analytics, and a read-only Database Explorer. Not a trainer-facing feature; nothing here is reachable without a real Auth0 role.
+
+### Auth0 setup (one-time)
+
+1. APIs → your API → Settings → enable **RBAC** and **Add Permissions in the Access Token**.
+2. APIs → your API → Permissions → add exactly: `admin:read`, `support:manage`, `users:manage`, `database:read`.
+3. User Management → Roles → create an **Admin** role → assign all 4 permissions to it.
+4. User Management → Users → your user → Roles → assign the Admin role.
+5. **Log out and back in** after any role/permission change — a cached access token keeps holding the old claim otherwise.
+6. Verify by decoding the real access token **locally** (browser DevTools) and confirming the `permissions` array is present — never paste a real token into a third-party site.
+
+No new environment variables — the Admin Dashboard reuses the same `AUTH0_M2M_CLIENT_ID`/`AUTH0_M2M_CLIENT_SECRET` (Trainers' "Refresh Auth0 Info") and `SENTRY_DSN`/`GOOGLE_API_KEY` (System Health's configured-check) the rest of the app already has configured.
+
+### Permission mapping
+
+| Permission | Grants |
+|---|---|
+| `admin:read` | Overview, System Health, Analytics |
+| `support:manage` | Support Requests |
+| `users:manage` | Trainers (list, detail, Auth0 info, account deletion) |
+| `database:read` | Database Explorer |
+
+Every permission is re-checked **server-side** on every request (`middleware/requirePermission.js`) — the client-side guard (`adminGuard`/`AdminService`) is a UX convenience only, and fails closed (zero permissions) on every error mode. No admin page ever renders a full raw Auth0 user id.
+
+### Endpoints
+
+All routes below require a valid Auth0 access token **and** the specific permission listed — a token missing the permission gets `403`; no token gets `401`.
+
+| Route | Permission | Notes |
+|---|---|---|
+| `GET /api/admin/ping` | `admin:read` | Smoke-test route, proves the auth chain end to end. |
+| `GET/PATCH /api/admin/support`, `/api/admin/support/:id` | `support:manage` | Status/priority validated allowlists; original message/name/email immutable. |
+| `GET /api/admin/trainers`, `/:id`, `/:id/auth0`, `DELETE /:id` | `users:manage` | Deletion reuses the same `accountService.deleteAccount` self-service uses. |
+| `GET /api/admin/overview` | `admin:read` | Real KPIs, recent support requests, recent cross-model activity — one response. |
+| `GET /api/admin/system` | `admin:read` | Real DB/PokeAPI checks; Gemini/Sentry reported as configured/not-configured only, never a fabricated "Operational". |
+| `GET /api/admin/analytics` | `admin:read` | Real over-time series, funnel, popularity/battle/support distributions. Deliberately excludes DAU/MAU/retention/page-views — this app has no data source for them (see "Deferred: product analytics tracking" below). |
+| `GET /api/admin/database/tables`, `/:table`, `/:table/:id` | `database:read` | Read-only browser over 8 whitelisted models; every response is masked server-side (`services/adminDatabaseRegistry.js`) before it ever leaves the API. |
+
+### Deferred: product analytics tracking
+
+The Analytics page only ever shows metrics computable from data this app already stores. DAU, MAU, retention, last-login/last-active, and page-view tracking are explicitly **not** implemented — there's no event-collection infrastructure for any of them yet, and this project's own standing rule is to never simulate a metric it can't back with a real query. A full design for that infrastructure (event schema, approved event registry, privacy constraints) is scoped as a deferred, not-yet-approved future phase in `ADMIN_DASHBOARD_PLAN.md`.

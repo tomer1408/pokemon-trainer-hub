@@ -5,12 +5,12 @@ const path = require('node:path');
 // Route-level test: exercises the real Express router + the real
 // requirePermission middleware on top of it, with only middleware/auth.js
 // (jwtCheck) swapped for a test double — same convention as routes/team.test.js
-// — so this never touches a real Auth0 tenant. jwtCheck's own real 401
-// behavior (an entirely missing/invalid token) is covered separately by
-// middleware/requirePermission.test.js's "req.auth.payload missing" case;
-// this file is about proving requirePermission is genuinely wired onto the
-// route and reacts correctly to what a real token's `permissions` claim
-// would contain.
+// — so this never touches a real Auth0 tenant. The 401 case below covers
+// req.auth.payload missing at the route level (same underlying behavior
+// middleware/requirePermission.test.js already unit-tests in isolation);
+// the rest of this file proves requirePermission is genuinely wired onto
+// the route and reacts correctly to what a real token's `permissions`
+// claim would contain.
 describe('routes/admin', () => {
   let request;
   let authPayload;
@@ -46,6 +46,14 @@ describe('routes/admin', () => {
       assert.equal(res.status, 200);
       assert.equal(res.body.status, 'ok');
       assert.ok(res.body.message);
+    });
+
+    test('returns 401 when no token is present', async () => {
+      authPayload = undefined;
+
+      const res = await request.get('/api/admin/ping');
+
+      assert.equal(res.status, 401);
     });
 
     test('returns 403 when the token is valid but lacks admin:read', async () => {

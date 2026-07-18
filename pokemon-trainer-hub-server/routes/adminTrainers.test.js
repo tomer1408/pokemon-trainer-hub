@@ -58,6 +58,14 @@ describe('routes/adminTrainers', () => {
     accountService.deleteAccount.mock.mockImplementation(async () => ({ auth0DeleteFailed: false }));
   });
 
+  test('returns 401 when no token is present', async () => {
+    authPayload = undefined;
+
+    const res = await request.get('/api/admin/trainers');
+
+    assert.equal(res.status, 401);
+  });
+
   test('returns 403 when the token lacks users:manage', async () => {
     authPayload = { sub: 'auth0|trainer', permissions: ['admin:read'] };
 

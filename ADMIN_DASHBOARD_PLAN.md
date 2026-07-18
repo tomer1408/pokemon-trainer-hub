@@ -13,12 +13,12 @@ anything said earlier in conversation.
 |---|---|---|
 | 0 | Admin authorization foundation | ✅ Done, tested, **committed locally** on `feature/admin-phase0-authorization` (not merged/pushed) |
 | 1 | Schema migration + Support Request management + AdminLayout/sidebar | ✅ Done, tested, **committed locally** (`1648016`) |
-| 2 | Trainer management | ✅ Done, tested, **not yet committed** |
-| 3 | Admin Overview (real KPIs) | ✅ Done, tested, **not yet committed** |
-| 4 | System Health | ✅ Done, tested, **not yet committed** |
-| 5 | Analytics | ✅ Done, tested, **not yet committed** |
-| 6 | Database Explorer | ✅ Done, tested, **not yet committed** |
-| 7 | Tests/docs/final verification pass | ⏳ Not started |
+| 2 | Trainer management | ✅ Done, tested, **committed locally** (`cbcffa2`) |
+| 3 | Admin Overview (real KPIs) | ✅ Done, tested, **committed locally** (`b713bbd`) |
+| 4 | System Health | ✅ Done, tested, **committed locally** (`60a3f82`) |
+| 5 | Analytics | ✅ Done, tested, **committed locally** (`59221c1`) |
+| 6 | Database Explorer | ✅ Done, tested, **committed locally** (`12f8d61`) |
+| 7 | Tests/docs/final verification pass | ✅ Done, tested, **not yet committed** |
 | 8 | Product Analytics Tracking (DAU/MAU/retention/page-views) | 🔭 Deferred — scoped below, **not approved, not started** |
 
 **Design source of truth:** Claude Design project `229f2acb-d143-4263-a151-ae50d008f03c`, file `Admin Dashboard.dc.html` (1,845 lines, covers all 6 areas + sidebar/header shell). Use it as the authoritative visual spec per phase — colors/spacing translated into this app's own existing CSS-variable system (`--bg/--surface/--text-body/--primary/--accent/--success/--error/--warning/--info`), not copied as raw hex.
@@ -92,9 +92,17 @@ anything said earlier in conversation.
 - Client: `core/admin-database.ts`, a genuinely model-agnostic `shared/admin-data-table` (columns derived from the real union of keys across the current rows — the one place in this feature that needs a fully dynamic grid, unlike Support/Trainers' fixed-column tables), and `pages/admin/database` — table-selector sidebar (real per-table counts), search, pagination, and a record-details drawer with prev/next navigation within the loaded page and a small JSON pretty-printer for any field whose value looks like a JSON string (used by `BattleMatch.roundsJson`/`teamSnapshotJson`). Database Explorer is now a real, enabled sidebar link.
 - Note: unlike Phase 2's Trainers page, there's no "Copy real ID" action here — the raw `auth0UserId` never reaches the client at all in this phase (masked server-side before the response leaves the API), so there's no unmasked value left to copy.
 
-## Phase 7 — Tests, docs, final verification
+## Phase 7 — Tests, docs, final verification ✅
 
-- 401/403/200 coverage for every `/api/admin/*` family; service unit tests; whitelist/masking/page-cap tests; audit-log-creation tests. `adminGuard` allow/deny/redirect cases, nav visibility, loading/empty/error states, filters, pagination, confirm-before-delete on the frontend. README "Admin Dashboard" section. Full `npm test` both sides + production build + `prisma migrate diff` sanity check.
+- Audited (not re-derived from memory) every requirement below against the real test files before reporting anything done:
+  - 401/403/200 coverage for every `/api/admin/*` route family — **found and fixed a real gap**: `routes/admin.test.js`, `adminSupport.test.js`, and `adminTrainers.test.js` (Phases 0-2) never had a direct in-file 401 test, unlike every later phase's route test; added one to each for consistency (the underlying 401 behavior was already covered once, in `middleware/requirePermission.test.js`, but not per-route).
+  - Service unit tests, whitelist/masking/page-cap tests, audit-log-creation tests — already solid across every phase, confirmed via direct inspection (no gaps found).
+  - `adminGuard` allow/deny/redirect cases — already comprehensive (`shared/admin-guard.spec.ts`: allows on a matching permission for 2+ different routes, redirects to `/admin/access-denied` on a missing permission, an empty permissions array, and a route declaring no permission at all).
+  - Nav visibility, loading/empty/error states, filters, pagination, confirm-before-delete — already covered per page, confirmed via direct inspection of every `pages/admin/**/*.spec.ts` file (no gaps found).
+- `README.md` — new "Admin Dashboard" section: what it is, the 4-permission Auth0 setup steps, the permission mapping table, the full `/api/admin/*` endpoint list, and a note on the deferred Phase 8.
+- `npx prisma migrate status` — 15 migrations found, all applied, **"Database schema is up to date!"** (the shadow-DB-based `prisma migrate diff` sanity check needs a `shadowDatabaseUrl` this local setup doesn't have configured — `migrate status` against the real local DB answers the same "is there drift" question without spinning up new DB infrastructure unprompted).
+- Full `npm test` both sides (298/298 server, 682/682 client) + production build, then a real end-to-end smoke check: server restarted fresh, all 7 `/api/admin/*` route families (`ping`/`support`/`trainers`/`overview`/`system`/`analytics`/`database/tables`) confirmed returning a real `401` with no token.
+- **Comprehensive cross-phase verification pass (0-7), done at the user's explicit request after Phase 7's own report**: re-ran every test suite fresh (298/298 server, 682/682 client), re-ran the production build, cross-checked server-side route permissions against the client-side route/nav permissions and both docs (no mismatches), confirmed no leftover "Soon" sidebar placeholders, confirmed every admin service/shared component is actually referenced somewhere (no orphans), and re-ran the full live end-to-end smoke test (`/api/health` → 200, all 7 admin route families → 401, including the `__proto__` whitelist edge case). Found and fixed one real issue: this Status table had drifted — Phases 2-5 were already committed (`cbcffa2`/`b713bbd`/`60a3f82`/`59221c1`) but still showed "not yet committed" here. Also flagged (not fixed, since it lives in an already-committed Phase 0 file): the client's `AdminService.ping()` has had zero callers since Phase 3 replaced the Overview placeholder — the server route it hits (`GET /api/admin/ping`) stays genuinely useful as a manual auth-chain smoke test and is documented as such in the README, but the client method itself is dead code.
 
 ## Phase 8 — Product Analytics Tracking (deferred — NOT approved, NOT started)
 
