@@ -20,6 +20,11 @@ const NAV_ITEMS: AdminNavItem[] = [
   { path: '', label: 'Overview', permission: 'admin:read', built: true },
   { path: 'support', label: 'Support Requests', permission: 'support:manage', built: true },
   { path: 'trainers', label: 'Trainers', permission: 'users:manage', built: true },
+  // Deliberately a top-level path, not "trainers/deleted" — isOnItem()'s
+  // prefix check (path === item.path || path.startsWith(item.path + '/'))
+  // would otherwise make this sub-path of "trainers" match BOTH nav items
+  // at once (double-highlight, wrong breadcrumb).
+  { path: 'recently-deleted', label: 'Recently Deleted', permission: 'users:manage', built: true },
   { path: 'analytics', label: 'Analytics', permission: 'admin:read', built: true },
   { path: 'system', label: 'System Health', permission: 'admin:read', built: true },
   { path: 'database', label: 'Database Explorer', permission: 'database:read', built: true },

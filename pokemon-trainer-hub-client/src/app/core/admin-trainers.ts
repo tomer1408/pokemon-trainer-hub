@@ -33,6 +33,8 @@ export interface TrainerListResult {
   total: number;
 }
 
+export type DeletionType = 'self' | 'admin';
+
 export interface TrainerDetailProfile {
   auth0UserId: string;
   trainerName: string;
@@ -48,6 +50,37 @@ export interface TrainerDetailProfile {
   hasCompletedStarterQuiz: boolean;
   whosThatBestStreak: number;
   createdAt: string;
+  // Soft-delete state — all four null/undefined means "active, not
+  // deleted" (see accountService.softDeleteAccount on the server).
+  deletedAt: string | null;
+  purgeAt: string | null;
+  deletedBy: string | null;
+  deletionType: DeletionType | null;
+}
+
+export interface DeletedTrainerListItem {
+  auth0UserId: string;
+  trainerName: string;
+  deletedAt: string;
+  purgeAt: string;
+  deletedBy: string;
+  deletionType: DeletionType;
+  daysUntilPurge: number;
+}
+
+export interface DeletedTrainerListFilters {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  sortBy?: string;
+  sortDirection?: 'asc' | 'desc';
+}
+
+export interface DeletedTrainerListResult {
+  results: DeletedTrainerListItem[];
+  page: number;
+  pageSize: number;
+  total: number;
 }
 
 export interface TrainerTeamMember {
@@ -131,9 +164,42 @@ export class AdminTrainersService {
     return this.http.get<Auth0UserInfo>(`${API_BASE}/admin/trainers/${encodeURIComponent(auth0UserId)}/auth0`);
   }
 
-  // Reuses the exact same deletion the self-service Delete My Account flow
-  // uses (services/accountService.js on the server) — not a second path.
+  // Soft-deletes (see routes/adminTrainers.js's DELETE /:id) — reuses the
+  // exact same function the self-service Delete My Account flow uses
+  // (services/accountService.js on the server), not a second path. The
+  // trainer has 30 days to request restoration; only an admin can actually
+  // restore them (restoreTrainer() below).
   deleteTrainer(auth0UserId: string): Observable<DeleteTrainerResult> {
     return this.http.delete<DeleteTrainerResult>(`${API_BASE}/admin/trainers/${encodeURIComponent(auth0UserId)}`);
+  }
+
+  // The Recently Deleted list — only soft-deleted trainers, real
+  // daysUntilPurge computed server-side.
+  listDeleted(filters: DeletedTrainerListFilters = {}): Observable<DeletedTrainerListResult> {
+    let params = new HttpParams();
+    for (const [key, value] of Object.entries(filters)) {
+      if (value !== undefined && value !== null && value !== '') {
+        params = params.set(key, String(value));
+      }
+    }
+    return this.http.get<DeletedTrainerListResult>(`${API_BASE}/admin/trainers/deleted`, { params });
+  }
+
+  // The only way a soft-deleted account ever comes back — never automatic,
+  // never self-service (see routes/adminTrainers.js's PATCH /:id/restore).
+  restoreTrainer(auth0UserId: string): Observable<{ message: string }> {
+    return this.http.patch<{ message: string }>(
+      `${API_BASE}/admin/trainers/${encodeURIComponent(auth0UserId)}/restore`,
+      {},
+    );
+  }
+
+  // The real, irreversible deletion — bypasses the 30-day process
+  // entirely. Works on an active trainer (a direct force-delete) or an
+  // already soft-deleted one ("Delete Forever" from Recently Deleted).
+  permanentlyDeleteTrainer(auth0UserId: string): Observable<DeleteTrainerResult> {
+    return this.http.delete<DeleteTrainerResult>(
+      `${API_BASE}/admin/trainers/${encodeURIComponent(auth0UserId)}/permanent`,
+    );
   }
 }

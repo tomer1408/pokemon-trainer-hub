@@ -39,6 +39,13 @@
         </a>
       }
 
+      @if (admin.hasPermission('users:manage')) {
+        <a routerLink="/admin/recently-deleted" (click)="closeSidebar()" class="nav-item" [class.active]="isActive('recently-deleted')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span>Recently Deleted</span>
+        </a>
+      }
+
       @if (admin.hasPermission('admin:read')) {
         <a routerLink="/admin/analytics" (click)="closeSidebar()" class="nav-item" [class.active]="isActive('analytics')">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>

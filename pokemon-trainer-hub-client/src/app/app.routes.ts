@@ -134,6 +134,13 @@ export const routes: Routes = [
           import('./pages/admin/trainer-detail/trainer-detail').then((m) => m.AdminTrainerDetail),
       },
       {
+        path: 'recently-deleted',
+        canActivate: [adminGuard],
+        data: { permission: 'users:manage' },
+        loadComponent: () =>
+          import('./pages/admin/recently-deleted/recently-deleted').then((m) => m.AdminRecentlyDeleted),
+      },
+      {
         path: 'system',
         canActivate: [adminGuard],
         data: { permission: 'admin:read' },

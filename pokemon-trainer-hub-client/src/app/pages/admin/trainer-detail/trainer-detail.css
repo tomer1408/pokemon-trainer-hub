@@ -206,10 +206,34 @@
   border-color: var(--danger);
 }
 
+.danger-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .delete-btn {
   align-self: flex-start;
   border: none;
   background: var(--danger);
+  color: #fff;
+  border-radius: 100px;
+  padding: 11px 22px;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.delete-forever-btn {
+  background: transparent;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+}
+
+.restore-btn {
+  align-self: flex-start;
+  border: none;
+  background: var(--success);
   color: #fff;
   border-radius: 100px;
   padding: 11px 22px;

@@ -54,4 +54,32 @@ describe('AdminTrainersService', () => {
     expect(req.request.method).toBe('DELETE');
     req.flush({ message: 'Deleted.' });
   });
+
+  it('listDeleted() sends only the real, non-empty filters as query params', () => {
+    let result: import('./admin-trainers').DeletedTrainerListResult | undefined;
+    service.listDeleted({ search: 'ash', page: 2 }).subscribe((r) => (result = r));
+
+    const req = httpMock.expectOne(
+      (r) => r.url === `${API_BASE}/admin/trainers/deleted` && r.params.get('search') === 'ash' && r.params.get('page') === '2',
+    );
+    req.flush({ results: [], page: 2, pageSize: 20, total: 0 });
+
+    expect(result?.page).toBe(2);
+  });
+
+  it('restoreTrainer() PATCHes the real, encoded restore endpoint', () => {
+    service.restoreTrainer('auth0|abc123').subscribe();
+
+    const req = httpMock.expectOne(`${API_BASE}/admin/trainers/auth0%7Cabc123/restore`);
+    expect(req.request.method).toBe('PATCH');
+    req.flush({ message: 'Restored.' });
+  });
+
+  it('permanentlyDeleteTrainer() DELETEs the real, encoded /permanent endpoint', () => {
+    service.permanentlyDeleteTrainer('auth0|abc123').subscribe();
+
+    const req = httpMock.expectOne(`${API_BASE}/admin/trainers/auth0%7Cabc123/permanent`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush({ message: 'Permanently deleted.' });
+  });
 });

@@ -87,11 +87,30 @@
     </div>
 
     <!-- Danger zone -->
-    <div class="card danger-card span-2">
-      <span class="card-title">Danger Zone</span>
-      <p class="card-helper">Delete this trainer's account. They'll have 30 days to request restoration before it's permanent.</p>
-      <button type="button" class="delete-btn" (click)="requestDelete()">Delete This Account</button>
-    </div>
+    @if (isDeleted()) {
+      <div class="card danger-card span-2">
+        <span class="card-title">Scheduled for Deletion</span>
+        <div class="meta-grid">
+          <div class="meta-cell"><span class="meta-label">Deleted By</span><span class="meta-value">{{ d.profile.deletionType === 'self' ? 'Themselves' : maskId(d.profile.deletedBy || '') }}</span></div>
+          <div class="meta-cell"><span class="meta-label">Deleted On</span><span class="meta-value">{{ d.profile.deletedAt | date: 'medium' }}</span></div>
+          <div class="meta-cell"><span class="meta-label">Days Until Permanent</span><span class="meta-value">{{ daysUntilPurge() }}</span></div>
+        </div>
+        <p class="card-helper">This account is blocked and scheduled for permanent deletion. Restore it to give the trainer their access back, or delete it forever right now.</p>
+        <div class="danger-actions">
+          <button type="button" class="restore-btn" (click)="requestRestore()">Restore Account</button>
+          <button type="button" class="delete-btn" (click)="requestPermanentDelete()">Delete Forever</button>
+        </div>
+      </div>
+    } @else {
+      <div class="card danger-card span-2">
+        <span class="card-title">Danger Zone</span>
+        <p class="card-helper">Delete this trainer's account. They'll have 30 days to request restoration before it's permanent.</p>
+        <div class="danger-actions">
+          <button type="button" class="delete-btn" (click)="requestDelete()">Delete This Account</button>
+          <button type="button" class="delete-btn delete-forever-btn" (click)="requestPermanentDelete()">Delete Forever</button>
+        </div>
+      </div>
+    }
   </div>
 
   @if (showDeleteConfirm()) {
@@ -107,6 +126,36 @@
       [isPikachu]="theme.isPikachu()"
       (confirmed)="confirmDelete()"
       (cancelled)="cancelDelete()"
+    />
+  }
+
+  @if (showPermanentDeleteConfirm()) {
+    <app-confirm-dialog
+      title="Permanently delete this trainer's account?"
+      body="This bypasses the 30-day recovery window entirely — their trainer profile, Dream Team, favorites, notes, support requests, battle history, and their login itself are deleted right now. This cannot be undone and will be recorded in the audit log."
+      confirmLabel="Delete Forever"
+      [requireTypedPhrase]="d.profile.trainerName"
+      [destructive]="true"
+      [busy]="permanentDeleting()"
+      [error]="permanentDeleteError()"
+      [isLight]="theme.isLight()"
+      [isPikachu]="theme.isPikachu()"
+      (confirmed)="confirmPermanentDelete()"
+      (cancelled)="cancelPermanentDelete()"
+    />
+  }
+
+  @if (showRestoreConfirm()) {
+    <app-confirm-dialog
+      title="Restore this trainer's account?"
+      body="Their account will be immediately reactivated and they'll be able to log in and use the app again."
+      confirmLabel="Restore Account"
+      [busy]="restoring()"
+      [error]="restoreError()"
+      [isLight]="theme.isLight()"
+      [isPikachu]="theme.isPikachu()"
+      (confirmed)="confirmRestore()"
+      (cancelled)="cancelRestore()"
     />
   }
 }

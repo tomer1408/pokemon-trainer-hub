@@ -29,6 +29,7 @@ describe('AdminLayout', () => {
               { path: 'support', component: Dummy },
               { path: 'trainers', component: Dummy },
               { path: 'trainers/:id', component: Dummy },
+              { path: 'recently-deleted', component: Dummy },
               { path: 'system', component: Dummy },
               { path: 'analytics', component: Dummy },
               { path: 'database', component: Dummy },
@@ -112,6 +113,28 @@ describe('AdminLayout', () => {
     expect(trainersLink).toBeTruthy();
     expect(trainersLink!.getAttribute('href')).toBe('/admin/trainers');
     expect(fixture.nativeElement.textContent).not.toMatch(/Trainers\s*Soon/);
+  });
+
+  it('the Recently Deleted item is a real, enabled link with its own top-level path', () => {
+    const fixture = setup();
+    const links: HTMLAnchorElement[] = fixture.nativeElement.querySelectorAll('a.nav-item');
+    const link = Array.from(links).find((a) => a.textContent?.includes('Recently Deleted'));
+
+    expect(link).toBeTruthy();
+    expect(link!.getAttribute('href')).toBe('/admin/recently-deleted');
+  });
+
+  it('being on /admin/recently-deleted highlights ONLY that item, never also Trainers', async () => {
+    const fixture = setup();
+    const router = TestBed.inject(Router);
+
+    await router.navigateByUrl('/admin/recently-deleted');
+    fixture.detectChanges();
+
+    const inst = fixture.componentInstance as any;
+    expect(inst.isActive('recently-deleted')).toBe(true);
+    expect(inst.isActive('trainers')).toBe(false);
+    expect(inst.currentItem().label).toBe('Recently Deleted');
   });
 
   it('the System Health item is a real, enabled link — not the "Soon" placeholder', () => {

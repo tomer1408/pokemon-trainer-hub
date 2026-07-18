@@ -1,0 +1,89 @@
+<div class="toolbar">
+  <span class="count-chip">{{ total() }} recently deleted</span>
+  <input
+    type="text"
+    class="search-input"
+    placeholder="Search by trainer name…"
+    [value]="searchInput()"
+    (input)="searchInput.set($any($event.target).value)"
+  />
+</div>
+
+<div class="table-card">
+  @if (isLoading()) {
+    <div class="state-block">Loading…</div>
+  } @else if (loadError()) {
+    <div class="state-block error">Could not load recently deleted trainers. Please try again.</div>
+  } @else if (trainers().length === 0) {
+    <div class="state-block">No recently deleted trainers.</div>
+  } @else {
+    <div class="table-scroll">
+      <div class="deleted-table">
+        <div class="head-row">
+          <span>Trainer</span>
+          <span>Deleted By</span>
+          <span>Deleted On</span>
+          <span>Days Left</span>
+          <span class="head-actions">Actions</span>
+        </div>
+        @for (t of trainers(); track t.auth0UserId) {
+          <div class="body-row">
+            <span class="cell-name">
+              {{ t.trainerName }}
+              <span class="cell-id">{{ maskId(t.auth0UserId) }}</span>
+            </span>
+            <span>
+              <app-status-badge
+                [label]="t.deletionType"
+                [variant]="deletionTypeVariant(t.deletionType)"
+                [isLight]="theme.isLight()"
+                [isPikachu]="theme.isPikachu()"
+              />
+            </span>
+            <span class="cell-mono">{{ t.deletedAt | date: 'MMM d, y' }}</span>
+            <span class="cell-days">{{ t.daysUntilPurge }}</span>
+            <span class="cell-actions">
+              <button type="button" class="restore-btn" (click)="requestRestore(t)">Restore</button>
+              <button type="button" class="delete-forever-btn" (click)="requestPermanentDelete(t)">Delete Forever</button>
+            </span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="pagination-footer">
+      <span class="page-info">Page {{ page() }} of {{ totalPages() }}</span>
+      <app-pagination [page]="page()" [totalPages]="totalPages()" [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" (pageChange)="setPage($event)" />
+    </div>
+  }
+</div>
+
+@if (restoreTarget(); as target) {
+  <app-confirm-dialog
+    title="Restore this trainer's account?"
+    body="Their account will be immediately reactivated and they'll be able to log in and use the app again."
+    confirmLabel="Restore Account"
+    [busy]="actionBusy()"
+    [error]="actionError()"
+    [isLight]="theme.isLight()"
+    [isPikachu]="theme.isPikachu()"
+    (confirmed)="confirmRestore()"
+    (cancelled)="cancelRestore()"
+  />
+}
+
+@if (permanentDeleteTarget(); as target) {
+  <app-confirm-dialog
+    title="Permanently delete this trainer's account?"
+    body="This bypasses the recovery window entirely — their trainer profile and all their data, and their login itself, are deleted right now. This cannot be undone and will be recorded in the audit log."
+    confirmLabel="Delete Forever"
+    [requireTypedPhrase]="target.trainerName"
+    [destructive]="true"
+    [busy]="actionBusy()"
+    [error]="actionError()"
+    [isLight]="theme.isLight()"
+    [isPikachu]="theme.isPikachu()"
+    (confirmed)="confirmPermanentDelete()"
+    (cancelled)="cancelPermanentDelete()"
+  />
+}
