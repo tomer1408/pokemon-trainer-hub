@@ -109,14 +109,26 @@ describe('ProfileService', () => {
     expect(ok).toBe(true);
   });
 
-  it('deleteAccount() DELETEs the profile resource and surfaces the server response as-is', () => {
-    let result: { message: string; warning?: string } | undefined;
+  it('deleteAccount() DELETEs the profile resource and surfaces the real server response', () => {
+    let result: { message: string } | undefined;
     service.deleteAccount().subscribe((r) => (result = r));
 
     const req = httpMock.expectOne(`${API_BASE}/profile`);
     expect(req.request.method).toBe('DELETE');
-    req.flush({ message: 'Your account and all your data have been deleted.', warning: 'Contact support.' });
+    req.flush({ message: 'Your account has been deleted. You have 30 days to request restoration.' });
 
-    expect(result).toEqual({ message: 'Your account and all your data have been deleted.', warning: 'Contact support.' });
+    expect(result).toEqual({ message: 'Your account has been deleted. You have 30 days to request restoration.' });
+  });
+
+  it('requestRestoration() POSTs the real message, never a client-sent topic', () => {
+    let result: { id: number; createdAt: string } | undefined;
+    service.requestRestoration('please restore my account').subscribe((r) => (result = r));
+
+    const req = httpMock.expectOne(`${API_BASE}/profile/restoration-request`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ message: 'please restore my account' });
+    req.flush({ id: 1, createdAt: '2026-07-01T00:00:00.000Z' });
+
+    expect(result).toEqual({ id: 1, createdAt: '2026-07-01T00:00:00.000Z' });
   });
 });

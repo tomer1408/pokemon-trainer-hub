@@ -148,7 +148,7 @@
       <div class="card danger-card">
         <div class="card-head">
           <span class="card-title">Danger Zone</span>
-          <span class="card-helper">Permanently delete your account and every piece of data tied to it.</span>
+          <span class="card-helper">Delete your account. You'll have 30 days to request restoration before it's permanent.</span>
         </div>
         <button type="button" class="delete-account-btn" (click)="requestDeleteAccount()">Delete My Account</button>
       </div>
@@ -178,7 +178,7 @@
   @if (showDeleteConfirm()) {
     <app-confirm-dialog
       title="Delete your account?"
-      body="This permanently deletes your trainer profile, Dream Team, favorites, notes, support requests, and battle history — and your login itself. This cannot be undone."
+      body="Your account will be deactivated immediately. If you change your mind, you can request restoration by logging back in within 30 days — after that, it's permanently deleted and cannot be recovered."
       confirmLabel="Delete My Account"
       requireTypedPhrase="DELETE"
       [destructive]="true"

@@ -83,4 +83,14 @@ describe('onboardingGuard', () => {
 
     expect(result).toBe(true);
   });
+
+  it('redirects to /restore-account on a real 403 ACCOUNT_DELETED, not fail-open', async () => {
+    const err = { status: 403, error: { code: 'ACCOUNT_DELETED', deletionType: 'admin' } };
+    const { parseUrl } = setupGuard(() => throwError(() => err), undefined);
+
+    const result = await runGuard();
+
+    expect(parseUrl).toHaveBeenCalledWith('/restore-account');
+    expect(result).toBe('parsed:/restore-account');
+  });
 });

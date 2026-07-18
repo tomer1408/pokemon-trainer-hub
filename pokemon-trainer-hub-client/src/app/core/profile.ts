@@ -99,13 +99,23 @@ export class ProfileService {
     );
   }
 
-  // Deletes every DB row this trainer owns AND their real Auth0 identity
-  // (see routes/profile.js's DELETE / and services/accountService.js) — the
-  // one truly irreversible action in the app. `warning` is present only if
-  // the Auth0 side of the deletion failed after the DB half already
-  // succeeded; the caller (Settings) logs the trainer out either way, since
-  // their data is gone regardless.
-  deleteAccount(): Observable<{ message: string; warning?: string }> {
-    return this.http.delete<{ message: string; warning?: string }>(`${API_BASE}/profile`);
+  // Soft-deletes the account (see routes/profile.js's DELETE / and
+  // services/accountService.softDeleteAccount) — not the irreversible
+  // action it used to be. No data is touched and Auth0 isn't either; the
+  // trainer has 30 days to request restoration by logging back in before
+  // the automatic purge makes it permanent. The caller (Settings) still
+  // logs the trainer out either way, since they're blocked from the app
+  // regardless.
+  deleteAccount(): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${API_BASE}/profile`);
+  }
+
+  // Submitted from the Restore Account page once a soft-deleted trainer
+  // logs back in during their 30-day window. The server derives which of
+  // the two restoration-request "flavors" this is (a genuine self-service
+  // restore request vs. a blocked-by-admin contact message) from the
+  // account's own real deletionType — never something this method sends.
+  requestRestoration(message: string): Observable<{ id: number; createdAt: string }> {
+    return this.http.post<{ id: number; createdAt: string }>(`${API_BASE}/profile/restoration-request`, { message });
   }
 }

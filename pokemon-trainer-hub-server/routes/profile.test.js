@@ -100,12 +100,14 @@ describe('routes/profile', () => {
       assert.ok(res.body.ageRange);
     });
 
-    test('returns 403 ACCOUNT_DELETED with the real deletionType when the trainer is soft-deleted', async () => {
+    test('returns 403 ACCOUNT_DELETED with the real deletionType and purgeAt when the trainer is soft-deleted', async () => {
+      const purgeAt = new Date('2026-08-01');
       prisma.trainerProfile.findUnique.mock.mockImplementationOnce(async () => ({
         trainerName: 'Ash',
         dateOfBirth: new Date('2000-01-01'),
         deletedAt: new Date(),
         deletionType: 'admin',
+        purgeAt,
       }));
 
       const res = await request.get('/api/profile');
@@ -113,14 +115,16 @@ describe('routes/profile', () => {
       assert.equal(res.status, 403);
       assert.equal(res.body.code, 'ACCOUNT_DELETED');
       assert.equal(res.body.deletionType, 'admin');
+      assert.equal(res.body.purgeAt, purgeAt.toISOString());
     });
 
-    test('never leaks deletedAt/deletionType into a normal (non-deleted) response', async () => {
+    test('never leaks deletedAt/deletionType/purgeAt into a normal (non-deleted) response', async () => {
       prisma.trainerProfile.findUnique.mock.mockImplementationOnce(async () => ({
         trainerName: 'Ash',
         dateOfBirth: new Date('2000-01-01'),
         deletedAt: null,
         deletionType: null,
+        purgeAt: null,
       }));
 
       const res = await request.get('/api/profile');
@@ -128,6 +132,7 @@ describe('routes/profile', () => {
       assert.equal(res.status, 200);
       assert.equal('deletedAt' in res.body, false);
       assert.equal('deletionType' in res.body, false);
+      assert.equal('purgeAt' in res.body, false);
     });
   });
 

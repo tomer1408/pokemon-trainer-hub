@@ -57,7 +57,7 @@ function withAgeRange(profile) {
 router.get('/', jwtCheck, async (req, res) => {
   const profile = await prisma.trainerProfile.findUnique({
     where: { auth0UserId: req.auth.payload.sub },
-    select: { ...PROFILE_SELECT, deletedAt: true, deletionType: true },
+    select: { ...PROFILE_SELECT, deletedAt: true, deletionType: true, purgeAt: true },
   });
 
   if (!profile) {
@@ -68,11 +68,12 @@ router.get('/', jwtCheck, async (req, res) => {
     return res.status(403).json({
       code: 'ACCOUNT_DELETED',
       deletionType: profile.deletionType,
+      purgeAt: profile.purgeAt,
       message: 'This account has been deleted.',
     });
   }
 
-  const { deletedAt, deletionType, ...safeProfile } = profile;
+  const { deletedAt, deletionType, purgeAt, ...safeProfile } = profile;
   res.json(withAgeRange(safeProfile));
 });
 

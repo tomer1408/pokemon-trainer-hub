@@ -24,9 +24,20 @@ export const onboardingGuard: CanActivateFn = () => {
 
   return profileService.getProfileStrict().pipe(
     map(() => router.parseUrl('/home')),
-    // 404 = genuinely no profile yet, the only case onboarding should be
-    // reachable. Any other error fails open (allow access) rather than
-    // stranding a real new user behind a transient network/server hiccup.
-    catchError(() => of(true)),
+    catchError((err) => {
+      // A soft-deleted trainer with a stale token could otherwise reach
+      // /onboarding directly and, without this check, resurrect/overwrite
+      // their soft-deleted row via a normal profile save (see
+      // routes/profile.js's POST / guard). Routed to the same restoration
+      // entry point as callback.ts's ACCOUNT_DELETED case.
+      if (err?.status === 403 && err?.error?.code === 'ACCOUNT_DELETED') {
+        return of(router.parseUrl('/restore-account'));
+      }
+      // 404 = genuinely no profile yet, the only other case onboarding
+      // should be reachable. Any other error fails open (allow access)
+      // rather than stranding a real new user behind a transient
+      // network/server hiccup.
+      return of(true);
+    }),
   );
 };

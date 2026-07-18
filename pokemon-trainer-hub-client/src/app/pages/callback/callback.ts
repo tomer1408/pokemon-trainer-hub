@@ -55,7 +55,13 @@ export class Callback {
     this.profileService.getProfileStrict().subscribe({
       next: () => this.router.navigateByUrl('/home'),
       error: (err) => {
-        if (err?.status === 404) {
+        if (err?.status === 403 && err?.error?.code === 'ACCOUNT_DELETED') {
+          // A soft-deleted trainer logging back in during their 30-day
+          // window — not a dead-end "access denied": /restore-account is
+          // the entry point for submitting a restoration request (see
+          // routes/profile.js's GET / and POST /restoration-request).
+          this.router.navigateByUrl('/restore-account');
+        } else if (err?.status === 404) {
           // Already just confirmed there's no profile — tell onboardingGuard
           // via navigation state so it doesn't re-issue the exact same
           // GET /api/profile a second time right behind this one.

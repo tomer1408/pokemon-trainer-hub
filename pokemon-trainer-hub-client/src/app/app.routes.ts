@@ -163,6 +163,14 @@ export const routes: Routes = [
       import('./pages/admin/access-denied/access-denied').then((m) => m.AdminAccessDenied),
   },
   {
+    // authGuardFn ONLY, same reasoning as admin/access-denied above — a
+    // soft-deleted trainer redirected here by callback.ts/onboardingGuard
+    // can never be bounced into another redirect loop.
+    path: 'restore-account',
+    canActivate: [authGuardFn],
+    loadComponent: () => import('./pages/restore-account/restore-account').then((m) => m.RestoreAccount),
+  },
+  {
     // Not auth-guarded on purpose — a mistyped URL shouldn't force a
     // logged-out visitor through Auth0 login just to see "page not found".
     path: '**',

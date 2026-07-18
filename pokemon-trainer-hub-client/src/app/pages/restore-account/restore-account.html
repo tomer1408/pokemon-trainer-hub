@@ -1,0 +1,69 @@
+<div class="restore-account" [class.light]="theme.isLight()" [class.pikachu]="theme.isPikachu()">
+  @switch (state()) {
+    @case ('checking') {
+      <div class="card">
+        <div class="spinner"></div>
+        <p class="message">Checking your account…</p>
+      </div>
+    }
+
+    @case ('error') {
+      <div class="card">
+        <p class="message error">We couldn't check your account status.</p>
+        <p class="submessage">Something went wrong. Please try again.</p>
+        <button type="button" class="retry-btn" (click)="retry()">Try again</button>
+      </div>
+    }
+
+    @case ('blocked') {
+      <div class="card">
+        @if (isSelfDeleted()) {
+          <div class="kicker">Account Deleted</div>
+          <h1 class="title">Request to restore your account</h1>
+          <p class="subtitle">
+            You deleted your own account.
+            @if (daysRemaining(); as days) {
+              You have <strong>{{ days }} day{{ days === 1 ? '' : 's' }}</strong> left to request restoration before it's permanently removed.
+            }
+            Submit a request below and an admin will review it.
+          </p>
+        } @else {
+          <div class="kicker">Account Blocked</div>
+          <h1 class="title">Your account was blocked by an administrator</h1>
+          <p class="subtitle">
+            @if (daysRemaining(); as days) {
+              It will be permanently deleted in <strong>{{ days }} day{{ days === 1 ? '' : 's' }}</strong> unless an admin restores it.
+            }
+            You can send a message below to contact us about it.
+          </p>
+        }
+
+        <textarea
+          class="message-input"
+          rows="4"
+          [placeholder]="isSelfDeleted() ? 'Why would you like your account restored?' : 'Your message…'"
+          [value]="messageInput()"
+          (input)="messageInput.set($any($event.target).value)"
+        ></textarea>
+
+        @if (submitError(); as err) {
+          <p class="message error small">{{ err }}</p>
+        }
+
+        <button type="button" class="primary-btn" [disabled]="submitting()" (click)="submitRequest()">
+          {{ submitting() ? 'Sending…' : (isSelfDeleted() ? 'Request Restoration' : 'Send Message') }}
+        </button>
+        <button type="button" class="ghost-btn" (click)="logOut()">Log Out</button>
+      </div>
+    }
+
+    @case ('submitted') {
+      <div class="card">
+        <div class="kicker">Request Sent</div>
+        <h1 class="title">Your message has been sent</h1>
+        <p class="subtitle">An admin will review your request. You'll need to log back in later to check on it.</p>
+        <button type="button" class="primary-btn" (click)="logOut()">Log Out</button>
+      </div>
+    }
+  }
+</div>

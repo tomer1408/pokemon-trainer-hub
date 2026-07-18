@@ -14,7 +14,7 @@ describe('Callback', () => {
 
   function setup(options: {
     redirectFails?: boolean;
-    profileError?: { status: number } | null;
+    profileError?: { status: number; error?: unknown } | null;
   } = {}) {
     handleRedirectCallback = vi.fn(() =>
       options.redirectFails ? Promise.reject(new Error('bad code')) : Promise.resolve({}),
@@ -65,6 +65,14 @@ describe('Callback', () => {
     await Promise.resolve();
 
     expect(navigateByUrl).toHaveBeenCalledWith('/onboarding', { state: { profileConfirmedMissing: true } });
+  });
+
+  it('navigates to /restore-account on a real 403 ACCOUNT_DELETED, not the generic error-auth path', async () => {
+    setup({ profileError: { status: 403, error: { code: 'ACCOUNT_DELETED', deletionType: 'self' } } });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(navigateByUrl).toHaveBeenCalledWith('/restore-account');
   });
 
   it('sets error-auth (not error-profile) on a 401/403 — a bad token needs a fresh login, not a retried GET', async () => {

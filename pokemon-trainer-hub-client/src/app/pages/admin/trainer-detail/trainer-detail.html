@@ -89,7 +89,7 @@
     <!-- Danger zone -->
     <div class="card danger-card span-2">
       <span class="card-title">Danger Zone</span>
-      <p class="card-helper">Permanently delete this trainer's account and every piece of their data.</p>
+      <p class="card-helper">Delete this trainer's account. They'll have 30 days to request restoration before it's permanent.</p>
       <button type="button" class="delete-btn" (click)="requestDelete()">Delete This Account</button>
     </div>
   </div>
@@ -97,8 +97,8 @@
   @if (showDeleteConfirm()) {
     <app-confirm-dialog
       title="Delete this trainer's account?"
-      body="This permanently deletes their trainer profile, Dream Team, favorites, notes, support requests, battle history, and their login itself. This cannot be undone and will be recorded in the audit log."
-      confirmLabel="Permanently Delete"
+      body="Their account will be deactivated immediately and blocked from logging in. They have 30 days to request restoration — after that, it's permanently deleted. This will be recorded in the audit log."
+      confirmLabel="Delete Account"
       [requireTypedPhrase]="d.profile.trainerName"
       [destructive]="true"
       [busy]="deleting()"
