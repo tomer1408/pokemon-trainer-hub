@@ -219,6 +219,7 @@ This means the network-level allowlist is broader than a dedicated IP would be �
 | `GOOGLE_GEMINI_MODEL` | Optional, same as local `.env` |
 | `AUTH0_M2M_CLIENT_ID` / `AUTH0_M2M_CLIENT_SECRET` | Optional — same as local `.env`. Powers real Auth0-identity deletion in Delete My Account; see step 5 above |
 | `SENTRY_DSN` | Optional — same as local `.env`. Server-side error tracking; see step 6 above |
+| `PURGE_SWEEP_SECRET` | Required for the account-deletion purge job to run in production — a real random value (e.g. `openssl rand -hex 32`), shared with the UptimeRobot monitor configured below. Without it, `POST /api/internal/purge-sweep` always 401s and soft-deleted accounts past their 30-day window are never automatically purged |
 
 Auth0's **Allowed Callback URLs**, **Logout URLs**, and **Web Origins** must include the Vercel URL alongside `localhost:4200` (not replacing it, so local dev keeps working).
 
@@ -233,6 +234,17 @@ The real fix: **[UptimeRobot](https://uptimerobot.com)**, a purpose-built uptime
 - `GET /api/health/db` — separately exercises the real Prisma → Azure SQL connection, since that pays its own first-connection cost (measured ~4s) independently of the Node process being warm.
 
 The old GitHub Actions workflow is kept in the repo as a harmless secondary backup (unreliable timing, but free and non-conflicting) — UptimeRobot is the mechanism actually relied on.
+
+### Automatic account-deletion purge
+
+Deleting a trainer account (self-service via Settings, or admin-initiated via the Admin Dashboard) is a **soft delete** with a 30-day recovery window, not immediate — see `services/accountService.js`'s `softDeleteAccount()`/`restoreAccount()`. Permanently removing an account once that window elapses needs a real recurring job, and this app has **no in-process scheduler** (no `node-cron`, no `setInterval`-based poller) — for the same reason an in-process keep-warm timer wouldn't work either (see above): Render's free tier spins the process down when idle, so a timer inside it simply doesn't fire while asleep.
+
+The mechanism: a **third UptimeRobot monitor**, alongside the two keep-warm ones, configured as:
+- **URL**: `POST https://<your-render-url>/api/internal/purge-sweep`
+- **Custom HTTP Header**: `x-purge-secret: <the real value of your PURGE_SWEEP_SECRET env var>`
+- **Interval**: 5 minutes (same as the other two monitors) — a 30-day recovery window has no need for finer precision than that.
+
+The endpoint finds every `TrainerProfile` whose `purgeAt` has passed and permanently deletes it via the same, unmodified `accountService.deleteAccount()` used everywhere else — never a second deletion code path. It is **not** behind Auth0 (`jwtCheck`) — UptimeRobot has no access token — instead gated by `middleware/requirePurgeSecret.js`, a shared-secret header check that fails closed (401) if `PURGE_SWEEP_SECRET` isn't even configured, not just on a wrong value.
 
 ### Deployment health check
 
