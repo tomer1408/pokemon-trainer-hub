@@ -235,15 +235,20 @@ The real fix: **[UptimeRobot](https://uptimerobot.com)**, a purpose-built uptime
 
 The old GitHub Actions workflow is kept in the repo as a harmless secondary backup (unreliable timing, but free and non-conflicting) — UptimeRobot is the mechanism actually relied on.
 
-### Automatic account-deletion purge
+### Account-deletion purge (manual invocation, by decision — no scheduler yet)
 
-Deleting a trainer account (self-service via Settings, or admin-initiated via the Admin Dashboard) is a **soft delete** with a 30-day recovery window, not immediate — see `services/accountService.js`'s `softDeleteAccount()`/`restoreAccount()`. Permanently removing an account once that window elapses needs a real recurring job, and this app has **no in-process scheduler** (no `node-cron`, no `setInterval`-based poller) — for the same reason an in-process keep-warm timer wouldn't work either (see above): Render's free tier spins the process down when idle, so a timer inside it simply doesn't fire while asleep.
+Deleting a trainer account (self-service via Settings, or admin-initiated via the Admin Dashboard) is a **soft delete** with a 30-day recovery window, not immediate — see `services/accountService.js`'s `softDeleteAccount()`/`restoreAccount()`. Permanently removing an account once that window elapses needs something to actually call `POST /api/internal/purge-sweep` — and this app has **no in-process scheduler** (no `node-cron`, no `setInterval`-based poller), for the same reason an in-process keep-warm timer wouldn't work either (see above): Render's free tier spins the process down when idle, so a timer inside it simply doesn't fire while asleep.
 
-The mechanism: a **third UptimeRobot monitor**, alongside the two keep-warm ones, configured as:
-- **URL**: `POST https://<your-render-url>/api/internal/purge-sweep`
-- **Custom HTTP Header**: `X-Purge-Secret: <the real value of your PURGE_SWEEP_SECRET env var>` (HTTP header names are case-insensitive — the server reads it via `req.get('x-purge-secret')` — so `X-Purge-Secret` and `x-purge-secret` are the same header; the real secret **value** is the only part that must match exactly).
-- **Interval**: 5 minutes (same as the other two monitors) — a 30-day recovery window has no need for finer precision than that.
-- **Before relying on this in production**: confirm UptimeRobot's plan/monitor type actually supports sending a custom HTTP header on its requests (some monitor types on some plans don't) — without it, every real check would 401 and no account would ever be purged automatically.
+**Current decision: no automatic scheduler at all — not UptimeRobot, not cron-job.org, not a GitHub Actions `schedule` workflow.** Reaching `purgeAt` does **not** by itself trigger deletion. An eligible account simply stays soft-deleted (fully blocked from logging in, fully recoverable by an admin) until an authorized operator manually runs:
+
+```bash
+curl -X POST https://<your-render-url>/api/internal/purge-sweep \
+  -H "X-Purge-Secret: <the real value of your PURGE_SWEEP_SECRET env var>"
+```
+
+(HTTP header names are case-insensitive — the server reads it via `req.get('x-purge-secret')` — so `X-Purge-Secret` and `x-purge-secret` are the same header; the real secret **value** is the only part that must match exactly.) The secret lives only in Render's environment variables — never in this repo, the Angular client, logs, or any API response — and there is deliberately no GET variant and no way to pass it via URL/query string, so it can never end up in server access logs or browser history.
+
+Should an automatic scheduler be added later, everything below (auth, rate limiting, eligibility, idempotency) already works unchanged — the only remaining step would be pointing a real scheduler (UptimeRobot's third monitor, alongside the two keep-warm ones, was the original plan) at this same endpoint with this same header. Nothing about the endpoint itself needs to change to support that later.
 
 The endpoint finds every `TrainerProfile` whose `purgeAt` has passed and permanently deletes it via the same, unmodified `accountService.deleteAccount()` used everywhere else — never a second deletion code path. Full security/eligibility design:
 
@@ -256,7 +261,7 @@ The endpoint finds every `TrainerProfile` whose `purgeAt` has passed and permane
 
 Automated coverage: `middleware/requirePurgeSecret.test.js` (missing/wrong/correct secret, the timing-safe-compare path, identical 401 shape regardless of failure reason), `services/purgeSweepService.test.js` (eligibility query shape, active/not-yet-eligible accounts excluded, skip-on-already-gone, one failure doesn't block the batch, repeated runs stay safe, response never carries PII), `routes/internal.test.js` (rate limiting, and that neither the configured secret nor a caller's guess is ever echoed back).
 
-Before enabling the production monitor for real, do one controlled manual pass against a disposable trainer account: soft-delete it, confirm an unauthorized purge request is rejected, confirm it is *not* purged before its `purgeAt`, force `purgeAt` into the past and confirm an authorized request purges only that account (other real accounts unaffected), confirm the sweep and any failures show up correctly in logs/Sentry, and confirm re-running the sweep afterward is a safe no-op.
+This was verified end to end against production with a real, disposable trainer account before this decision was made: soft-deleted it, confirmed an unauthorized purge request was rejected, confirmed it was *not* purged before its `purgeAt`, forced `purgeAt` into the past under controlled, explicitly-approved conditions and confirmed an authorized request purged only that account (other real accounts unaffected, verified via a read-only Recently Deleted check beforehand), confirmed the sweep and its audit-log entry showed up correctly, and confirmed re-running the sweep afterward was a safe no-op.
 
 ### Deployment health check
 
