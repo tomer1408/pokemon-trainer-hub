@@ -23,7 +23,7 @@
           <p class="subtitle">
             You deleted your own account.
             @if (daysRemaining(); as days) {
-              You have <strong>{{ days }} day{{ days === 1 ? '' : 's' }}</strong> left to request restoration before it's permanently removed.
+              You have <strong>{{ days }} day{{ days === 1 ? '' : 's' }}</strong> left to request restoration before it becomes eligible for permanent removal.
             }
             Submit a request below and an admin will review it.
           </p>
@@ -32,7 +32,7 @@
           <h1 class="title">Your account was blocked by an administrator</h1>
           <p class="subtitle">
             @if (daysRemaining(); as days) {
-              It will be permanently deleted in <strong>{{ days }} day{{ days === 1 ? '' : 's' }}</strong> unless an admin restores it.
+              It becomes eligible for permanent deletion in <strong>{{ days }} day{{ days === 1 ? '' : 's' }}</strong> unless an admin restores it.
             }
             You can send a message below to contact us about it.
           </p>
