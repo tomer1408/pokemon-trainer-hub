@@ -87,6 +87,73 @@ describe('services/analyticsEventService', () => {
     });
   });
 
+  describe('assertValidClientEvent', () => {
+    test('rejects a server-owned event type — a client can never claim battle_completed', () => {
+      assert.throws(
+        () => service.assertValidClientEvent('battle_completed', null, null),
+        (err) => err.code === 'INVALID_EVENT_TYPE',
+      );
+    });
+
+    test('accepts session_started with no metadata', () => {
+      assert.doesNotThrow(() => service.assertValidClientEvent('session_started', null, null));
+    });
+
+    test('rejects session_started with any metadata at all', () => {
+      assert.throws(
+        () => service.assertValidClientEvent('session_started', null, { anything: true }),
+        (err) => err.code === 'INVALID_METADATA',
+      );
+    });
+
+    test('page_viewed requires a pageName', () => {
+      assert.throws(
+        () => service.assertValidClientEvent('page_viewed', null, null),
+        (err) => err.code === 'PAGE_NAME_REQUIRED',
+      );
+    });
+
+    test('page_viewed accepts a real pageName with no metadata', () => {
+      assert.doesNotThrow(() => service.assertValidClientEvent('page_viewed', 'explorer', null));
+    });
+
+    test('a pageName on a non-page_viewed event is rejected', () => {
+      assert.throws(
+        () => service.assertValidClientEvent('session_started', 'explorer', null),
+        (err) => err.code === 'UNEXPECTED_PAGE_NAME',
+      );
+    });
+
+    test('whos_that_round_completed requires exactly { correct: boolean, streak: non-negative integer }', () => {
+      assert.doesNotThrow(() =>
+        service.assertValidClientEvent('whos_that_round_completed', null, { correct: true, streak: 4 }),
+      );
+    });
+
+    test('whos_that_round_completed rejects a negative or non-integer streak', () => {
+      assert.throws(
+        () => service.assertValidClientEvent('whos_that_round_completed', null, { correct: true, streak: -1 }),
+        (err) => err.code === 'INVALID_METADATA',
+      );
+      assert.throws(
+        () => service.assertValidClientEvent('whos_that_round_completed', null, { correct: true, streak: 1.5 }),
+        (err) => err.code === 'INVALID_METADATA',
+      );
+    });
+
+    test('whos_that_round_completed rejects extra, unexpected metadata keys', () => {
+      assert.throws(
+        () =>
+          service.assertValidClientEvent('whos_that_round_completed', null, {
+            correct: true,
+            streak: 4,
+            extra: 'smuggled',
+          }),
+        (err) => err.code === 'INVALID_METADATA',
+      );
+    });
+  });
+
   describe('logEventSafe', () => {
     test('logs and swallows a failure instead of throwing — the caller\'s real action must never be blocked by analytics', async () => {
       prisma.appEvent.create.mock.mockImplementationOnce(async () => {
