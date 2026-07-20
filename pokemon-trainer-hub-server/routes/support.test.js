@@ -6,6 +6,7 @@ describe('routes/support', () => {
   let request;
   let prisma;
   let rateLimiter;
+  let analyticsEventService;
   const FAKE_USER = 'auth0|test-user';
 
   before(() => {
@@ -33,6 +34,9 @@ describe('routes/support', () => {
       exports: { createRateLimiter: () => rateLimiter },
     });
 
+    analyticsEventService = { logEventSafe: mock.fn(async () => {}) };
+    mock.module(path.resolve(__dirname, '../services/analyticsEventService.js'), { exports: analyticsEventService });
+
     const express = require('express');
     const supertest = require('supertest');
     const supportRouter = require('./support');
@@ -47,6 +51,7 @@ describe('routes/support', () => {
     prisma.supportRequest.create.mock.resetCalls();
     rateLimiter.consume.mock.resetCalls();
     rateLimiter.consume.mock.mockImplementation(() => true);
+    analyticsEventService.logEventSafe.mock.resetCalls();
   });
 
   test('POST / rejects an invalid email', async () => {
@@ -120,5 +125,26 @@ describe('routes/support', () => {
 
     assert.equal(res.status, 201);
     assert.equal(prisma.supportRequest.create.mock.calls.length, 1);
+  });
+
+  test('POST / logs a real support_request_created event after the request is saved', async () => {
+    await request
+      .post('/api/support')
+      .send({ name: 'Ash', email: 'ash@example.com', topic: 'Bug', message: 'It broke.' });
+
+    assert.equal(analyticsEventService.logEventSafe.mock.calls.length, 1);
+    assert.deepEqual(analyticsEventService.logEventSafe.mock.calls[0].arguments[0], {
+      auth0UserId: FAKE_USER,
+      eventType: 'support_request_created',
+      metadata: { topic: 'Bug' },
+    });
+  });
+
+  test('POST / never logs an event when validation fails', async () => {
+    await request
+      .post('/api/support')
+      .send({ name: 'Ash', email: 'not-an-email', topic: 'Bug', message: 'It broke.' });
+
+    assert.equal(analyticsEventService.logEventSafe.mock.calls.length, 0);
   });
 });

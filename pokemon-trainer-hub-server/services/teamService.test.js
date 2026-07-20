@@ -17,6 +17,7 @@ describe('services/teamService', () => {
   let teamService;
   let prisma;
   let pokeapi;
+  let analyticsEventService;
   const USER = 'auth0|test-user';
 
   before(() => {
@@ -47,6 +48,9 @@ describe('services/teamService', () => {
     };
     mock.module(path.resolve(__dirname, './pokeapi.js'), { exports: pokeapi });
 
+    analyticsEventService = { logEventSafe: mock.fn(async () => {}) };
+    mock.module(path.resolve(__dirname, './analyticsEventService.js'), { exports: analyticsEventService });
+
     teamService = require('./teamService');
   });
 
@@ -61,6 +65,7 @@ describe('services/teamService', () => {
     prisma.dreamTeamMember.update.mock.resetCalls();
     prisma.$transaction.mock.resetCalls();
     pokeapi.fetchPokemonDetail.mock.resetCalls();
+    analyticsEventService.logEventSafe.mock.resetCalls();
   }
 
   beforeEach(() => {
@@ -128,6 +133,42 @@ describe('services/teamService', () => {
 
       assert.equal(result.member.position, 4);
       assert.equal(result.message, 'mon-25 joined your Dream Team!');
+    });
+
+    test('logs a real pokemon_added_to_team event after the DB write, never before', async () => {
+      await teamService.addToTeam(USER, 25);
+
+      assert.equal(analyticsEventService.logEventSafe.mock.calls.length, 1);
+      assert.deepEqual(analyticsEventService.logEventSafe.mock.calls[0].arguments[0], {
+        auth0UserId: USER,
+        eventType: 'pokemon_added_to_team',
+        metadata: { pokemonId: 25, pokemonType: 'fire' },
+      });
+    });
+
+    test('also logs dream_team_completed when this add brings the team to exactly 5', async () => {
+      prisma.dreamTeamMember.count.mock.mockImplementationOnce(async () => 4);
+
+      await teamService.addToTeam(USER, 25);
+
+      assert.equal(analyticsEventService.logEventSafe.mock.calls.length, 2);
+      assert.equal(analyticsEventService.logEventSafe.mock.calls[1].arguments[0].eventType, 'dream_team_completed');
+    });
+
+    test('does not log dream_team_completed when the team is still below 5 after this add', async () => {
+      prisma.dreamTeamMember.count.mock.mockImplementationOnce(async () => 1);
+
+      await teamService.addToTeam(USER, 25);
+
+      assert.equal(analyticsEventService.logEventSafe.mock.calls.length, 1);
+    });
+
+    test('never logs any event when the add fails validation', async () => {
+      prisma.dreamTeamMember.count.mock.mockImplementationOnce(async () => 5);
+
+      await assert.rejects(() => teamService.addToTeam(USER, 25));
+
+      assert.equal(analyticsEventService.logEventSafe.mock.calls.length, 0);
     });
 
     test('throws DUPLICATE and never creates when the Pokémon is already on the team', async () => {

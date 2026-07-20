@@ -2,6 +2,7 @@ const express = require('express');
 const prisma = require('../services/prisma');
 const jwtCheck = require('../middleware/auth');
 const { createRateLimiter } = require('../services/rateLimiter');
+const { logEventSafe } = require('../services/analyticsEventService');
 
 const router = express.Router();
 
@@ -34,6 +35,8 @@ router.post('/', jwtCheck, async (req, res) => {
   const request = await prisma.supportRequest.create({
     data: { auth0UserId: req.auth.payload.sub, name, email, topic, message },
   });
+
+  logEventSafe({ auth0UserId: req.auth.payload.sub, eventType: 'support_request_created', metadata: { topic } });
 
   res.status(201).json({ id: request.id, createdAt: request.createdAt });
 });

@@ -106,9 +106,23 @@ async function updateLastActive(auth0UserId) {
   });
 }
 
+// Fire-and-forget wrapper for every real call site (routes/services logging
+// a server-owned event alongside the real action they describe) — a
+// logging failure must never fail or roll back the real action it's
+// attached to. logEvent() itself still throws directly for callers (and
+// tests) that need to observe validation failures.
+async function logEventSafe(params) {
+  try {
+    await logEvent(params);
+  } catch (err) {
+    console.error('analyticsEventService: failed to log event:', err.message);
+  }
+}
+
 module.exports = {
   APPROVED_EVENT_TYPES,
   APPROVED_PAGE_NAMES,
   logEvent,
+  logEventSafe,
   updateLastActive,
 };

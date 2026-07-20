@@ -1,6 +1,7 @@
 const express = require('express');
 const prisma = require('../services/prisma');
 const jwtCheck = require('../middleware/auth');
+const { logEventSafe } = require('../services/analyticsEventService');
 
 const router = express.Router();
 
@@ -84,6 +85,12 @@ router.post('/', jwtCheck, async (req, res) => {
       roundsJson: JSON.stringify(roundDetails),
       teamSnapshotJson: JSON.stringify(teamSnapshot),
     },
+  });
+
+  logEventSafe({
+    auth0UserId: req.auth.payload.sub,
+    eventType: 'battle_completed',
+    metadata: { difficulty, result, opponentType },
   });
 
   res.status(201).json({ id: match.id, createdAt: match.createdAt });

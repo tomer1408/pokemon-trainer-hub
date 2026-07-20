@@ -5,6 +5,7 @@ const path = require('node:path');
 describe('routes/battleHistory', () => {
   let request;
   let prisma;
+  let analyticsEventService;
   const FAKE_USER = 'auth0|test-user';
 
   const validMatchBody = {
@@ -39,6 +40,9 @@ describe('routes/battleHistory', () => {
     };
     mock.module(path.resolve(__dirname, '../services/prisma.js'), { exports: { default: prisma } });
 
+    analyticsEventService = { logEventSafe: mock.fn(async () => {}) };
+    mock.module(path.resolve(__dirname, '../services/analyticsEventService.js'), { exports: analyticsEventService });
+
     const express = require('express');
     const supertest = require('supertest');
     const battleHistoryRouter = require('./battleHistory');
@@ -53,6 +57,7 @@ describe('routes/battleHistory', () => {
     prisma.battleMatch.findMany.mock.resetCalls();
     prisma.battleMatch.create.mock.resetCalls();
     prisma.battleMatch.findMany.mock.mockImplementation(async () => []);
+    analyticsEventService.logEventSafe.mock.resetCalls();
   });
 
   describe('GET /', () => {
@@ -129,6 +134,24 @@ describe('routes/battleHistory', () => {
       assert.equal(data.auth0UserId, FAKE_USER);
       assert.equal(data.roundsJson, JSON.stringify(validMatchBody.roundDetails));
       assert.equal(data.teamSnapshotJson, JSON.stringify(validMatchBody.teamSnapshot));
+    });
+
+    test('logs a real battle_completed event after the match is saved', async () => {
+      await request.post('/api/battle-history').send(validMatchBody);
+
+      assert.equal(analyticsEventService.logEventSafe.mock.calls.length, 1);
+      assert.deepEqual(analyticsEventService.logEventSafe.mock.calls[0].arguments[0], {
+        auth0UserId: FAKE_USER,
+        eventType: 'battle_completed',
+        metadata: { difficulty: 'hard', result: 'win', opponentType: 'fire' },
+      });
+    });
+
+    test('never logs an event when the match record is rejected', async () => {
+      const { opponentName, ...incomplete } = validMatchBody;
+      await request.post('/api/battle-history').send(incomplete);
+
+      assert.equal(analyticsEventService.logEventSafe.mock.calls.length, 0);
     });
   });
 });

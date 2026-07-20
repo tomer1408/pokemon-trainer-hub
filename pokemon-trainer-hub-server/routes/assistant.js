@@ -3,6 +3,7 @@ const jwtCheck = require('../middleware/auth');
 const teamService = require('../services/teamService');
 const assistantService = require('../services/assistantService');
 const { createRateLimiter } = require('../services/rateLimiter');
+const { logEventSafe } = require('../services/analyticsEventService');
 
 const router = express.Router();
 
@@ -13,11 +14,20 @@ const RATE_LIMIT_MESSAGE = "We've hit today's AI usage limit — please try agai
 // on top of Gemini's own quota — 5 generations per trainer per hour.
 const teamNameRateLimiter = createRateLimiter({ windowSeconds: 60 * 60, maxRequests: 5 });
 
-// Shared by all three routes below — 503 (not 502) for a rate limit, since
-// this is "come back later," not "the upstream service is broken."
-function respondToAssistantError(err, res, label) {
+// Shared by all four routes below — 503 (not 502) for a rate limit, since
+// this is "come back later," not "the upstream service is broken." Also
+// the one place ai_request_failed is logged — feature identifies which of
+// analyze/query/chat/team-name, reason is a category (never the raw Gemini
+// error message, which could echo back user-supplied text).
+function respondToAssistantError(err, res, label, auth0UserId, feature) {
   console.error(`${label} failed:`, err.message);
-  if (assistantService.isRateLimitError(err)) {
+  const rateLimited = assistantService.isRateLimitError(err);
+  logEventSafe({
+    auth0UserId,
+    eventType: 'ai_request_failed',
+    metadata: { feature, reason: rateLimited ? 'rate_limited' : 'upstream_error' },
+  });
+  if (rateLimited) {
     return res.status(503).json({ message: RATE_LIMIT_MESSAGE });
   }
   res.status(502).json({ message: 'The AI assistant is unavailable right now. Please try again later.' });
@@ -31,9 +41,10 @@ router.post('/analyze', jwtCheck, async (req, res) => {
   try {
     const rec = await assistantService.analyzeTeam(team);
     const pokemon = await assistantService.getStrongestOfType(rec.type);
+    logEventSafe({ auth0UserId: req.auth.payload.sub, eventType: 'ai_request_completed', metadata: { feature: 'analyze' } });
     res.json({ type: rec.type, reasoning: rec.reasoning, pokemon });
   } catch (err) {
-    respondToAssistantError(err, res, 'Assistant analyze');
+    respondToAssistantError(err, res, 'Assistant analyze', req.auth.payload.sub, 'analyze');
   }
 });
 
@@ -47,9 +58,10 @@ router.post('/query', jwtCheck, async (req, res) => {
   try {
     const rec = await assistantService.queryDescription(text);
     const pokemon = await assistantService.getStrongestOfType(rec.type);
+    logEventSafe({ auth0UserId: req.auth.payload.sub, eventType: 'ai_request_completed', metadata: { feature: 'query' } });
     res.json({ type: rec.type, reasoning: rec.reasoning, pokemon });
   } catch (err) {
-    respondToAssistantError(err, res, 'Assistant query');
+    respondToAssistantError(err, res, 'Assistant query', req.auth.payload.sub, 'query');
   }
 });
 
@@ -67,9 +79,10 @@ router.post('/chat', jwtCheck, async (req, res) => {
 
   try {
     const reply = await assistantService.chatWithAssistant(history);
+    logEventSafe({ auth0UserId: req.auth.payload.sub, eventType: 'ai_request_completed', metadata: { feature: 'chat' } });
     res.json(reply);
   } catch (err) {
-    respondToAssistantError(err, res, 'Assistant chat');
+    respondToAssistantError(err, res, 'Assistant chat', req.auth.payload.sub, 'chat');
   }
 });
 
@@ -103,9 +116,10 @@ router.post('/team-name', jwtCheck, async (req, res) => {
 
   try {
     const result = await assistantService.generateTeamNames(team, style);
+    logEventSafe({ auth0UserId, eventType: 'ai_request_completed', metadata: { feature: 'team-name' } });
     res.json(result);
   } catch (err) {
-    respondToAssistantError(err, res, 'Team name generation');
+    respondToAssistantError(err, res, 'Team name generation', auth0UserId, 'team-name');
   }
 });
 

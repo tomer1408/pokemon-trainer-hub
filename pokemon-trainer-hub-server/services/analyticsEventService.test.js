@@ -87,6 +87,21 @@ describe('services/analyticsEventService', () => {
     });
   });
 
+  describe('logEventSafe', () => {
+    test('logs and swallows a failure instead of throwing — the caller\'s real action must never be blocked by analytics', async () => {
+      prisma.appEvent.create.mock.mockImplementationOnce(async () => {
+        throw new Error('DB is down');
+      });
+
+      await assert.doesNotReject(service.logEventSafe({ eventType: 'battle_completed' }));
+    });
+
+    test('still writes the real event when nothing fails', async () => {
+      await service.logEventSafe({ eventType: 'battle_completed' });
+      assert.equal(prisma.appEvent.create.mock.calls.length, 1);
+    });
+  });
+
   describe('updateLastActive', () => {
     test('does nothing when the trainer has no profile row', async () => {
       prisma.trainerProfile.findUnique.mock.mockImplementationOnce(async () => null);

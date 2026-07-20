@@ -12,6 +12,7 @@ describe('routes/profile', () => {
   let accountService;
   let auth0Management;
   let rateLimiter;
+  let analyticsEventService;
   const FAKE_USER = 'auth0|test-user';
 
   const validSignup = {
@@ -63,6 +64,9 @@ describe('routes/profile', () => {
       exports: { createRateLimiter: () => rateLimiter },
     });
 
+    analyticsEventService = { logEventSafe: mock.fn(async () => {}), updateLastActive: mock.fn(async () => {}) };
+    mock.module(path.resolve(__dirname, '../services/analyticsEventService.js'), { exports: analyticsEventService });
+
     const express = require('express');
     const supertest = require('supertest');
     const profileRouter = require('./profile');
@@ -90,6 +94,9 @@ describe('routes/profile', () => {
     auth0Management.getAuth0User.mock.mockImplementation(async () => ({ email: 'ash@example.com' }));
     rateLimiter.consume.mock.resetCalls();
     rateLimiter.consume.mock.mockImplementation(() => true);
+    analyticsEventService.logEventSafe.mock.resetCalls();
+    analyticsEventService.updateLastActive.mock.resetCalls();
+    analyticsEventService.updateLastActive.mock.mockImplementation(async () => {});
   });
 
   describe('GET /', () => {
@@ -145,6 +152,24 @@ describe('routes/profile', () => {
       assert.equal('deletionType' in res.body, false);
       assert.equal('purgeAt' in res.body, false);
     });
+
+    test('touches updateLastActive for a real, active profile', async () => {
+      prisma.trainerProfile.findUnique.mock.mockImplementationOnce(async () => ({
+        trainerName: 'Ash',
+        dateOfBirth: new Date('2000-01-01'),
+      }));
+
+      await request.get('/api/profile');
+
+      assert.equal(analyticsEventService.updateLastActive.mock.calls.length, 1);
+      assert.equal(analyticsEventService.updateLastActive.mock.calls[0].arguments[0], FAKE_USER);
+    });
+
+    test('never calls updateLastActive when there is no profile (404)', async () => {
+      await request.get('/api/profile');
+
+      assert.equal(analyticsEventService.updateLastActive.mock.calls.length, 0);
+    });
   });
 
   describe('POST /', () => {
@@ -194,6 +219,16 @@ describe('routes/profile', () => {
       assert.equal(data.marketingEmailsOptIn, false); // default when not sent
     });
 
+    test('logs a real onboarding_completed event when creating a genuinely new profile', async () => {
+      await request.post('/api/profile').send(validSignup);
+
+      assert.equal(analyticsEventService.logEventSafe.mock.calls.length, 1);
+      assert.deepEqual(analyticsEventService.logEventSafe.mock.calls[0].arguments[0], {
+        auth0UserId: FAKE_USER,
+        eventType: 'onboarding_completed',
+      });
+    });
+
     test('editing an existing profile never re-demands or overwrites the acceptance record', async () => {
       const acceptedAt = new Date('2025-01-01');
       prisma.trainerProfile.findUnique.mock.mockImplementationOnce(async () => ({
@@ -213,6 +248,7 @@ describe('routes/profile', () => {
       assert.equal(data.acceptedPolicyAt, acceptedAt);
       assert.equal(data.experienceLevel, 'Intermediate'); // preserved, never client-set
       assert.equal(data.marketingEmailsOptIn, true); // preserved, not silently reset to false
+      assert.equal(analyticsEventService.logEventSafe.mock.calls.length, 0); // never re-fires onboarding_completed on an edit
     });
 
     test('editing an existing profile updates marketingEmailsOptIn when explicitly sent', async () => {
@@ -267,15 +303,20 @@ describe('routes/profile', () => {
       assert.deepEqual(prisma.trainerProfile.update.mock.calls[0].arguments[0].data, {
         hasCompletedStarterQuiz: true,
       });
+      assert.deepEqual(analyticsEventService.logEventSafe.mock.calls[0].arguments[0], {
+        auth0UserId: FAKE_USER,
+        eventType: 'starter_quiz_completed',
+      });
     });
 
-    test('returns 404 when the trainer has no profile row yet', async () => {
+    test('returns 404 when the trainer has no profile row yet, and never logs an event', async () => {
       prisma.trainerProfile.update.mock.mockImplementationOnce(async () => {
         throw new Error('not found');
       });
 
       const res = await request.patch('/api/profile/starter-quiz');
       assert.equal(res.status, 404);
+      assert.equal(analyticsEventService.logEventSafe.mock.calls.length, 0);
     });
   });
 

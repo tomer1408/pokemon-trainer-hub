@@ -1,6 +1,7 @@
 const prisma = require('./prisma');
 const { fetchPokemonDetail } = require('./pokeapi');
 const ServiceError = require('./serviceError');
+const { logEventSafe } = require('./analyticsEventService');
 
 const MAX_TEAM_SIZE = 5;
 
@@ -90,6 +91,18 @@ async function addToTeam(auth0UserId, pokemonId) {
       position,
     },
   });
+
+  // Server-owned analytics — logged only after the real DB write above
+  // committed, never from a client claim. Fire-and-forget: a logging
+  // failure must never fail the actual team add.
+  logEventSafe({
+    auth0UserId,
+    eventType: 'pokemon_added_to_team',
+    metadata: { pokemonId: pokemon.id, pokemonType: pokemon.types[0] ?? null },
+  });
+  if (currentCount + 1 === MAX_TEAM_SIZE) {
+    logEventSafe({ auth0UserId, eventType: 'dream_team_completed' });
+  }
 
   return { message: `${pokemon.name} joined your Dream Team!`, member };
 }

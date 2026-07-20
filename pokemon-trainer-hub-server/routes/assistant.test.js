@@ -7,6 +7,7 @@ describe('routes/assistant', () => {
   let teamService;
   let assistantService;
   let rateLimiter;
+  let analyticsEventService;
   const FAKE_USER = 'auth0|test-user';
 
   before(() => {
@@ -40,6 +41,9 @@ describe('routes/assistant', () => {
       exports: { createRateLimiter: () => rateLimiter },
     });
 
+    analyticsEventService = { logEventSafe: mock.fn(async () => {}) };
+    mock.module(path.resolve(__dirname, '../services/analyticsEventService.js'), { exports: analyticsEventService });
+
     const express = require('express');
     const supertest = require('supertest');
     const assistantRouter = require('./assistant');
@@ -59,6 +63,7 @@ describe('routes/assistant', () => {
     assistantService.generateTeamNames.mock.resetCalls();
     assistantService.isRateLimitError.mock.resetCalls();
     rateLimiter.consume.mock.resetCalls();
+    analyticsEventService.logEventSafe.mock.resetCalls();
   }
 
   beforeEach(() => {
@@ -81,9 +86,14 @@ describe('routes/assistant', () => {
       assert.deepEqual(res.body, { type: 'electric', reasoning: 'Balanced team.', pokemon: { id: 6, name: 'charizard' } });
       assert.equal(teamService.getTeam.mock.calls[0].arguments[0], FAKE_USER);
       assert.equal(assistantService.getStrongestOfType.mock.calls[0].arguments[0], 'electric');
+      assert.deepEqual(analyticsEventService.logEventSafe.mock.calls[0].arguments[0], {
+        auth0UserId: FAKE_USER,
+        eventType: 'ai_request_completed',
+        metadata: { feature: 'analyze' },
+      });
     });
 
-    test('maps a rate-limit error to 503', async () => {
+    test('maps a rate-limit error to 503 and logs ai_request_failed with reason rate_limited', async () => {
       assistantService.analyzeTeam.mock.mockImplementationOnce(async () => {
         throw new Error('rate limited');
       });
@@ -91,6 +101,11 @@ describe('routes/assistant', () => {
 
       const res = await request.post('/api/assistant/analyze');
       assert.equal(res.status, 503);
+      assert.deepEqual(analyticsEventService.logEventSafe.mock.calls[0].arguments[0], {
+        auth0UserId: FAKE_USER,
+        eventType: 'ai_request_failed',
+        metadata: { feature: 'analyze', reason: 'rate_limited' },
+      });
     });
 
     test('maps any other failure to 502', async () => {
@@ -116,6 +131,7 @@ describe('routes/assistant', () => {
 
       assert.equal(res.status, 200);
       assert.deepEqual(res.body, { type: 'fire', reasoning: 'Sounds fiery.', pokemon: { id: 6, name: 'charizard' } });
+      assert.equal(analyticsEventService.logEventSafe.mock.calls[0].arguments[0].metadata.feature, 'query');
     });
 
     test('maps a rate-limit error to 503', async () => {
@@ -147,6 +163,14 @@ describe('routes/assistant', () => {
 
       assert.equal(res.status, 200);
       assert.deepEqual(res.body, { reply: 'Hi there!' });
+      assert.deepEqual(analyticsEventService.logEventSafe.mock.calls[0].arguments[0], {
+        auth0UserId: FAKE_USER,
+        eventType: 'ai_request_completed',
+        metadata: { feature: 'chat' },
+      });
+      // Only the feature name is logged, never the actual conversation content.
+      const metadataJson = JSON.stringify(analyticsEventService.logEventSafe.mock.calls[0].arguments[0]);
+      assert.ok(!metadataJson.includes('hi'));
     });
   });
 
@@ -182,6 +206,22 @@ describe('routes/assistant', () => {
       assert.equal(res.status, 200);
       assert.deepEqual(res.body, { names: ['Thunder Squad'] });
       assert.deepEqual(assistantService.generateTeamNames.mock.calls[0].arguments, [[{ pokemonId: 25 }], 'Epic']);
+      assert.equal(analyticsEventService.logEventSafe.mock.calls[0].arguments[0].metadata.feature, 'team-name');
+    });
+
+    test('logs ai_request_failed with feature team-name on a non-rate-limit failure', async () => {
+      assistantService.generateTeamNames.mock.mockImplementationOnce(async () => {
+        throw new Error('model down');
+      });
+
+      const res = await request.post('/api/assistant/team-name').send({ style: 'Epic' });
+
+      assert.equal(res.status, 502);
+      assert.deepEqual(analyticsEventService.logEventSafe.mock.calls[0].arguments[0], {
+        auth0UserId: FAKE_USER,
+        eventType: 'ai_request_failed',
+        metadata: { feature: 'team-name', reason: 'upstream_error' },
+      });
     });
   });
 });

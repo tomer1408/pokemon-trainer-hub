@@ -6,6 +6,7 @@ const { validateTeamNameValue } = require('../services/teamNameFallback');
 const accountService = require('../services/accountService');
 const { getAuth0User } = require('../services/auth0Management');
 const { createRateLimiter } = require('../services/rateLimiter');
+const { logEventSafe, updateLastActive } = require('../services/analyticsEventService');
 
 const router = express.Router();
 
@@ -79,6 +80,12 @@ router.get('/', jwtCheck, async (req, res) => {
       message: 'This account has been deleted.',
     });
   }
+
+  // Fire-and-forget, throttled internally to at most once per 15 minutes —
+  // GET / is the one call every login/page-load flow already makes, so
+  // it's the natural "this trainer is actively using the app right now"
+  // signal (see schema.prisma's TrainerProfile.lastActiveAt comment).
+  updateLastActive(req.auth.payload.sub).catch(() => {});
 
   const { deletedAt, deletionType, purgeAt, ...safeProfile } = profile;
   res.json(withAgeRange(safeProfile));
@@ -201,6 +208,12 @@ router.post('/', jwtCheck, async (req, res) => {
     select: PROFILE_SELECT,
   });
 
+  // Only a genuinely NEW profile counts as onboarding completing — an
+  // existing trainer editing their profile later must never re-fire this.
+  if (!existing) {
+    logEventSafe({ auth0UserId: req.auth.payload.sub, eventType: 'onboarding_completed' });
+  }
+
   res.json(withAgeRange(profile));
 });
 
@@ -215,6 +228,7 @@ router.patch('/starter-quiz', jwtCheck, async (req, res) => {
       data: { hasCompletedStarterQuiz: true },
       select: PROFILE_SELECT,
     });
+    logEventSafe({ auth0UserId: req.auth.payload.sub, eventType: 'starter_quiz_completed' });
     res.json(withAgeRange(profile));
   } catch (err) {
     res.status(404).json({ message: 'No profile found for this user.' });
