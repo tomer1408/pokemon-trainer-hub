@@ -3,11 +3,13 @@ import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { ProfileService } from '../../core/profile';
 import { QuizService, QuizRound } from '../../core/quiz';
+import { AnalyticsService } from '../../core/analytics';
 import { WhosThatPokemon } from './whos-that-pokemon';
 
 describe('WhosThatPokemon', () => {
   let getRound: ReturnType<typeof vi.fn>;
   let updateWhosThatBestStreak: ReturnType<typeof vi.fn>;
+  let logEvent: ReturnType<typeof vi.fn>;
 
   function round(overrides: Partial<QuizRound> = {}): QuizRound {
     return {
@@ -25,12 +27,14 @@ describe('WhosThatPokemon', () => {
   function setup(options: { round?: QuizRound | null; bestStreak?: number } = {}) {
     getRound = vi.fn(() => of(options.round === undefined ? round() : options.round));
     updateWhosThatBestStreak = vi.fn(() => of(true));
+    logEvent = vi.fn();
 
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
         { provide: QuizService, useValue: { getRound } },
         { provide: ProfileService, useValue: { getProfile: () => of({ whosThatBestStreak: options.bestStreak ?? 0 } as any), updateWhosThatBestStreak } },
+        { provide: AnalyticsService, useValue: { logEvent } },
       ],
     });
 
@@ -75,6 +79,7 @@ describe('WhosThatPokemon', () => {
     expect(inst.streak()).toBe(1);
     expect(inst.revealed()).toBe(true);
     expect(inst.feedbackText()).toBe('Correct! Nice one.');
+    expect(logEvent).toHaveBeenCalledWith('whos_that_round_completed', undefined, { correct: true, streak: 1 });
   });
 
   it('pick() with a wrong name resets the streak to 0 and shows the real target name', () => {
@@ -86,6 +91,7 @@ describe('WhosThatPokemon', () => {
     expect(inst.wasCorrect()).toBe(false);
     expect(inst.streak()).toBe(0);
     expect(inst.feedbackText()).toBe('Nope — it was pikachu.');
+    expect(logEvent).toHaveBeenCalledWith('whos_that_round_completed', undefined, { correct: false, streak: 0 });
   });
 
   it('pick() is idempotent once already revealed (a second pick is ignored)', () => {

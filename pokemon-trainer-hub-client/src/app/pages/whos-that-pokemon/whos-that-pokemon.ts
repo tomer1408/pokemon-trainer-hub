@@ -2,6 +2,7 @@ import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ProfileService } from '../../core/profile';
 import { QuizService, QuizRound } from '../../core/quiz';
+import { AnalyticsService } from '../../core/analytics';
 import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
 import { ThemeService } from '../../shared/theme';
 
@@ -30,6 +31,7 @@ interface OptionView {
 export class WhosThatPokemon implements OnDestroy {
   private readonly quizService = inject(QuizService);
   private readonly profileService = inject(ProfileService);
+  private readonly analytics = inject(AnalyticsService);
   protected readonly theme = inject(ThemeService);
 
   protected readonly round = signal<QuizRound | null>(null);
@@ -163,6 +165,11 @@ export class WhosThatPokemon implements OnDestroy {
     } else {
       this.streak.set(0);
     }
+
+    // The only real server-side signal of "a round happened" — the server
+    // never otherwise learns whether a guess was right, since the whole
+    // round is evaluated here, client-side.
+    this.analytics.logEvent('whos_that_round_completed', undefined, { correct, streak: this.streak() });
 
     if (this.streak() > this.best()) {
       this.best.set(this.streak());

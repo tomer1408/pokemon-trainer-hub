@@ -42,7 +42,7 @@ const APPROVED_PAGE_NAMES = [
   'profile',
   'settings',
   'support',
-  'ai-trainer-assistant',
+  'ai-assistant',
   'battle',
   'battle-history',
   'starter-quiz',
