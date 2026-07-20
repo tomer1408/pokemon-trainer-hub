@@ -1,6 +1,14 @@
 <div class="confirm-overlay" [class.light]="isLight()" [class.pikachu]="isPikachu()" (click)="onCancel()">
-  <div class="confirm-card" (click)="$event.stopPropagation()">
-    <h2 class="confirm-title">{{ title() }}</h2>
+  <div
+    #card
+    class="confirm-card"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="confirm-dialog-title"
+    (click)="$event.stopPropagation()"
+    (keydown)="onKeydown($event)"
+  >
+    <h2 id="confirm-dialog-title" class="confirm-title">{{ title() }}</h2>
     <p class="confirm-body">{{ body() }}</p>
 
     @if (requireTypedPhrase(); as phrase) {
@@ -23,7 +31,7 @@
     }
 
     <div class="confirm-actions">
-      <button type="button" class="confirm-cancel" [disabled]="busy()" (click)="onCancel()">{{ cancelLabel() }}</button>
+      <button #cancelBtn type="button" class="confirm-cancel" [disabled]="busy()" (click)="onCancel()">{{ cancelLabel() }}</button>
       <button
         type="button"
         class="confirm-confirm"

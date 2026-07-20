@@ -78,4 +78,71 @@ describe('ConfirmDialog', () => {
     fixture.componentInstance.onCancel();
     expect(spy).not.toHaveBeenCalled();
   });
+
+  it('renders real dialog ARIA semantics: role, aria-modal, and a title linked via aria-labelledby', () => {
+    const fixture = setup();
+    const card = fixture.nativeElement.querySelector('[role="dialog"]') as HTMLElement;
+
+    expect(card).toBeTruthy();
+    expect(card.getAttribute('aria-modal')).toBe('true');
+    const labelledBy = card.getAttribute('aria-labelledby');
+    expect(labelledBy).toBeTruthy();
+    expect(fixture.nativeElement.querySelector(`#${labelledBy}`)?.textContent).toContain('Delete this?');
+  });
+
+  it('moves focus onto the Cancel button once rendered, not the (destructive) Confirm button', async () => {
+    const fixture = setup();
+    await fixture.whenStable();
+
+    const cancelBtn = fixture.nativeElement.querySelector('.confirm-cancel') as HTMLElement;
+    expect(document.activeElement).toBe(cancelBtn);
+  });
+
+  it('Escape key triggers the same cancel behavior as clicking Cancel', () => {
+    const fixture = setup();
+    const spy = vi.fn();
+    fixture.componentInstance.cancelled.subscribe(spy);
+
+    (fixture.componentInstance as any).onKeydown(new KeyboardEvent('keydown', { key: 'Escape' }));
+
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('Escape is a no-op while busy, same as onCancel()', () => {
+    const fixture = setup({ busy: true });
+    const spy = vi.fn();
+    fixture.componentInstance.cancelled.subscribe(spy);
+
+    (fixture.componentInstance as any).onKeydown(new KeyboardEvent('keydown', { key: 'Escape' }));
+
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('Tab from the last focusable element wraps back to the first (focus trap)', () => {
+    const fixture = setup();
+    const focusable = fixture.nativeElement.querySelectorAll('button:not([disabled]), input:not([disabled])');
+    const first = focusable[0] as HTMLElement;
+    const last = focusable[focusable.length - 1] as HTMLElement;
+    last.focus();
+
+    const event = new KeyboardEvent('keydown', { key: 'Tab', cancelable: true });
+    (fixture.componentInstance as any).onKeydown(event);
+
+    expect(document.activeElement).toBe(first);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('Shift+Tab from the first focusable element wraps to the last (focus trap)', () => {
+    const fixture = setup();
+    const focusable = fixture.nativeElement.querySelectorAll('button:not([disabled]), input:not([disabled])');
+    const first = focusable[0] as HTMLElement;
+    const last = focusable[focusable.length - 1] as HTMLElement;
+    first.focus();
+
+    const event = new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, cancelable: true });
+    (fixture.componentInstance as any).onKeydown(event);
+
+    expect(document.activeElement).toBe(last);
+    expect(event.defaultPrevented).toBe(true);
+  });
 });
