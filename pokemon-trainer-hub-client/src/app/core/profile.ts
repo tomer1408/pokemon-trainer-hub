@@ -103,9 +103,10 @@ export class ProfileService {
   // services/accountService.softDeleteAccount) — not the irreversible
   // action it used to be. No data is touched and Auth0 isn't either; the
   // trainer has 30 days to request restoration by logging back in before
-  // the automatic purge makes it permanent. The caller (Settings) still
-  // logs the trainer out either way, since they're blocked from the app
-  // regardless.
+  // becoming eligible for permanent deletion (currently a manually-invoked
+  // purge sweep, not a scheduler — see routes/internal.js). The caller
+  // (Settings) still logs the trainer out either way, since they're
+  // blocked from the app regardless.
   deleteAccount(): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(`${API_BASE}/profile`);
   }

@@ -276,8 +276,9 @@ router.patch('/whos-that-streak', jwtCheck, async (req, res) => {
 // The trainer is blocked from the app for 30 days (GET / above); if they
 // log back in during that window they can submit a restoration request
 // (POST /restoration-request, added in a later phase) — only an admin can
-// actually restore the account. If untouched for 30 days, the account and
-// all its data are permanently purged by the automatic sweep.
+// actually restore the account. If untouched for 30 days, the account
+// becomes eligible for permanent deletion via the purge sweep (currently
+// invoked manually, not on a schedule — see routes/internal.js).
 router.delete('/', jwtCheck, async (req, res) => {
   await accountService.softDeleteAccount(req.auth.payload.sub, {
     deletedBy: req.auth.payload.sub,

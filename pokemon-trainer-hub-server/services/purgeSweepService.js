@@ -8,21 +8,25 @@ const { logAdminAction } = require('./adminAudit');
 // just naming the automated process itself instead of a person.
 const PURGE_ACTOR = 'system';
 
-// The automatic conclusion of the 30-day soft-delete window (see
+// The real conclusion of the 30-day soft-delete window (see
 // accountService.softDeleteAccount) — finds every TrainerProfile whose
 // purgeAt has passed and permanently deletes it via the same, unmodified
-// accountService.deleteAccount() used by admin force-delete. Processed
-// sequentially (not Promise.all) — each deletion is its own DB transaction
-// plus a real Auth0 API call, and this app's realistic scale doesn't need
-// (or want) an unbounded burst against either.
+// accountService.deleteAccount() used by admin force-delete. Currently
+// invoked manually by an authorized operator (POST /api/internal/purge-
+// sweep, see routes/internal.js) rather than on a schedule — by decision,
+// not a limitation; nothing here would need to change if a scheduler were
+// wired up later. Processed sequentially (not Promise.all) — each deletion
+// is its own DB transaction plus a real Auth0 API call, and this app's
+// realistic scale doesn't need (or want) an unbounded burst against either.
 //
 // Eligibility is deliberately over-specified (both deletedAt and purgeAt
 // checked, not just purgeAt) even though softDeleteAccount always sets them
 // together and restoreAccount always clears them together — the query
 // itself, not that invariant, is what an attacker or a future bug can't
-// bypass. Nothing from the caller (the external scheduler has no notion of
-// "which users" at all) ever influences which rows are selected; eligibility
-// is computed entirely from real DB values and the server's own clock.
+// bypass. Nothing from the caller (whoever holds the shared secret has no
+// way to name "which users" at all) ever influences which rows are
+// selected; eligibility is computed entirely from real DB values and the
+// server's own clock.
 async function runPurgeSweep() {
   const candidates = await prisma.trainerProfile.findMany({
     where: { deletedAt: { not: null }, purgeAt: { not: null, lte: new Date() } },
