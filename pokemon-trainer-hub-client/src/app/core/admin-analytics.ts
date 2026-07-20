@@ -24,6 +24,19 @@ export interface LabeledCount {
   count: number;
 }
 
+export interface AiFeatureStats {
+  feature: string;
+  completed: number;
+  failed: number;
+  successRatePct: number | null;
+}
+
+export interface RetentionWindow {
+  eligible: number;
+  retained: number;
+  ratePct: number | null;
+}
+
 export interface Analytics {
   days: number;
   overTime: {
@@ -48,6 +61,23 @@ export interface Analytics {
   supportStats: {
     byTopic: LabeledCount[];
     byStatus: LabeledCount[];
+  };
+  // Phase 8 — real, computed from the AppEvent table (see
+  // services/adminAnalyticsService.js's computeEngagementStats/
+  // computeRetention). Only meaningful from the moment that phase
+  // deployed onward — never backfilled or estimated for older activity.
+  engagement: {
+    dau: number;
+    mau: number;
+    pageViewsOverTime: DailyCount[];
+    sessionsOverTime: DailyCount[];
+    featureAdoption: LabeledCount[];
+    aiRequestStats: AiFeatureStats[];
+  };
+  retention: {
+    day1: RetentionWindow;
+    day7: RetentionWindow;
+    day30: RetentionWindow;
   };
 }
 

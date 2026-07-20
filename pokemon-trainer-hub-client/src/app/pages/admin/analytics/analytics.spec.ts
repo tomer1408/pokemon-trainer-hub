@@ -29,6 +29,19 @@ describe('AdminAnalytics', () => {
       },
       whosThatStats: { averageBestStreak: 4.5, highestBestStreak: 12, trainersWhoHavePlayed: 9 },
       supportStats: { byTopic: [{ label: 'billing', count: 6 }], byStatus: [{ label: 'open', count: 3 }] },
+      engagement: {
+        dau: 3,
+        mau: 9,
+        pageViewsOverTime: [{ date: '2026-07-01', count: 12 }],
+        sessionsOverTime: [{ date: '2026-07-01', count: 4 }],
+        featureAdoption: [{ label: 'battle_completed', count: 5 }],
+        aiRequestStats: [{ feature: 'chat', completed: 8, failed: 2, successRatePct: 80 }],
+      },
+      retention: {
+        day1: { eligible: 4, retained: 3, ratePct: 75 },
+        day7: { eligible: 2, retained: 1, ratePct: 50 },
+        day30: { eligible: 0, retained: 0, ratePct: null },
+      },
       ...overrides,
     };
   }
@@ -83,6 +96,22 @@ describe('AdminAnalytics', () => {
 
     expect(inst.popularInTeamsItems()).toEqual([{ label: 'pikachu', count: 4 }]);
     expect(inst.popularFavoritedItems()).toEqual([{ label: 'charizard', count: 3 }]);
+  });
+
+  it('featureAdoptionItems maps a real eventType to a human-readable label for HBarList', () => {
+    const fixture = setup(() => of(analytics()));
+    const inst = fixture.componentInstance as any;
+
+    expect(inst.featureAdoptionItems()).toEqual([{ label: 'Battle Completed', count: 5 }]);
+  });
+
+  it('featureAdoptionItems falls back to the raw eventType if a label is ever missing', () => {
+    const fixture = setup(() =>
+      of(analytics({ engagement: { ...analytics().engagement, featureAdoption: [{ label: 'some_new_event', count: 1 }] } })),
+    );
+    const inst = fixture.componentInstance as any;
+
+    expect(inst.featureAdoptionItems()).toEqual([{ label: 'some_new_event', count: 1 }]);
   });
 
   it('setDays() refetches with the real selected window', () => {

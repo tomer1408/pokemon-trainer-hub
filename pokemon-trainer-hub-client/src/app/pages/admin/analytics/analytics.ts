@@ -21,13 +21,29 @@ interface FunnelRow {
   dropFromPrevious: number | null;
 }
 
-// Phase 5: one GET /api/admin/analytics?days=N call — real over-time
-// buckets, a real sequential funnel, real popularity/battle/support
-// distributions, and real Who's That streak stats. Charts are small,
-// hand-rolled components (HBarList/MiniBarChart/DonutChart) — no new
-// charting library. Deliberately omits DAU/MAU/retention/last-login/
-// page-views — this app has no data source for any of them, and this
-// project's standing rule is to never fake a metric.
+// Raw eventType -> a human label, for the Feature Adoption HBarList.
+const FEATURE_ADOPTION_LABELS: Record<string, string> = {
+  onboarding_completed: 'Onboarding Completed',
+  starter_quiz_completed: 'Starter Quiz Completed',
+  pokemon_added_to_team: 'Pokémon Added to Team',
+  dream_team_completed: 'Dream Team Completed (5/5)',
+  battle_completed: 'Battle Completed',
+  whos_that_round_completed: "Who's That Round Played",
+  support_request_created: 'Support Request Sent',
+  ai_request_completed: 'AI Request Completed',
+};
+
+// Phase 5 (Admin Dashboard) + Phase 8 (Product Analytics Tracking, once
+// approved and built): one GET /api/admin/analytics?days=N call — real
+// over-time buckets, a real sequential funnel, real popularity/battle/
+// support distributions, real Who's That streak stats, and now real DAU/
+// MAU/retention/page-view/session/feature-adoption/AI-success-rate numbers
+// too, computed server-side from the real AppEvent table (see
+// services/adminAnalyticsService.js). Those numbers are only meaningful
+// from the moment Phase 8 actually deployed onward — never backfilled or
+// estimated for older activity, per this project's standing rule to never
+// fake a metric. Charts are small, hand-rolled components (HBarList/
+// MiniBarChart/DonutChart) — no new charting library.
 @Component({
   selector: 'app-admin-analytics',
   imports: [DonutChart, HBarList, MiniBarChart],
@@ -87,6 +103,13 @@ export class AdminAnalytics {
     const colorFor = (label: string) => (label === 'win' ? 'var(--success)' : label === 'loss' ? 'var(--danger)' : 'var(--text-secondary-night)');
     return results.map((r) => ({ label: r.label, count: r.count, colorVar: colorFor(r.label) }));
   });
+
+  protected readonly featureAdoptionItems = computed(() =>
+    (this.analytics()?.engagement.featureAdoption ?? []).map((f) => ({
+      label: FEATURE_ADOPTION_LABELS[f.label] ?? f.label,
+      count: f.count,
+    })),
+  );
 
   setDays(days: number): void {
     this.daysFilter.set(days);

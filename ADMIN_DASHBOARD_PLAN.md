@@ -104,14 +104,20 @@ anything said earlier in conversation.
 - Full `npm test` both sides (298/298 server, 682/682 client) + production build, then a real end-to-end smoke check: server restarted fresh, all 7 `/api/admin/*` route families (`ping`/`support`/`trainers`/`overview`/`system`/`analytics`/`database/tables`) confirmed returning a real `401` with no token.
 - **Comprehensive cross-phase verification pass (0-7), done at the user's explicit request after Phase 7's own report**: re-ran every test suite fresh (298/298 server, 682/682 client), re-ran the production build, cross-checked server-side route permissions against the client-side route/nav permissions and both docs (no mismatches), confirmed no leftover "Soon" sidebar placeholders, confirmed every admin service/shared component is actually referenced somewhere (no orphans), and re-ran the full live end-to-end smoke test (`/api/health` → 200, all 7 admin route families → 401, including the `__proto__` whitelist edge case). Found and fixed one real issue: this Status table had drifted — Phases 2-5 were already committed (`cbcffa2`/`b713bbd`/`60a3f82`/`59221c1`) but still showed "not yet committed" here. Also flagged (not fixed, since it lives in an already-committed Phase 0 file): the client's `AdminService.ping()` has had zero callers since Phase 3 replaced the Overview placeholder — the server route it hits (`GET /api/admin/ping`) stays genuinely useful as a manual auth-chain smoke test and is documented as such in the README, but the client method itself is dead code.
 
-## Phase 8 — Product Analytics Tracking (deferred — NOT approved, NOT started)
+## Phase 8 — Product Analytics Tracking ✅
 
-Explicitly out of scope for the current 0-7 phase build. Complete and verify
-Phases 4-7 first. This is a new product/technical feature (real event
-collection infrastructure), not a small extension of Phase 5's Analytics
-page — before implementing any of it, present the design below back to the
-user for review and wait for separate explicit approval, same as every
-other phase.
+Built across 5 sub-phases after the design below was presented back to the
+user for review and explicitly approved: (1) `AppEvent` schema +
+`services/analyticsEventService.js` core (`logEvent`/`logEventSafe`/
+`updateLastActive`), (2) server-owned events wired into the real routes/
+services whose actions they describe, (3) `POST /api/events` — the one
+client-facing route, its own smaller `CLIENT_ALLOWED_EVENT_TYPES` allowlist
+and strict per-event metadata validation, (4) client instrumentation
+(`core/analytics.ts`, `app.ts`'s session/page-view tracking,
+`whos-that-pokemon.ts`'s round-completed event), (5) `adminAnalyticsService.js`'s
+`computeEngagementStats`/`computeRetention` wired into the real Analytics
+page. See README's "Product analytics tracking" section for the full
+picture.
 
 **Objective:** build the real data collection this app currently lacks, so
 Analytics can eventually show DAU, MAU, last-active/last-login, Day 1/7/30

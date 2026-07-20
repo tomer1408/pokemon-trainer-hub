@@ -20,6 +20,9 @@ describe('services/adminAnalyticsService', () => {
       dreamTeamMember: { groupBy: mock.fn(async () => []) },
       favorite: { groupBy: mock.fn(async () => []) },
       supportRequest: { groupBy: mock.fn(async () => []) },
+      appEvent: {
+        findMany: mock.fn(async () => []),
+      },
     };
     mock.module(path.resolve(__dirname, './prisma.js'), { exports: { default: prisma } });
 
@@ -35,6 +38,7 @@ describe('services/adminAnalyticsService', () => {
     prisma.dreamTeamMember.groupBy.mock.resetCalls();
     prisma.favorite.groupBy.mock.resetCalls();
     prisma.supportRequest.groupBy.mock.resetCalls();
+    prisma.appEvent.findMany.mock.resetCalls();
   }
 
   beforeEach(() => {
@@ -50,6 +54,7 @@ describe('services/adminAnalyticsService', () => {
     prisma.dreamTeamMember.groupBy.mock.mockImplementation(async () => []);
     prisma.favorite.groupBy.mock.mockImplementation(async () => []);
     prisma.supportRequest.groupBy.mock.mockImplementation(async () => []);
+    prisma.appEvent.findMany.mock.mockImplementation(async () => []);
   });
 
   describe('normalizeDays', () => {
@@ -73,7 +78,7 @@ describe('services/adminAnalyticsService', () => {
   });
 
   describe('getAnalytics', () => {
-    test('returns all 6 real sections in one combined response', async () => {
+    test('returns all 8 real sections in one combined response', async () => {
       const analytics = await service.getAnalytics(30);
 
       assert.ok('overTime' in analytics);
@@ -82,6 +87,8 @@ describe('services/adminAnalyticsService', () => {
       assert.ok('battleStats' in analytics);
       assert.ok('whosThatStats' in analytics);
       assert.ok('supportStats' in analytics);
+      assert.ok('engagement' in analytics);
+      assert.ok('retention' in analytics);
       assert.equal(analytics.days, 30);
     });
 
@@ -193,6 +200,158 @@ describe('services/adminAnalyticsService', () => {
 
       assert.deepEqual(analytics.supportStats.byTopic, [{ label: 'billing', count: 6 }]);
       assert.deepEqual(analytics.supportStats.byStatus, [{ label: 'open', count: 3 }]);
+    });
+
+    test('engagement and retention are real, computed from AppEvent, and included in the combined response', async () => {
+      const now = new Date();
+      prisma.appEvent.findMany.mock.mockImplementationOnce(async () => [
+        { auth0UserId: 'auth0|a', eventType: 'page_viewed', createdAt: now, metadataJson: null },
+      ]);
+
+      const analytics = await service.getAnalytics(30);
+
+      assert.ok(analytics.engagement);
+      assert.ok(analytics.retention);
+      assert.equal(analytics.engagement.dau, 1);
+    });
+  });
+
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+  describe('computeEngagementStats', () => {
+    test('DAU counts only real, distinct authenticated users active today', () => {
+      const now = new Date();
+      const events = [
+        { auth0UserId: 'auth0|a', eventType: 'page_viewed', createdAt: now, metadataJson: null },
+        { auth0UserId: 'auth0|a', eventType: 'session_started', createdAt: now, metadataJson: null }, // same user twice today
+        { auth0UserId: 'auth0|b', eventType: 'page_viewed', createdAt: new Date(now.getTime() - 40 * ONE_DAY_MS), metadataJson: null }, // too old
+        { auth0UserId: null, eventType: 'page_viewed', createdAt: now, metadataJson: null }, // no real user
+      ];
+
+      const stats = service.computeEngagementStats(events, new Date(now.getTime() - 6 * ONE_DAY_MS), 7);
+
+      assert.equal(stats.dau, 1);
+    });
+
+    test('MAU includes anyone active in the last 30 days, DAU does not', () => {
+      const now = new Date();
+      const events = [
+        { auth0UserId: 'auth0|a', eventType: 'page_viewed', createdAt: now, metadataJson: null },
+        { auth0UserId: 'auth0|b', eventType: 'page_viewed', createdAt: new Date(now.getTime() - 10 * ONE_DAY_MS), metadataJson: null },
+      ];
+
+      const stats = service.computeEngagementStats(events, new Date(now.getTime() - 29 * ONE_DAY_MS), 30);
+
+      assert.equal(stats.dau, 1);
+      assert.equal(stats.mau, 2);
+    });
+
+    test('pageViewsOverTime and sessionsOverTime only count their own real eventType, bucketed by day', () => {
+      const now = new Date();
+      const events = [
+        { auth0UserId: 'auth0|a', eventType: 'page_viewed', createdAt: now, metadataJson: null },
+        { auth0UserId: 'auth0|a', eventType: 'page_viewed', createdAt: now, metadataJson: null },
+        { auth0UserId: 'auth0|a', eventType: 'session_started', createdAt: now, metadataJson: null },
+        { auth0UserId: 'auth0|a', eventType: 'battle_completed', createdAt: now, metadataJson: null },
+      ];
+
+      const stats = service.computeEngagementStats(events, new Date(now.getTime() - 2 * ONE_DAY_MS), 3);
+
+      const pageViewTotal = stats.pageViewsOverTime.reduce((sum, d) => sum + d.count, 0);
+      const sessionTotal = stats.sessionsOverTime.reduce((sum, d) => sum + d.count, 0);
+      assert.equal(pageViewTotal, 2);
+      assert.equal(sessionTotal, 1);
+    });
+
+    test('featureAdoption reports a real count for every approved feature event, zero when never logged', () => {
+      const now = new Date();
+      const events = [
+        { auth0UserId: 'auth0|a', eventType: 'battle_completed', createdAt: now, metadataJson: null },
+        { auth0UserId: 'auth0|a', eventType: 'battle_completed', createdAt: now, metadataJson: null },
+      ];
+
+      const stats = service.computeEngagementStats(events, now, 1);
+
+      const battle = stats.featureAdoption.find((f) => f.label === 'battle_completed');
+      const quiz = stats.featureAdoption.find((f) => f.label === 'starter_quiz_completed');
+      assert.equal(battle.count, 2);
+      assert.equal(quiz.count, 0);
+    });
+
+    test('aiRequestStats groups by the real feature in metadata and computes a real success rate', () => {
+      const now = new Date();
+      const events = [
+        { auth0UserId: 'auth0|a', eventType: 'ai_request_completed', createdAt: now, metadataJson: JSON.stringify({ feature: 'chat' }) },
+        { auth0UserId: 'auth0|a', eventType: 'ai_request_completed', createdAt: now, metadataJson: JSON.stringify({ feature: 'chat' }) },
+        { auth0UserId: 'auth0|a', eventType: 'ai_request_failed', createdAt: now, metadataJson: JSON.stringify({ feature: 'chat', reason: 'rate_limited' }) },
+      ];
+
+      const stats = service.computeEngagementStats(events, now, 1);
+
+      assert.deepEqual(stats.aiRequestStats, [{ feature: 'chat', completed: 2, failed: 1, successRatePct: 66.7 }]);
+    });
+
+    test('a corrupted metadataJson row is grouped as "unknown" instead of crashing the whole page', () => {
+      const now = new Date();
+      const events = [
+        { auth0UserId: 'auth0|a', eventType: 'ai_request_completed', createdAt: now, metadataJson: 'not real json' },
+      ];
+
+      const stats = service.computeEngagementStats(events, now, 1);
+
+      assert.equal(stats.aiRequestStats[0].feature, 'unknown');
+    });
+  });
+
+  describe('computeRetention', () => {
+    test('a user is not eligible for Day-1 retention until a full day has actually passed since their first event', () => {
+      const events = [{ auth0UserId: 'auth0|a', eventType: 'session_started', createdAt: new Date() }];
+
+      const retention = service.computeRetention(events);
+
+      assert.equal(retention.day1.eligible, 0);
+    });
+
+    test('a user who returns exactly on day 1 counts as retained', () => {
+      const firstDay = new Date(Date.now() - 2 * ONE_DAY_MS);
+      const returnedDay = new Date(firstDay.getTime() + ONE_DAY_MS);
+      const events = [
+        { auth0UserId: 'auth0|a', eventType: 'session_started', createdAt: firstDay },
+        { auth0UserId: 'auth0|a', eventType: 'page_viewed', createdAt: returnedDay },
+      ];
+
+      const retention = service.computeRetention(events);
+
+      assert.equal(retention.day1.eligible, 1);
+      assert.equal(retention.day1.retained, 1);
+      assert.equal(retention.day1.ratePct, 100);
+    });
+
+    test('a user who never returns is eligible but not retained', () => {
+      const firstDay = new Date(Date.now() - 5 * ONE_DAY_MS);
+      const events = [{ auth0UserId: 'auth0|a', eventType: 'session_started', createdAt: firstDay }];
+
+      const retention = service.computeRetention(events);
+
+      assert.equal(retention.day1.eligible, 1);
+      assert.equal(retention.day1.retained, 0);
+      assert.equal(retention.day1.ratePct, 0);
+    });
+
+    test('a null auth0UserId is never counted toward any cohort', () => {
+      const events = [{ auth0UserId: null, eventType: 'page_viewed', createdAt: new Date(Date.now() - 5 * ONE_DAY_MS) }];
+
+      const retention = service.computeRetention(events);
+
+      assert.equal(retention.day1.eligible, 0);
+    });
+
+    test('ratePct is null (not a fabricated 0) when nobody is eligible yet', () => {
+      const retention = service.computeRetention([]);
+
+      assert.equal(retention.day1.ratePct, null);
+      assert.equal(retention.day7.ratePct, null);
+      assert.equal(retention.day30.ratePct, null);
     });
   });
 });

@@ -4,7 +4,7 @@
   <div class="state-block error">Could not load Analytics. Please try again.</div>
 } @else if (analytics(); as a) {
   <div class="scope-note">
-    Every number below comes from data this app already stores. DAU, MAU, retention, last-login/last-active and page-view metrics are <strong>not shown</strong> — this app has no event-tracking data source for them yet, and this dashboard never simulates a metric it can't back with a real query.
+    Every number below comes from data this app already stores. DAU, MAU, retention, page views and sessions are computed from a real event log (AppEvent) that only started recording once that tracking shipped — those numbers are honestly small/zero for activity from before then, never backfilled or estimated.
   </div>
 
   <div class="toolbar">
@@ -107,6 +107,65 @@
           <div class="stat-cell"><span class="stat-value">{{ a.whosThatStats.averageBestStreak }}</span><span class="stat-label">Avg. Best Streak</span></div>
           <div class="stat-cell"><span class="stat-value">{{ a.whosThatStats.highestBestStreak }}</span><span class="stat-label">Highest Streak</span></div>
           <div class="stat-cell"><span class="stat-value">{{ a.whosThatStats.trainersWhoHavePlayed }}</span><span class="stat-label">Trainers Played</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Analytics (Phase 8) -->
+  <div class="section">
+    <div class="section-head"><span class="section-dot"></span>Product Analytics</div>
+    <div class="chart-grid">
+      <div class="card">
+        <div class="card-head"><span class="card-title">Active Trainers</span><span class="card-sub">real, from AppEvent</span></div>
+        <div class="stat-grid cols-2">
+          <div class="stat-cell"><span class="stat-value">{{ a.engagement.dau }}</span><span class="stat-label">DAU (today)</span></div>
+          <div class="stat-cell"><span class="stat-value">{{ a.engagement.mau }}</span><span class="stat-label">MAU (30 days)</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Page Views</span><span class="card-sub">last {{ a.days }} days</span></div>
+        <app-mini-bar-chart [series]="a.engagement.pageViewsOverTime" [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" />
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Sessions Started</span><span class="card-sub">last {{ a.days }} days</span></div>
+        <app-mini-bar-chart [series]="a.engagement.sessionsOverTime" [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" />
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Feature Adoption</span><span class="card-sub">all-time, since Phase 8 shipped</span></div>
+        <app-hbar-list [items]="featureAdoptionItems()" [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" />
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">AI Request Success Rate</span><span class="card-sub">by feature, all-time</span></div>
+        @if (a.engagement.aiRequestStats.length === 0) {
+          <div class="empty-note">No AI requests logged yet.</div>
+        } @else {
+          <div class="ai-stats-list">
+            @for (s of a.engagement.aiRequestStats; track s.feature) {
+              <div class="ai-stats-row">
+                <span class="ai-stats-feature">{{ s.feature }}</span>
+                <span class="ai-stats-detail">{{ s.completed }} ok · {{ s.failed }} failed</span>
+                <span class="ai-stats-rate">{{ s.successRatePct !== null ? s.successRatePct + '%' : '—' }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Retention</span><span class="card-sub">cohort-based, real — see note above</span></div>
+        <div class="stat-grid">
+          <div class="stat-cell">
+            <span class="stat-value">{{ a.retention.day1.ratePct !== null ? a.retention.day1.ratePct + '%' : '—' }}</span>
+            <span class="stat-label">Day 1 ({{ a.retention.day1.eligible }} eligible)</span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-value">{{ a.retention.day7.ratePct !== null ? a.retention.day7.ratePct + '%' : '—' }}</span>
+            <span class="stat-label">Day 7 ({{ a.retention.day7.eligible }} eligible)</span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-value">{{ a.retention.day30.ratePct !== null ? a.retention.day30.ratePct + '%' : '—' }}</span>
+            <span class="stat-label">Day 30 ({{ a.retention.day30.eligible }} eligible)</span>
+          </div>
         </div>
       </div>
     </div>
