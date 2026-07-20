@@ -108,7 +108,7 @@
                   </div>
                   <div class="slot-name">{{ member.pokemonName }}</div>
                   @if (member.types[0]; as type) {
-                    <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                    <span class="type-pill" [style.background]="typeColor(type) + '33'">
                       <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
                     </span>
                   }
@@ -227,7 +227,7 @@
             <div class="potd-info">
               <div class="potd-name">{{ p.name }}</div>
               @if (p.types[0]; as type) {
-                <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                <span class="type-pill" [style.background]="typeColor(type) + '33'">
                   <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
                 </span>
               }

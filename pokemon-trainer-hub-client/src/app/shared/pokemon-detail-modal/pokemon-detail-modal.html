@@ -24,7 +24,7 @@
             <h1 class="name">{{ p.name }}</h1>
             <div class="types-row">
               @for (t of p.types; track t) {
-                <span class="type-pill big" [style.background]="typeColor(t) + '33'" [style.color]="typeColor(t)">
+                <span class="type-pill big" [style.background]="typeColor(t) + '33'">
                   <span class="type-glyph" [style.background]="typeColor(t)"></span>{{ t }}
                 </span>
               }
@@ -143,7 +143,7 @@
                     <span class="badge-none">None</span>
                   } @else {
                     @for (t of p.weaknesses; track t) {
-                      <span class="type-pill" [style.background]="typeColor(t) + '33'" [style.color]="typeColor(t)">
+                      <span class="type-pill" [style.background]="typeColor(t) + '33'">
                         <span class="type-glyph" [style.background]="typeColor(t)"></span>{{ t }}
                       </span>
                     }
@@ -157,7 +157,7 @@
                     <span class="badge-none">None</span>
                   } @else {
                     @for (t of p.resistances; track t) {
-                      <span class="type-pill" [style.background]="typeColor(t) + '33'" [style.color]="typeColor(t)">
+                      <span class="type-pill" [style.background]="typeColor(t) + '33'">
                         <span class="type-glyph" [style.background]="typeColor(t)"></span>{{ t }}
                       </span>
                     }
@@ -180,7 +180,7 @@
                 <div class="move-list">
                   @for (mv of p.topMoves; track mv.name) {
                     <div class="move-row">
-                      <span class="type-pill" [style.background]="typeColor(mv.type) + '33'" [style.color]="typeColor(mv.type)">
+                      <span class="type-pill" [style.background]="typeColor(mv.type) + '33'">
                         <span class="type-glyph" [style.background]="typeColor(mv.type)"></span>{{ mv.type }}
                       </span>
                       <span class="move-name">{{ mv.name.replaceAll('-', ' ') }}</span>

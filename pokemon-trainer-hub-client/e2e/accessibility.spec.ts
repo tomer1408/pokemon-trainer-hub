@@ -11,17 +11,14 @@ test('Landing page has no automatically-detectable accessibility violations', as
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 
-  const results = await new AxeBuilder({ page })
-    // color-contrast is deliberately excluded here, not silently ignored:
-    // this scan found a real, serious-impact violation in the shared
-    // per-type badge colors (e.g. the Water type's blue against certain
-    // card backgrounds falls just under WCAG AA's 4.5:1). Fixing it means
-    // auditing the whole TYPE_COLORS palette used across every page, not a
-    // one-line template fix like the landmark/heading-order issues this
-    // same scan already caught and fixed — tracked as a known follow-up
-    // rather than scope-creeping this task into a full color audit.
-    .disableRules(['color-contrast'])
-    .analyze();
+  // color-contrast used to be excluded here: the shared type-pill badges
+  // rendered text in the raw type color on that same color's own tinted
+  // background (e.g. Water's blue measured 4.18:1, short of WCAG AA's
+  // 4.5:1) — too close in hue/lightness by construction, on every page
+  // that renders a type badge. Fixed by giving every .type-pill/.fav-pill
+  // a fixed, theme-contrasting text color instead (the type color still
+  // shows via the full-saturation glyph dot) — no longer needs excluding.
+  const results = await new AxeBuilder({ page }).analyze();
 
   expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
 });
@@ -35,17 +32,14 @@ test('Home page (authenticated) has no automatically-detectable accessibility vi
   await page.waitForURL('**/home');
   await expect(page.getByRole('heading', { name: MOCK_PROFILE.trainerName })).toBeVisible();
 
-  const results = await new AxeBuilder({ page })
-    // color-contrast is deliberately excluded here, not silently ignored:
-    // this scan found a real, serious-impact violation in the shared
-    // per-type badge colors (e.g. the Water type's blue against certain
-    // card backgrounds falls just under WCAG AA's 4.5:1). Fixing it means
-    // auditing the whole TYPE_COLORS palette used across every page, not a
-    // one-line template fix like the landmark/heading-order issues this
-    // same scan already caught and fixed — tracked as a known follow-up
-    // rather than scope-creeping this task into a full color audit.
-    .disableRules(['color-contrast'])
-    .analyze();
+  // color-contrast used to be excluded here: the shared type-pill badges
+  // rendered text in the raw type color on that same color's own tinted
+  // background (e.g. Water's blue measured 4.18:1, short of WCAG AA's
+  // 4.5:1) — too close in hue/lightness by construction, on every page
+  // that renders a type badge. Fixed by giving every .type-pill/.fav-pill
+  // a fixed, theme-contrasting text color instead (the type color still
+  // shows via the full-saturation glyph dot) — no longer needs excluding.
+  const results = await new AxeBuilder({ page }).analyze();
 
   expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
 });

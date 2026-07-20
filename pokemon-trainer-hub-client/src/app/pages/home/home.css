@@ -593,6 +593,14 @@
   border-radius: 100px;
 }
 
+.type-pill {
+  /* Fixed, theme-contrasting text — NOT the type color itself. Text in the
+     type color on that same color's own tinted background repeatedly fails
+     WCAG AA: the two are too close in hue/lightness by construction. The
+     type color still shows via the full-saturation glyph dot. */
+  color: var(--text-body);
+}
+
 .manage-link {
   gap: 7px;
   font-weight: 800;

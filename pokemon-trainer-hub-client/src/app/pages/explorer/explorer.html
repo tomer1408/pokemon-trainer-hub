@@ -121,7 +121,7 @@
               <div class="card-name">{{ p.name }}</div>
               <div class="card-types">
                 @for (t of p.types; track t) {
-                  <span class="type-pill" [style.background]="typeColor(t) + '33'" [style.color]="typeColor(t)">
+                  <span class="type-pill" [style.background]="typeColor(t) + '33'">
                     <span class="type-glyph" [style.background]="typeColor(t)"></span>{{ t }}
                   </span>
                 }
@@ -221,7 +221,7 @@
         <span class="coverage-none">None yet</span>
       } @else {
         @for (t of teamCoverage(); track t) {
-          <span class="type-pill" [style.background]="typeColor(t) + '33'" [style.color]="typeColor(t)">
+          <span class="type-pill" [style.background]="typeColor(t) + '33'">
             <span class="type-glyph" [style.background]="typeColor(t)"></span>{{ t }}
           </span>
         }

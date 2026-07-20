@@ -37,7 +37,7 @@
                     <div class="scout-id-col">
                       <span class="scout-name">{{ s.pokemonName }}</span>
                       @if (s.types[0]; as type) {
-                        <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                        <span class="type-pill" [style.background]="typeColor(type) + '33'">
                           <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
                         </span>
                       }
@@ -81,7 +81,7 @@
                     <div class="scout-id-col">
                       <span class="scout-name">{{ s.pokemonName }}</span>
                       @if (s.types[0]; as type) {
-                        <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                        <span class="type-pill" [style.background]="typeColor(type) + '33'">
                           <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
                         </span>
                       }
@@ -149,7 +149,7 @@
                   <div class="slot-name">{{ member.pokemonName }}</div>
                   <div class="type-power-row">
                     @if (member.types[0]; as type) {
-                      <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                      <span class="type-pill" [style.background]="typeColor(type) + '33'">
                         <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
                       </span>
                     }
@@ -226,7 +226,7 @@
                 <div class="pool-info">
                   <div class="pool-name">{{ card.pokemonName }}</div>
                   @if (card.types[0]; as type) {
-                    <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                    <span class="type-pill" [style.background]="typeColor(type) + '33'">
                       <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
                     </span>
                   }
@@ -283,7 +283,7 @@
                 <div class="pool-info">
                   <div class="pool-name">{{ card.pokemonName }}</div>
                   @if (card.types[0]; as type) {
-                    <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                    <span class="type-pill" [style.background]="typeColor(type) + '33'">
                       <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
                     </span>
                   }
@@ -336,7 +336,7 @@
                 </div>
                 <div class="type-legend">
                   @for (seg of draftTypeSegments(); track seg.type) {
-                    <span class="type-pill" [style.background]="typeColor(seg.type) + '33'" [style.color]="typeColor(seg.type)">
+                    <span class="type-pill" [style.background]="typeColor(seg.type) + '33'">
                       <span class="type-glyph" [style.background]="typeColor(seg.type)"></span>{{ seg.type }} {{ seg.pct }}%
                     </span>
                   }

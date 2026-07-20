@@ -457,6 +457,12 @@
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 10.5px;
+  /* Fixed, theme-contrasting text — NOT the type color itself. Text in the
+     type color on that same color's own tinted background repeatedly fails
+     WCAG AA (as low as 4.18:1 measured for Water, need 4.5:1): the two are
+     too close in hue/lightness by construction. The type color still shows
+     via the full-saturation glyph dot next to the label. */
+  color: var(--text-body);
 }
 
 .type-glyph {

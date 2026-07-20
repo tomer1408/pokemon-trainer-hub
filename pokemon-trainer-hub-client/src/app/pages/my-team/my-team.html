@@ -30,7 +30,7 @@
               </div>
               <div class="slot-name">{{ member.pokemonName }}</div>
               @if (member.types[0]; as type) {
-                <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                <span class="type-pill" [style.background]="typeColor(type) + '33'">
                   <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
                 </span>
               }
@@ -88,7 +88,7 @@
               <div class="strongest-row">
                 <span class="strongest-name">{{ s.pokemonName }}</span>
                 @if (s.types[0]; as type) {
-                  <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                  <span class="type-pill" [style.background]="typeColor(type) + '33'">
                     <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
                   </span>
                 }
@@ -121,7 +121,7 @@
           </div>
           <div class="type-legend">
             @for (seg of typeSegments(); track seg.type) {
-              <span class="type-pill" [style.background]="typeColor(seg.type) + '33'" [style.color]="typeColor(seg.type)">
+              <span class="type-pill" [style.background]="typeColor(seg.type) + '33'">
                 <span class="type-glyph" [style.background]="typeColor(seg.type)"></span>{{ seg.type }} {{ seg.pct }}%
               </span>
             }
@@ -181,7 +181,7 @@
               <div class="matchup-col-head"><span class="strong-dot"></span>Strong Against</div>
               <div class="chip-wrap">
                 @for (t of teamMatchup().strongAgainst; track t) {
-                  <span class="type-pill" [style.background]="typeColor(t) + '33'" [style.color]="typeColor(t)">
+                  <span class="type-pill" [style.background]="typeColor(t) + '33'">
                     <span class="type-glyph" [style.background]="typeColor(t)"></span>{{ t }}
                   </span>
                 } @empty {
@@ -193,7 +193,7 @@
               <div class="matchup-col-head"><span class="weak-dot"></span>Vulnerable To</div>
               <div class="chip-wrap">
                 @for (v of teamMatchup().vulnerableTo; track v.type) {
-                  <span class="type-pill" [style.background]="typeColor(v.type) + '33'" [style.color]="typeColor(v.type)">
+                  <span class="type-pill" [style.background]="typeColor(v.type) + '33'">
                     <span class="type-glyph" [style.background]="typeColor(v.type)"></span>{{ v.type }}{{ v.count > 1 ? ' ×' + v.count : '' }}
                   </span>
                 } @empty {

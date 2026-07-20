@@ -69,7 +69,7 @@
             <div class="hex-badge" title="Power">{{ card.power }}</div>
             <div class="hero-card-top-row">
               <span class="hero-card-dex">{{ card.dex }}</span>
-              <span class="type-pill" [style.background]="card.typeColor + '33'" [style.color]="card.typeColor">
+              <span class="type-pill" [style.background]="card.typeColor + '33'">
                 <span class="type-glyph" [style.background]="card.typeColor"></span>{{ card.type }}
               </span>
             </div>
@@ -93,7 +93,7 @@
   <div class="marquee-mask">
     <div class="marquee-track">
       @for (m of marqueeItems; track $index) {
-        <span class="type-pill marquee-pill" [style.background]="m.color + '33'" [style.color]="m.color">
+        <span class="type-pill marquee-pill" [style.background]="m.color + '33'">
           <span class="type-glyph" [style.background]="m.color"></span>{{ m.label }}
         </span>
       }

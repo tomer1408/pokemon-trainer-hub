@@ -81,7 +81,7 @@
                 <div class="rec-name">{{ r.pokemon.name }}</div>
                 <div class="rec-type-row">
                   @for (type of r.pokemon.types; track type) {
-                    <span class="type-pill" [style.background]="typeColor(type) + '33'" [style.color]="typeColor(type)">
+                    <span class="type-pill" [style.background]="typeColor(type) + '33'">
                       <span class="type-glyph" [style.background]="typeColor(type)"></span>{{ type }}
                     </span>
                   }

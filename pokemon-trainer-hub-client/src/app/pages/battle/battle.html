@@ -172,7 +172,7 @@
 
         <div class="detail-panel">
           @if (activeMon(); as m) {
-            <span class="type-pill" [style.background]="typeColor(m.types[0]) + '33'" [style.color]="typeColor(m.types[0])">
+            <span class="type-pill" [style.background]="typeColor(m.types[0]) + '33'">
               <span class="type-glyph" [style.background]="typeColor(m.types[0])"></span>{{ m.types[0] }}
             </span>
             <span class="detail-name">{{ m.name }}</span>
@@ -206,7 +206,7 @@
               <div class="pick-sprite" [style.background]="typeColor(p.types[0]) + '33'">
                 @if (p.spriteUrl) { <img [src]="p.spriteUrl" alt="{{ p.name }}" /> }
               </div>
-              <span class="type-pill" [style.background]="typeColor(p.types[0]) + '33'" [style.color]="typeColor(p.types[0])">
+              <span class="type-pill" [style.background]="typeColor(p.types[0]) + '33'">
                 <span class="type-glyph" [style.background]="typeColor(p.types[0])"></span>{{ p.types[0] }}
               </span>
               <div class="pick-name">{{ p.name }}</div>
@@ -249,7 +249,7 @@
             <div class="faceoff-sprite" [style.background]="typeColor(last.yourMon.types[0]) + '33'">
               @if (last.yourMon.spriteUrl) { <img [src]="last.yourMon.spriteUrl" alt="{{ last.yourMon.name }}" /> }
             </div>
-            <span class="type-pill" [style.background]="typeColor(last.yourMon.types[0]) + '33'" [style.color]="typeColor(last.yourMon.types[0])">
+            <span class="type-pill" [style.background]="typeColor(last.yourMon.types[0]) + '33'">
               <span class="type-glyph" [style.background]="typeColor(last.yourMon.types[0])"></span>{{ last.yourMon.types[0] }}
             </span>
             <div class="faceoff-name">{{ last.yourMon.name }}</div>
@@ -284,7 +284,7 @@
             <div class="faceoff-sprite" [style.background]="typeColor(last.oppMon.types[0]) + '33'">
               @if (last.oppMon.spriteUrl) { <img [src]="last.oppMon.spriteUrl" alt="{{ last.oppMon.name }}" /> }
             </div>
-            <span class="type-pill" [style.background]="typeColor(last.oppMon.types[0]) + '33'" [style.color]="typeColor(last.oppMon.types[0])">
+            <span class="type-pill" [style.background]="typeColor(last.oppMon.types[0]) + '33'">
               <span class="type-glyph" [style.background]="typeColor(last.oppMon.types[0])"></span>{{ last.oppMon.types[0] }}
             </span>
             <div class="faceoff-name">{{ last.oppMon.name }}</div>

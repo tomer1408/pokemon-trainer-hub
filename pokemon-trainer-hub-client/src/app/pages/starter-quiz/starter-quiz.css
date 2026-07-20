@@ -539,6 +539,9 @@
   font-weight: 700;
   font-size: 11px;
   text-transform: capitalize;
+  /* Fixed, theme-contrasting text — not the type color, which repeatedly
+     fails WCAG AA against its own tinted background. */
+  color: var(--text-body);
 }
 
 .type-glyph {
