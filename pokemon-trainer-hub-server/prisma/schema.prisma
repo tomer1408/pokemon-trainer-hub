@@ -187,5 +187,36 @@ model TrainerProfile {
   // favoriteType/experienceLevel elsewhere in this schema. "self" | "admin".
   deletionType String?
 
+  // Real, server-side "most recent meaningful product action" timestamp —
+  // deliberately distinct from Auth0's own last-login time (see
+  // services/analyticsEventService.js's updateLastActive) — powers
+  // Analytics' DAU/MAU. Throttled on write (at most once per 15 minutes per
+  // trainer), so this is a coarse recency signal, not an exact click log.
+  lastActiveAt DateTime?
+
   @@index([purgeAt])
+}
+
+// Real product-analytics event log (Phase 8) — every row is either
+// server-owned (written after a real action already succeeded, e.g. a
+// battle actually being saved) or client-owned (page/session/navigation
+// signals only, validated against APPROVED_EVENT_TYPES server-side before
+// ever reaching this table — see services/analyticsEventService.js).
+// auth0UserId is nullable because a couple of client-owned events
+// (session_started before onboarding) can legitimately fire before a
+// TrainerProfile row exists yet. metadataJson is deliberately minimal and
+// purpose-specific — never a payload dump, never anything on the banned
+// list (AI content, notes, support messages, search queries, tokens, ids,
+// emails) documented in analyticsEventService.js.
+model AppEvent {
+  id           Int      @id @default(autoincrement())
+  auth0UserId  String?
+  eventType    String
+  pageName     String?
+  metadataJson String?
+  createdAt    DateTime @default(now())
+
+  @@index([auth0UserId])
+  @@index([eventType])
+  @@index([createdAt])
 }
