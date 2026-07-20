@@ -5,6 +5,7 @@ const path = require('node:path');
 describe('routes/support', () => {
   let request;
   let prisma;
+  let rateLimiter;
   const FAKE_USER = 'auth0|test-user';
 
   before(() => {
@@ -24,6 +25,14 @@ describe('routes/support', () => {
     };
     mock.module(path.resolve(__dirname, '../services/prisma.js'), { exports: { default: prisma } });
 
+    // Same controllable-mock convention as routes/assistant.test.js's own
+    // rate limiter — tested directly via consume()'s return value, not by
+    // racing a real 60-minute window.
+    rateLimiter = { consume: mock.fn(() => true) };
+    mock.module(path.resolve(__dirname, '../services/rateLimiter.js'), {
+      exports: { createRateLimiter: () => rateLimiter },
+    });
+
     const express = require('express');
     const supertest = require('supertest');
     const supportRouter = require('./support');
@@ -36,6 +45,8 @@ describe('routes/support', () => {
 
   beforeEach(() => {
     prisma.supportRequest.create.mock.resetCalls();
+    rateLimiter.consume.mock.resetCalls();
+    rateLimiter.consume.mock.mockImplementation(() => true);
   });
 
   test('POST / rejects an invalid email', async () => {
@@ -88,5 +99,26 @@ describe('routes/support', () => {
       topic: 'Bug',
       message: 'It broke.',
     });
+  });
+
+  test('POST / is rate-limited per trainer: returns 503 and never touches the database once the limit is hit', async () => {
+    rateLimiter.consume.mock.mockImplementationOnce(() => false);
+
+    const res = await request
+      .post('/api/support')
+      .send({ name: 'Ash', email: 'ash@example.com', topic: 'Bug', message: 'It broke.' });
+
+    assert.equal(res.status, 503);
+    assert.equal(prisma.supportRequest.create.mock.calls.length, 0);
+    assert.equal(rateLimiter.consume.mock.calls[0].arguments[0], FAKE_USER);
+  });
+
+  test('POST / under the limit still creates the request normally', async () => {
+    const res = await request
+      .post('/api/support')
+      .send({ name: 'Ash', email: 'ash@example.com', topic: 'Bug', message: 'It broke.' });
+
+    assert.equal(res.status, 201);
+    assert.equal(prisma.supportRequest.create.mock.calls.length, 1);
   });
 });

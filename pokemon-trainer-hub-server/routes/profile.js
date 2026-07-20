@@ -5,8 +5,15 @@ const { MIN_AGE, calculateAge, calculateAgeRange } = require('../services/ageRan
 const { validateTeamNameValue } = require('../services/teamNameFallback');
 const accountService = require('../services/accountService');
 const { getAuth0User } = require('../services/auth0Management');
+const { createRateLimiter } = require('../services/rateLimiter');
 
 const router = express.Router();
+
+const RESTORATION_RATE_LIMIT_MESSAGE = "You've submitted several requests recently — please wait a bit before sending another.";
+// Keyed by the caller's own auth0UserId, same reasoning as
+// routes/support.js's rate limiter — a genuinely soft-deleted trainer has
+// no legitimate reason to submit more than a handful of these.
+const restorationRateLimiter = createRateLimiter({ windowSeconds: 60 * 60, maxRequests: 5 });
 
 // Server-authoritative — never trust a client-sent policyVersion for a
 // compliance-relevant field.
@@ -300,6 +307,10 @@ router.delete('/', jwtCheck, async (req, res) => {
 // submitting it never restores anything by itself (see
 // routes/adminTrainers.js's PATCH /:id/restore, added in a later phase).
 router.post('/restoration-request', jwtCheck, async (req, res) => {
+  if (!restorationRateLimiter.consume(req.auth.payload.sub)) {
+    return res.status(503).json({ message: RESTORATION_RATE_LIMIT_MESSAGE });
+  }
+
   const message = typeof req.body.message === 'string' ? req.body.message.trim() : '';
   if (!message) {
     return res.status(400).json({ message: 'A message is required.' });

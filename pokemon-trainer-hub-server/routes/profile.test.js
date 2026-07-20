@@ -11,6 +11,7 @@ describe('routes/profile', () => {
   let prisma;
   let accountService;
   let auth0Management;
+  let rateLimiter;
   const FAKE_USER = 'auth0|test-user';
 
   const validSignup = {
@@ -54,6 +55,14 @@ describe('routes/profile', () => {
     auth0Management = { getAuth0User: mock.fn(async () => ({ email: 'ash@example.com' })) };
     mock.module(path.resolve(__dirname, '../services/auth0Management.js'), { exports: auth0Management });
 
+    // Same controllable-mock convention as routes/assistant.test.js's own
+    // rate limiter — tested directly via consume()'s return value, not by
+    // racing a real 60-minute window.
+    rateLimiter = { consume: mock.fn(() => true) };
+    mock.module(path.resolve(__dirname, '../services/rateLimiter.js'), {
+      exports: { createRateLimiter: () => rateLimiter },
+    });
+
     const express = require('express');
     const supertest = require('supertest');
     const profileRouter = require('./profile');
@@ -79,6 +88,8 @@ describe('routes/profile', () => {
     prisma.supportRequest.create.mock.mockImplementation(async ({ data }) => ({ id: 1, createdAt: new Date(), ...data }));
     auth0Management.getAuth0User.mock.resetCalls();
     auth0Management.getAuth0User.mock.mockImplementation(async () => ({ email: 'ash@example.com' }));
+    rateLimiter.consume.mock.resetCalls();
+    rateLimiter.consume.mock.mockImplementation(() => true);
   });
 
   describe('GET /', () => {
@@ -428,6 +439,28 @@ describe('routes/profile', () => {
 
       assert.equal(res.status, 502);
       assert.equal(prisma.supportRequest.create.mock.calls.length, 0);
+    });
+
+    test('is rate-limited per trainer: returns 503 and never touches the database once the limit is hit', async () => {
+      rateLimiter.consume.mock.mockImplementationOnce(() => false);
+
+      const res = await request.post('/api/profile/restoration-request').send({ message: 'please restore me' });
+
+      assert.equal(res.status, 503);
+      assert.equal(prisma.trainerProfile.findUnique.mock.calls.length, 0);
+      assert.equal(rateLimiter.consume.mock.calls[0].arguments[0], FAKE_USER);
+    });
+
+    test('under the limit still submits the request normally', async () => {
+      prisma.trainerProfile.findUnique.mock.mockImplementationOnce(async () => ({
+        trainerName: 'Ash',
+        deletedAt: new Date(),
+        deletionType: 'self',
+      }));
+
+      const res = await request.post('/api/profile/restoration-request').send({ message: 'please restore me' });
+
+      assert.equal(res.status, 201);
     });
   });
 });
