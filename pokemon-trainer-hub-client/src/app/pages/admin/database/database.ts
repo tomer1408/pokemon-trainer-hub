@@ -15,7 +15,7 @@ interface DetailField {
   isJson: boolean;
 }
 
-// Phase 6: a real, read-only, generic browser over the 8 whitelisted
+// Phase 6: a real, read-only, generic browser over the whitelisted
 // tables in services/adminDatabaseRegistry.js. Every response already
 // arrives masked/stripped server-side (never re-masked here) — this page
 // only ever issues GETs, never writes anything.

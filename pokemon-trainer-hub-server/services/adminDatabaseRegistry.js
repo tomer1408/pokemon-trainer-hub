@@ -173,6 +173,22 @@ const REGISTRY = {
       sortOrder: row.sortOrder,
     }),
   },
+  appEvents: {
+    label: 'App Events',
+    description: 'Real product-analytics event log (Phase 8) — powers the Analytics page\'s DAU/MAU/retention/feature-adoption numbers.',
+    modelName: 'appEvent',
+    defaultSort: { field: 'createdAt', direction: 'desc' },
+    searchableFields: ['eventType', 'pageName'],
+    sortableFields: ['id', 'eventType', 'pageName', 'createdAt'],
+    toSafeRow: (row) => ({
+      id: row.id,
+      auth0UserId: maskAuth0Id(row.auth0UserId),
+      eventType: row.eventType,
+      pageName: row.pageName,
+      metadataJson: row.metadataJson,
+      createdAt: row.createdAt,
+    }),
+  },
   adminAuditLogs: {
     label: 'Admin Audit Log',
     description: 'Read-only record of sensitive admin actions.',

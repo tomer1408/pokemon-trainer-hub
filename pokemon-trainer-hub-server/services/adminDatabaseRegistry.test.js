@@ -3,11 +3,12 @@ const assert = require('node:assert/strict');
 const { REGISTRY, getTableKeys, getTableEntry } = require('./adminDatabaseRegistry');
 
 describe('services/adminDatabaseRegistry', () => {
-  test('registers exactly the 8 real models from the plan, nothing invented', () => {
+  test('registers exactly the 9 real models from the plan, nothing invented', () => {
     assert.deepEqual(
       getTableKeys().sort(),
       [
         'adminAuditLogs',
+        'appEvents',
         'avatarIcons',
         'battleMatches',
         'dreamTeamMembers',
@@ -131,6 +132,34 @@ describe('services/adminDatabaseRegistry', () => {
     const detailRow = REGISTRY.battleMatches.toSafeDetail(raw);
     assert.equal(detailRow.roundsJson, raw.roundsJson);
     assert.equal(detailRow.teamSnapshotJson, raw.teamSnapshotJson);
+  });
+
+  test('appEvents masks a real auth0UserId', () => {
+    const row = REGISTRY.appEvents.toSafeRow({
+      id: 1,
+      auth0UserId: 'auth0|64f2b3c1a9d8e7f6',
+      eventType: 'battle_completed',
+      pageName: null,
+      metadataJson: '{"difficulty":"hard","result":"win"}',
+      createdAt: new Date(),
+    });
+
+    assert.notEqual(row.auth0UserId, 'auth0|64f2b3c1a9d8e7f6');
+    assert.equal(row.eventType, 'battle_completed');
+    assert.equal(row.metadataJson, '{"difficulty":"hard","result":"win"}');
+  });
+
+  test('appEvents leaves a null auth0UserId (a client-owned event before onboarding) as null, not a crash', () => {
+    const row = REGISTRY.appEvents.toSafeRow({
+      id: 2,
+      auth0UserId: null,
+      eventType: 'session_started',
+      pageName: null,
+      metadataJson: null,
+      createdAt: new Date(),
+    });
+
+    assert.equal(row.auth0UserId, null);
   });
 
   test('adminAuditLogs masks the acting admin id', () => {

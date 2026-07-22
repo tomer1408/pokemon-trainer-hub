@@ -458,7 +458,7 @@ All routes below require a valid Auth0 access token **and** the specific permiss
 | `GET /api/admin/overview` | `admin:read` | Real KPIs, recent support requests, recent cross-model activity — one response. |
 | `GET /api/admin/system` | `admin:read` | Real DB/PokeAPI checks; Gemini/Sentry reported as configured/not-configured only, never a fabricated "Operational". |
 | `GET /api/admin/analytics` | `admin:read` | Real over-time series, funnel, popularity/battle/support distributions, plus real DAU/MAU/retention/page-views/sessions/feature-adoption/AI-success-rate from the `AppEvent` table (see "Product analytics tracking" below). |
-| `GET /api/admin/database/tables`, `/:table`, `/:table/:id` | `database:read` | Read-only browser over 8 whitelisted models; every response is masked server-side (`services/adminDatabaseRegistry.js`) before it ever leaves the API. |
+| `GET /api/admin/database/tables`, `/:table`, `/:table/:id` | `database:read` | Read-only browser over 9 whitelisted models (including `AppEvent`); every response is masked server-side (`services/adminDatabaseRegistry.js`) before it ever leaves the API. |
 
 ### Product analytics tracking
 

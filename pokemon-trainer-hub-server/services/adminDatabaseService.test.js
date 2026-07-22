@@ -24,6 +24,7 @@ describe('services/adminDatabaseService', () => {
       battleMatch: modelMock(),
       avatarIcon: modelMock(),
       adminAuditLog: modelMock(),
+      appEvent: modelMock(),
     };
     mock.module(path.resolve(__dirname, './prisma.js'), { exports: { default: prisma } });
 
@@ -44,7 +45,7 @@ describe('services/adminDatabaseService', () => {
     test('returns a real count per registered model, exactly one query per table', async () => {
       const tables = await service.listTables();
 
-      assert.equal(tables.length, 8);
+      assert.equal(tables.length, 9);
       const trainerProfiles = tables.find((t) => t.key === 'trainerProfiles');
       assert.ok(trainerProfiles);
       assert.equal(typeof trainerProfiles.count, 'number');
