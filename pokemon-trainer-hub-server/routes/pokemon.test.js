@@ -114,4 +114,84 @@ describe('routes/pokemon', () => {
     assert.equal(res.body.message, 'Unknown type "unknown-type".');
     assert.equal(pokeapi.getStrongestRankedList.mock.calls.length, 0);
   });
+
+  describe('GET /surprise', () => {
+    test('with no type, picks from the real master list and never reports a fallback', async () => {
+      const res = await request.get('/api/pokemon/surprise?count=1');
+
+      assert.equal(res.status, 200);
+      assert.equal(res.body.usedFallback, false);
+      assert.equal(res.body.picks.length, 1);
+      assert.ok([1, 2].includes(res.body.picks[0].id)); // from the mocked master list
+    });
+
+    test('with a real type and no exclusions, picks from that type\'s real pool, not the fallback', async () => {
+      const res = await request.get('/api/pokemon/surprise?count=1&type=fire');
+
+      assert.equal(res.status, 200);
+      assert.equal(res.body.usedFallback, false);
+      assert.equal(pokeapi.getListByType.mock.calls[0].arguments[0], 'fire');
+      assert.ok([4, 5].includes(res.body.picks[0].id)); // from the mocked "fire" pool
+    });
+
+    test('falls back to the full master list when every candidate of the favorite type is excluded', async () => {
+      const res = await request.get('/api/pokemon/surprise?count=1&type=fire&exclude=4,5');
+
+      assert.equal(res.status, 200);
+      assert.equal(res.body.usedFallback, true);
+      assert.ok([1, 2].includes(res.body.picks[0].id)); // fell back to the master list
+    });
+
+    test('falls back to the master list when the requested type does not exist at all', async () => {
+      const res = await request.get('/api/pokemon/surprise?count=1&type=unknown-type');
+
+      assert.equal(res.status, 200);
+      assert.equal(res.body.usedFallback, true);
+      assert.ok([1, 2].includes(res.body.picks[0].id));
+    });
+
+    test('never picks an id the caller asked to exclude, from either pool', async () => {
+      const res = await request.get('/api/pokemon/surprise?count=1&exclude=1');
+
+      assert.equal(res.status, 200);
+      assert.equal(res.body.picks[0].id, 2); // the only real, non-excluded candidate left
+    });
+
+    test('count is clamped to the real 5-Pokémon team maximum, never higher', async () => {
+      pokeapi.getMasterList.mock.mockImplementationOnce(async () =>
+        Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `mon-${i + 1}` })),
+      );
+
+      const res = await request.get('/api/pokemon/surprise?count=99');
+
+      assert.equal(res.body.picks.length, 5);
+    });
+
+    test('a real, valid but oversized exclude list never crashes — just an empty (or short) real result, not an error', async () => {
+      const res = await request.get('/api/pokemon/surprise?count=1&exclude=1,2');
+
+      assert.equal(res.status, 200);
+      assert.deepEqual(res.body.picks, []);
+    });
+
+    test('returns 502 (not a crash) when PokeAPI is unreachable for the master list', async () => {
+      pokeapi.getMasterList.mock.mockImplementationOnce(async () => {
+        throw new Error('network down');
+      });
+
+      const res = await request.get('/api/pokemon/surprise?count=1');
+
+      assert.equal(res.status, 502);
+    });
+
+    test('returns 502 (not a crash) when PokeAPI is unreachable for the type lookup', async () => {
+      pokeapi.getListByType.mock.mockImplementationOnce(async () => {
+        throw new Error('network down');
+      });
+
+      const res = await request.get('/api/pokemon/surprise?count=1&type=fire');
+
+      assert.equal(res.status, 502);
+    });
+  });
 });

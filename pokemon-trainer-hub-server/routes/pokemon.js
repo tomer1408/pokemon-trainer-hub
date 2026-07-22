@@ -10,7 +10,21 @@ const {
 } = require('../services/pokeapi');
 
 const PAGE_SIZE = 20;
+const MAX_SURPRISE_COUNT = 5;
 const router = express.Router();
+
+// Fisher-Yates-based pick — same helper already used by GET /api/quiz/round
+// (routes/quiz.js), duplicated here rather than shared: it's an 8-line pure
+// function, not worth a new shared module for two callers.
+function pickDistinctRandom(list, count) {
+  const pool = [...list];
+  const picked = [];
+  for (let i = 0; i < count && pool.length > 0; i += 1) {
+    const idx = Math.floor(Math.random() * pool.length);
+    picked.push(pool.splice(idx, 1)[0]);
+  }
+  return picked;
+}
 
 // GET /api/pokemon?search=&type=&sort=id|name|strongest&page=
 // GET /api/pokemon?ids=25,1,4 — a small fixed set of exact ids (e.g. the
@@ -113,6 +127,66 @@ router.get('/type-chart', jwtCheck, async (req, res) => {
   } catch (err) {
     res.status(502).json({ message: 'PokeAPI is unavailable. Please try again later.' });
   }
+});
+
+// GET /api/pokemon/surprise?exclude=1,2,3&count=1&type=water — real random
+// pick(s) for the "Surprise Me" feature. Registered before /:id so Express
+// doesn't treat "surprise" as a Pokémon id/name. Never trusts anything
+// beyond exclude/count/type from the client — the candidate pool always
+// comes from real PokeAPI data (getListByType/getMasterList), same as
+// every other route here; this only returns which real id(s) were picked,
+// not full detail (the client already has getById/getByIds for that).
+//
+// Bias logic: if `type` is given, tries that type's real pool (minus
+// excluded ids) first. Only falls back to the full, unfiltered master list
+// (minus excluded ids) if that biased pool doesn't have enough real
+// candidates left (or the type lookup failed) — `usedFallback` tells the
+// client which of the two happened, so it can show the right reason text
+// ("because you love X" vs "something new for you").
+router.get('/surprise', jwtCheck, async (req, res) => {
+  const excludeIds = new Set(
+    String(req.query.exclude || '')
+      .split(',')
+      .map((s) => parseInt(s.trim(), 10))
+      .filter((n) => !Number.isNaN(n)),
+  );
+  const count = Math.min(MAX_SURPRISE_COUNT, Math.max(1, parseInt(req.query.count, 10) || 1));
+  const type = req.query.type ? String(req.query.type).trim() : '';
+
+  let biasedPool = null;
+  if (type) {
+    try {
+      biasedPool = await getListByType(type);
+    } catch (err) {
+      return res.status(502).json({ message: 'PokeAPI is unavailable. Please try again later.' });
+    }
+  }
+
+  let usedFallback = false;
+  let pool = null;
+  if (biasedPool) {
+    const filtered = biasedPool.filter((p) => !excludeIds.has(p.id));
+    if (filtered.length >= count) {
+      pool = filtered;
+    } else {
+      usedFallback = true;
+    }
+  } else if (type) {
+    usedFallback = true;
+  }
+
+  if (!pool) {
+    let masterList;
+    try {
+      masterList = await getMasterList();
+    } catch (err) {
+      return res.status(502).json({ message: 'PokeAPI is unavailable. Please try again later.' });
+    }
+    pool = masterList.filter((p) => !excludeIds.has(p.id));
+  }
+
+  const picks = pickDistinctRandom(pool, count);
+  res.json({ picks, usedFallback });
 });
 
 // GET /api/pokemon/:id — id or name, both work since PokeAPI accepts either.
