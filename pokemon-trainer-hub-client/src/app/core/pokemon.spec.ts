@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { API_BASE } from './api-base';
-import { PokemonDetail, PokemonListResponse, PokemonService, PokemonSummary, TypeChart } from './pokemon';
+import { PokemonDetail, PokemonListResponse, PokemonService, PokemonSummary, SurpriseResult, TypeChart } from './pokemon';
 
 describe('PokemonService', () => {
   let service: PokemonService;
@@ -118,5 +118,43 @@ describe('PokemonService', () => {
     httpMock.expectOne(`${API_BASE}/pokemon/type-chart`).flush('error', { status: 500, statusText: 'Server Error' });
 
     expect(result).toEqual({});
+  });
+
+  it('getSurprise() sends count, and only sends exclude/type when actually provided', () => {
+    service.getSurprise([], 1).subscribe();
+
+    const req = httpMock.expectOne((r) => r.url === `${API_BASE}/pokemon/surprise`);
+    expect(req.request.params.get('count')).toBe('1');
+    expect(req.request.params.has('exclude')).toBe(false);
+    expect(req.request.params.has('type')).toBe(false);
+    req.flush({ picks: [], usedFallback: false });
+  });
+
+  it('getSurprise() joins exclude ids and passes the real type through', () => {
+    service.getSurprise([1, 2, 3], 5, 'water').subscribe();
+
+    const req = httpMock.expectOne((r) => r.url === `${API_BASE}/pokemon/surprise`);
+    expect(req.request.params.get('exclude')).toBe('1,2,3');
+    expect(req.request.params.get('type')).toBe('water');
+    expect(req.request.params.get('count')).toBe('5');
+    req.flush({ picks: [], usedFallback: false });
+  });
+
+  it('getSurprise() resolves the real picks and usedFallback flag', () => {
+    let result: SurpriseResult | undefined;
+    service.getSurprise([], 1).subscribe((r) => (result = r));
+
+    httpMock.expectOne((r) => r.url === `${API_BASE}/pokemon/surprise`).flush({ picks: [{ id: 6, name: 'charizard' }], usedFallback: true });
+
+    expect(result).toEqual({ picks: [{ id: 6, name: 'charizard' }], usedFallback: true });
+  });
+
+  it('getSurprise() falls back to an empty, non-fallback result on error, never throws', () => {
+    let result: SurpriseResult | undefined;
+    service.getSurprise([], 1).subscribe((r) => (result = r));
+
+    httpMock.expectOne((r) => r.url === `${API_BASE}/pokemon/surprise`).flush('error', { status: 500, statusText: 'Server Error' });
+
+    expect(result).toEqual({ picks: [], usedFallback: false });
   });
 });

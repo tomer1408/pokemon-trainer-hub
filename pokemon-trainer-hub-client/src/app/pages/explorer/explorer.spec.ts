@@ -251,15 +251,16 @@ describe('Explorer', () => {
     expect(inst.page()).toBe(1);
   });
 
-  it('onSurpriseMe() looks up a real random Pokémon and puts its name into search', () => {
+  it('onSurpriseMe() excludes every Dream Team + Favorites pokemonId and passes the real favoriteType through', () => {
+    const getSurprise = vi.fn(() => of({ picks: [{ id: 42, name: 'golem' }], usedFallback: false }));
     getById = vi.fn(() => of(summary(42, { name: 'golem' })));
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        { provide: PokemonService, useValue: { search: () => of({ results: [], page: 1, pageSize: 4, total: 0 }), getById } },
-        { provide: TeamService, useValue: { getTeam: () => of([]) } },
-        { provide: FavoritesService, useValue: { getFavorites: () => of([]) } },
-        { provide: ProfileService, useValue: { getProfile: () => of(null) } },
+        { provide: PokemonService, useValue: { search: () => of({ results: [], page: 1, pageSize: 4, total: 0 }), getById, getSurprise } },
+        { provide: TeamService, useValue: { getTeam: () => of([member(1), member(2)]) } },
+        { provide: FavoritesService, useValue: { getFavorites: () => of([favorite(3)]) } },
+        { provide: ProfileService, useValue: { getProfile: () => of({ favoriteType: 'water' } as any) } },
       ],
     });
     const fixture = TestBed.createComponent(Explorer);
@@ -268,17 +269,38 @@ describe('Explorer', () => {
 
     fixture.componentInstance.onSurpriseMe();
 
-    expect(inst.searchInput()).toBe('golem');
-    expect(inst.surpriseId()).toBe(42);
+    expect(getSurprise).toHaveBeenCalledWith(expect.arrayContaining([1, 2, 3]), 1, 'water');
+    expect(inst.selectedPokemon()?.id).toBe(42);
+    expect(inst.surpriseReasonText()).toBe('Because you love water types');
   });
 
-  it('onSurpriseMe() clears the highlight after its timeout', () => {
-    vi.useFakeTimers();
-    getById = vi.fn(() => of(summary(42, { name: 'golem' })));
+  it('onSurpriseMe() shows a "something new" reason when the type bias fell back', () => {
+    const getSurprise = vi.fn(() => of({ picks: [{ id: 7, name: 'squirtle' }], usedFallback: true }));
+    getById = vi.fn(() => of(summary(7, { name: 'squirtle' })));
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        { provide: PokemonService, useValue: { search: () => of({ results: [], page: 1, pageSize: 4, total: 0 }), getById } },
+        { provide: PokemonService, useValue: { search: () => of({ results: [], page: 1, pageSize: 4, total: 0 }), getById, getSurprise } },
+        { provide: TeamService, useValue: { getTeam: () => of([]) } },
+        { provide: FavoritesService, useValue: { getFavorites: () => of([]) } },
+        { provide: ProfileService, useValue: { getProfile: () => of({ favoriteType: 'water' } as any) } },
+      ],
+    });
+    const fixture = TestBed.createComponent(Explorer);
+    fixture.detectChanges();
+    const inst = fixture.componentInstance as any;
+
+    fixture.componentInstance.onSurpriseMe();
+
+    expect(inst.surpriseReasonText()).toBe('Something new for you');
+  });
+
+  it('onSurpriseMe() toggles isSurpriseLoading and does nothing on an empty pool', () => {
+    const getSurprise = vi.fn(() => of({ picks: [], usedFallback: false }));
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: PokemonService, useValue: { search: () => of({ results: [], page: 1, pageSize: 4, total: 0 }), getById: vi.fn(() => of(null)), getSurprise } },
         { provide: TeamService, useValue: { getTeam: () => of([]) } },
         { provide: FavoritesService, useValue: { getFavorites: () => of([]) } },
         { provide: ProfileService, useValue: { getProfile: () => of(null) } },
@@ -289,10 +311,9 @@ describe('Explorer', () => {
     const inst = fixture.componentInstance as any;
 
     fixture.componentInstance.onSurpriseMe();
-    expect(inst.surpriseId()).toBe(42);
-    vi.advanceTimersByTime(2800);
-    expect(inst.surpriseId()).toBeNull();
-    vi.useRealTimers();
+
+    expect(inst.isSurpriseLoading()).toBe(false);
+    expect(inst.selectedPokemon()).toBeNull();
   });
 
   it('openDetail()/closeDetail() and toggleMobileDrawer()/closeMobileDrawer() control their own UI state', () => {

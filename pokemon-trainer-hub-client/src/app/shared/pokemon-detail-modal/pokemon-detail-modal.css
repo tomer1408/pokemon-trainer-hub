@@ -210,6 +210,31 @@
   text-transform: capitalize;
 }
 
+.reason-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px 5px 10px;
+  border-radius: 100px;
+  background: var(--overlay-06);
+  margin-bottom: 12px;
+  width: fit-content;
+}
+
+.reason-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--cyan);
+}
+
+.reason-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--cyan);
+}
+
 .types-row {
   display: flex;
   gap: 10px;

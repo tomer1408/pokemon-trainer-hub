@@ -244,6 +244,11 @@
   font-size: 13px;
 }
 
+.surprise-btn:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
 .surprise-glyph {
   width: 14px;
   height: 14px;
@@ -436,11 +441,6 @@
 .pokemon-card:hover {
   transform: scale(1.035);
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
-}
-
-.pokemon-card.surprised {
-  border-color: var(--yellow);
-  animation: surprisePulse 1.4s ease-out 2;
 }
 
 .fav-btn {
@@ -911,11 +911,6 @@
 @keyframes shimmer {
   0% { background-position: -300px 0; }
   100% { background-position: 300px 0; }
-}
-
-@keyframes surprisePulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(253, 230, 138, 0.6); }
-  50% { box-shadow: 0 0 0 10px rgba(253, 230, 138, 0); }
 }
 
 @media (max-width: 860px) {

@@ -32,6 +32,11 @@ export class PokemonDetailModal implements OnChanges {
   // anymore — hides the favorite/team-membership actions entirely rather
   // than showing controls that don't apply to a point-in-time snapshot.
   @Input() readOnly = false;
+  // Optional — shown as a small pill under the name when set (currently
+  // only Explorer's Surprise Me passes this, e.g. "Because you love Water
+  // types"). Undefined/omitted for every other caller, so nothing changes
+  // for the normal "click a card" open path.
+  @Input() reasonText?: string | null;
 
   @Output() closed = new EventEmitter<void>();
   @Output() toggleFavorite = new EventEmitter<void>();

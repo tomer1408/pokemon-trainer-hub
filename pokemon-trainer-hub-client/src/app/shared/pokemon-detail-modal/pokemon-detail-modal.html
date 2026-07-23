@@ -22,6 +22,9 @@
               <span class="dex-label">#{{ p.id.toString().padStart(4, '0') }}</span>
             </div>
             <h1 class="name">{{ p.name }}</h1>
+            @if (reasonText) {
+              <div class="reason-row"><span class="reason-dot"></span><span class="reason-text">{{ reasonText }}</span></div>
+            }
             <div class="types-row">
               @for (t of p.types; track t) {
                 <span class="type-pill big" [style.background]="typeColor(t) + '33'">

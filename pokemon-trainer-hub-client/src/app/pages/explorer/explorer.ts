@@ -67,7 +67,11 @@ export class Explorer {
   protected readonly sortBy = signal<SortBy>('name');
   protected readonly favoritesOnly = signal(false);
   protected readonly page = signal(1);
-  protected readonly surpriseId = signal<number | null>(null);
+  protected readonly isSurpriseLoading = signal(false);
+  // Only set right before Surprise Me opens the Detail Modal — cleared on
+  // every normal "click a card" open, so the reason pill never leaks into
+  // an unrelated detail view.
+  protected readonly surpriseReasonText = signal<string | null>(null);
   protected readonly mobileDrawerOpen = signal(false);
   protected readonly pendingRemove = signal<{ id: number; name: string } | null>(null);
   protected readonly swapNotice = signal<string | null>(null);
@@ -361,27 +365,43 @@ export class Explorer {
     this.page.update((p) => Math.min(this.totalPages(), p + 1));
   }
 
-  // Picks a real random Pokémon (original 151, so the id is always valid) and
-  // puts its name straight into search — guarantees it's actually visible in
-  // the results (unlike highlighting a card that may be off-page).
+  // Real pick from the trainer's actual unseen pool (never the Dream Team or
+  // Favorites), biased toward their real favoriteType when one is set —
+  // opens straight into the existing Detail Modal instead of just landing on
+  // a search result, so the reveal itself feels like the "surprise".
   onSurpriseMe(): void {
-    const randomId = Math.floor(Math.random() * 151) + 1;
-    this.pokemonService.getById(randomId).subscribe((p) => {
-      if (!p) return;
-      this.favoritesOnly.set(false);
-      this.typeFilter.set('all');
-      this.searchInput.set(p.name);
-      this.surpriseId.set(p.id);
-      setTimeout(() => this.surpriseId.set(null), 2800);
+    if (this.isSurpriseLoading()) return;
+    this.isSurpriseLoading.set(true);
+
+    const exclude = [...this.team().map((m) => m.pokemonId), ...this.favorites().map((f) => f.pokemonId)];
+    const favoriteType = this.profile()?.favoriteType;
+
+    this.pokemonService.getSurprise(exclude, 1, favoriteType || undefined).subscribe((result) => {
+      const pick = result.picks[0];
+      if (!pick) {
+        this.isSurpriseLoading.set(false);
+        return;
+      }
+
+      this.pokemonService.getById(pick.id).subscribe((detail) => {
+        this.isSurpriseLoading.set(false);
+        if (!detail) return;
+        this.surpriseReasonText.set(
+          !result.usedFallback && favoriteType ? `Because you love ${favoriteType} types` : 'Something new for you',
+        );
+        this.selectedPokemon.set(detail);
+      });
     });
   }
 
   openDetail(p: PokemonSummary): void {
+    this.surpriseReasonText.set(null);
     this.selectedPokemon.set(p);
   }
 
   closeDetail(): void {
     this.selectedPokemon.set(null);
+    this.surpriseReasonText.set(null);
   }
 
   toggleMobileDrawer(): void {

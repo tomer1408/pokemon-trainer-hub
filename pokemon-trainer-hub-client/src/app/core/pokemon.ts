@@ -66,6 +66,15 @@ export interface TypeMatchup {
 
 export type TypeChart = Record<string, TypeMatchup>;
 
+export interface SurpriseResult {
+  picks: { id: number; name: string }[];
+  // True when a favorite-type bias was requested but the real candidate
+  // pool for that type (minus already-known Pokémon) was exhausted, so the
+  // server fell back to the full dex instead — lets the caller show the
+  // right reason ("because you love X" vs "something new for you").
+  usedFallback: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PokemonService {
   private readonly http = inject(HttpClient);
@@ -95,11 +104,27 @@ export class PokemonService {
       .pipe(catchError(() => of({ results: [], page: 1, pageSize: 20, total: 0 })));
   }
 
-  // Used by Surprise Me (random real dex number) and the Pokémon Detail Modal.
+  // Used by the Pokémon Detail Modal (self-fetches by id) and by Surprise
+  // Me/Surprise My Team once getSurprise() below has picked real id(s).
   getById(id: number | string): Observable<PokemonDetail | null> {
     return this.http
       .get<PokemonDetail>(`${API_BASE}/pokemon/${id}`)
       .pipe(catchError(() => of(null)));
+  }
+
+  // Real random pick(s) for Surprise Me (count=1) / Surprise My Team
+  // (count=5). `exclude` should be every pokemonId already on the trainer's
+  // Dream Team or Favorites, so the same real candidate can't be repeatedly
+  // re-offered; `type` (the trainer's real favoriteType) is optional — see
+  // SurpriseResult.usedFallback for what happens when that pool runs out.
+  getSurprise(exclude: number[], count: number, type?: string): Observable<SurpriseResult> {
+    const params: Record<string, string> = { count: String(count) };
+    if (exclude.length > 0) params['exclude'] = exclude.join(',');
+    if (type) params['type'] = type;
+
+    return this.http
+      .get<SurpriseResult>(`${API_BASE}/pokemon/surprise`, { params })
+      .pipe(catchError(() => of({ picks: [], usedFallback: false })));
   }
 
   // Used by the avatar icon picker (Onboarding + Profile) — a single request

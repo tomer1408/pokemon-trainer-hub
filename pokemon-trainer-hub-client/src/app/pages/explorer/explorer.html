@@ -28,9 +28,9 @@
       </span>
     </button>
 
-    <button type="button" class="surprise-btn" (click)="onSurpriseMe()">
+    <button type="button" class="surprise-btn" [disabled]="isSurpriseLoading()" (click)="onSurpriseMe()">
       <span class="surprise-glyph"></span>
-      Surprise Me
+      {{ isSurpriseLoading() ? 'Rolling…' : 'Surprise Me' }}
     </button>
   </div>
 
@@ -94,7 +94,7 @@
       } @else {
         <div class="card-grid">
           @for (p of listResult().results; track p.id) {
-            <div class="pokemon-card" [class.surprised]="surpriseId() === p.id" (click)="openDetail(p)">
+            <div class="pokemon-card" (click)="openDetail(p)">
               <button
                 type="button"
                 class="compare-toggle-btn"
@@ -255,6 +255,7 @@
   @if (selectedPokemon(); as sp) {
     <app-pokemon-detail-modal
       [pokemonId]="sp.id"
+      [reasonText]="surpriseReasonText()"
       [isFavorite]="isFavorite(sp.id)"
       [isOnTeam]="isOnTeam(sp.id)"
       [teamFull]="teamFull()"
