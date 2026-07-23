@@ -316,6 +316,54 @@ describe('Explorer', () => {
     expect(inst.selectedPokemon()).toBeNull();
   });
 
+  it('onSurpriseMyTeam() excludes Dream Team + Favorites, resolves full summaries via getByIds, and tracks fallback', () => {
+    const getSurprise = vi.fn(() => of({ picks: [{ id: 1, name: 'bulbasaur' }, { id: 4, name: 'charmander' }], usedFallback: true }));
+    const getByIds = vi.fn(() => of([summary(1, { name: 'bulbasaur' }), summary(4, { name: 'charmander' })]));
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: PokemonService, useValue: { search: () => of({ results: [], page: 1, pageSize: 4, total: 0 }), getById: vi.fn(() => of(null)), getSurprise, getByIds } },
+        { provide: TeamService, useValue: { getTeam: () => of([member(1)]) } },
+        { provide: FavoritesService, useValue: { getFavorites: () => of([favorite(2)]) } },
+        { provide: ProfileService, useValue: { getProfile: () => of({ favoriteType: 'fire' } as any) } },
+      ],
+    });
+    const fixture = TestBed.createComponent(Explorer);
+    fixture.detectChanges();
+    const inst = fixture.componentInstance as any;
+
+    fixture.componentInstance.onSurpriseMyTeam();
+
+    expect(getSurprise).toHaveBeenCalledWith(expect.arrayContaining([1, 2]), 5, 'fire');
+    expect(inst.showSurpriseTeam()).toBe(true);
+    expect(inst.isSurpriseTeamLoading()).toBe(false);
+    expect(inst.surpriseTeamUsedFallback()).toBe(true);
+    expect(inst.surpriseTeamPicks().map((p: PokemonSummary) => p.id)).toEqual([1, 4]);
+  });
+
+  it('closeSurpriseTeam() hides the grid and clears the picks', () => {
+    const fixture = setup();
+    const inst = fixture.componentInstance as any;
+    inst.showSurpriseTeam.set(true);
+    inst.surpriseTeamPicks.set([summary(1)]);
+
+    fixture.componentInstance.closeSurpriseTeam();
+
+    expect(inst.showSurpriseTeam()).toBe(false);
+    expect(inst.surpriseTeamPicks()).toEqual([]);
+  });
+
+  it('onSurpriseTeamPick() opens the same Detail Modal a normal grid click would, with no reason pill', () => {
+    const fixture = setup();
+    const inst = fixture.componentInstance as any;
+    const pick = summary(4, { name: 'charmander' });
+
+    fixture.componentInstance.onSurpriseTeamPick(pick);
+
+    expect(inst.selectedPokemon()).toEqual(pick);
+    expect(inst.surpriseReasonText()).toBeNull();
+  });
+
   it('openDetail()/closeDetail() and toggleMobileDrawer()/closeMobileDrawer() control their own UI state', () => {
     const fixture = setup();
     const inst = fixture.componentInstance as any;

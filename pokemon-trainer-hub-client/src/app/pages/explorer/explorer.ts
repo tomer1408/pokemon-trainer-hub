@@ -14,6 +14,7 @@ import { ThemeService } from '../../shared/theme';
 import { PokemonDetailModal } from '../../shared/pokemon-detail-modal/pokemon-detail-modal';
 import { TeamSwapModal } from '../../shared/team-swap-modal/team-swap-modal';
 import { PokemonCompareModal } from '../../shared/pokemon-compare-modal/pokemon-compare-modal';
+import { SurpriseTeamModal } from '../../shared/surprise-team-modal/surprise-team-modal';
 import { PotdCard } from '../../shared/potd-card/potd-card';
 import { dayOfYearPokemonId } from '../../shared/pokemon-of-the-day';
 
@@ -37,7 +38,16 @@ function sortSummaries(list: PokemonSummary[], sort: SortBy): PokemonSummary[] {
 
 @Component({
   selector: 'app-explorer',
-  imports: [FormsModule, NgTemplateOutlet, RouterLink, PokemonDetailModal, TeamSwapModal, PokemonCompareModal, PotdCard],
+  imports: [
+    FormsModule,
+    NgTemplateOutlet,
+    RouterLink,
+    PokemonDetailModal,
+    TeamSwapModal,
+    PokemonCompareModal,
+    SurpriseTeamModal,
+    PotdCard,
+  ],
   templateUrl: './explorer.html',
   styleUrl: './explorer.css',
 })
@@ -72,6 +82,12 @@ export class Explorer {
   // every normal "click a card" open, so the reason pill never leaks into
   // an unrelated detail view.
   protected readonly surpriseReasonText = signal<string | null>(null);
+  // "Surprise My Team" — a separate, curated grid of 5 (see below), distinct
+  // from the single-pick Surprise Me above.
+  protected readonly showSurpriseTeam = signal(false);
+  protected readonly surpriseTeamPicks = signal<PokemonSummary[]>([]);
+  protected readonly isSurpriseTeamLoading = signal(false);
+  protected readonly surpriseTeamUsedFallback = signal(false);
   protected readonly mobileDrawerOpen = signal(false);
   protected readonly pendingRemove = signal<{ id: number; name: string } | null>(null);
   protected readonly swapNotice = signal<string | null>(null);
@@ -392,6 +408,44 @@ export class Explorer {
         this.selectedPokemon.set(detail);
       });
     });
+  }
+
+  // Same exclusion + favoriteType-bias rules as onSurpriseMe(), just count=5
+  // and resolved to full PokemonSummary objects (getSurprise only returns
+  // {id, name} — getByIds is the existing batch lookup used elsewhere, e.g.
+  // the avatar icon picker).
+  onSurpriseMyTeam(): void {
+    this.showSurpriseTeam.set(true);
+    this.rollSurpriseTeam();
+  }
+
+  rollSurpriseTeam(): void {
+    if (this.isSurpriseTeamLoading()) return;
+    this.isSurpriseTeamLoading.set(true);
+
+    const exclude = [...this.team().map((m) => m.pokemonId), ...this.favorites().map((f) => f.pokemonId)];
+    const favoriteType = this.profile()?.favoriteType;
+
+    this.pokemonService.getSurprise(exclude, 5, favoriteType || undefined).subscribe((result) => {
+      const ids = result.picks.map((p) => p.id);
+      this.pokemonService.getByIds(ids).subscribe((summaries) => {
+        this.isSurpriseTeamLoading.set(false);
+        this.surpriseTeamUsedFallback.set(result.usedFallback);
+        this.surpriseTeamPicks.set(summaries);
+      });
+    });
+  }
+
+  closeSurpriseTeam(): void {
+    this.showSurpriseTeam.set(false);
+    this.surpriseTeamPicks.set([]);
+  }
+
+  // Deliberately not a bulk apply — this just opens the same Detail Modal a
+  // normal grid click would, so add/favorite/compare on this pick reuses the
+  // existing one-at-a-time flow instead of a new bulk 5-way UI.
+  onSurpriseTeamPick(p: PokemonSummary): void {
+    this.openDetail(p);
   }
 
   openDetail(p: PokemonSummary): void {

@@ -249,6 +249,16 @@
   cursor: default;
 }
 
+.surprise-btn.team-variant {
+  background: transparent;
+  border: 1.5px solid var(--cyan);
+  color: var(--cyan);
+}
+
+.surprise-btn.team-variant .surprise-glyph {
+  background: var(--cyan);
+}
+
 .surprise-glyph {
   width: 14px;
   height: 14px;

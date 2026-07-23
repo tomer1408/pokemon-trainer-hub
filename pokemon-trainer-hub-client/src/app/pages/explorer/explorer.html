@@ -32,6 +32,11 @@
       <span class="surprise-glyph"></span>
       {{ isSurpriseLoading() ? 'Rolling…' : 'Surprise Me' }}
     </button>
+
+    <button type="button" class="surprise-btn team-variant" (click)="onSurpriseMyTeam()">
+      <span class="surprise-glyph"></span>
+      Surprise My Team
+    </button>
   </div>
 
   <!-- Type chip row -->
@@ -267,6 +272,22 @@
       (addToTeam)="onAction(sp)"
       (compare)="onCompareWithTeam(sp)"
       (removeFromTeam)="removeFromTeamModal(sp.id)"
+    />
+  }
+
+  <!-- Surprise My Team — a curated 5-pick grid; tapping a card opens it in
+       the same Pokémon Detail Modal above, so add/favorite/compare reuses
+       that existing one-at-a-time flow instead of a new bulk UI. -->
+  @if (showSurpriseTeam()) {
+    <app-surprise-team-modal
+      [picks]="surpriseTeamPicks()"
+      [isLoading]="isSurpriseTeamLoading()"
+      [usedFallback]="surpriseTeamUsedFallback()"
+      [isLight]="theme.isLight()"
+      [isPikachu]="theme.isPikachu()"
+      (closed)="closeSurpriseTeam()"
+      (shuffle)="rollSurpriseTeam()"
+      (pickSelected)="onSurpriseTeamPick($event)"
     />
   }
 

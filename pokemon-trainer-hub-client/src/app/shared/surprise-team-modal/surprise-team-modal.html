@@ -1,0 +1,50 @@
+<div class="dim-overlay" [class.light]="isLight" [class.pikachu]="isPikachu" (click)="onCancel()">
+  <div class="modal-outer" (click)="$event.stopPropagation()">
+    <div class="modal-inner">
+      <button type="button" class="close-btn" (click)="onCancel()">&times;</button>
+
+      <div class="header-block">
+        <span class="kicker">Surprise My Team</span>
+        <h1 class="title">5 fresh Pok&eacute;mon, picked just for you</h1>
+        @if (usedFallback) {
+          <p class="fallback-note">Ran out of new picks in your favorite type &mdash; mixed in some others too.</p>
+        }
+      </div>
+
+      @if (isLoading) {
+        <div class="loading-state">
+          <app-loading-screen [isLight]="isLight" [isPikachu]="isPikachu" size="sm" />
+        </div>
+      } @else if (picks.length === 0) {
+        <div class="empty-state">No new Pok&eacute;mon left to surprise you with &mdash; you've caught them all!</div>
+      } @else {
+        <div class="pick-grid">
+          @for (p of picks; track p.id) {
+            <button type="button" class="pick-card" (click)="pickSelected.emit(p)">
+              <div class="pick-sprite" [style.background]="typeColor(p.types[0]) + '22'">
+                @if (p.spriteUrl) {
+                  <img [src]="p.spriteUrl" alt="{{ p.name }}" />
+                }
+              </div>
+              <span class="pick-name">{{ p.name }}</span>
+              <div class="pick-types">
+                @for (t of p.types; track t) {
+                  <span class="type-pill" [style.background]="typeColor(t) + '33'">
+                    <span class="type-glyph" [style.background]="typeColor(t)"></span>{{ t }}
+                  </span>
+                }
+              </div>
+              <span class="pick-power">PWR {{ p.baseExperience }}</span>
+            </button>
+          }
+        </div>
+      }
+
+      <div class="actions-row">
+        <button type="button" class="shuffle-btn" [disabled]="isLoading" (click)="shuffle.emit()">
+          {{ isLoading ? 'Rolling…' : '⟳ Shuffle Again' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,288 @@
+/* Same token scaffold as pokemon-detail-modal.css — every modal in this app
+   follows the host page's theme rather than forcing dark. */
+:host {
+  --bg: var(--background-page-night);
+  --surface: var(--surface-primary-night);
+  --surface-raised: var(--surface-raised-night);
+  --border-soft: var(--border-default-night);
+  --text-body: var(--text-primary-night);
+  --text-muted: var(--text-secondary-night);
+  --violet: var(--primary-night);
+  --violet-deep: var(--primary-active-night);
+  --cyan: var(--accent-night);
+  --yellow: var(--energy-night);
+  --overlay-05: var(--overlay-05-night);
+  --overlay-06: var(--overlay-06-night);
+  --overlay-08: var(--overlay-08-night);
+  --overlay-10: var(--overlay-10-night);
+
+  display: block;
+}
+
+.dim-overlay.light {
+  --surface: var(--surface-primary);
+  --surface-raised: var(--surface-raised);
+  --border-soft: var(--border-default);
+  --text-body: var(--text-primary);
+  --text-muted: var(--text-secondary);
+  --violet: var(--primary);
+  --violet-deep: var(--primary-active);
+  --cyan: var(--accent);
+  --yellow: var(--energy);
+  --overlay-05: var(--overlay-05);
+  --overlay-06: var(--overlay-06);
+  --overlay-08: var(--overlay-08);
+  --overlay-10: var(--overlay-10);
+}
+
+.dim-overlay.pikachu {
+  --surface: var(--surface-primary-pikachu);
+  --surface-raised: var(--surface-raised-pikachu);
+  --border-soft: var(--border-default-pikachu);
+  --text-body: var(--text-primary-pikachu);
+  --text-muted: var(--text-secondary-pikachu);
+  --violet: var(--primary-pikachu);
+  --violet-deep: var(--primary-active-pikachu);
+  --cyan: var(--accent-pikachu);
+  --yellow: var(--energy-pikachu);
+  --overlay-05: var(--overlay-05-pikachu);
+  --overlay-06: var(--overlay-06-pikachu);
+  --overlay-08: var(--overlay-08-pikachu);
+  --overlay-10: var(--overlay-10-pikachu);
+}
+
+.dim-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(5, 3, 15, 0.72);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  box-sizing: border-box;
+}
+
+.modal-outer {
+  position: relative;
+  width: 100%;
+  max-width: 680px;
+  max-height: 88vh;
+  border-radius: 28px;
+  padding: 3px;
+  background: linear-gradient(120deg, var(--violet-deep), var(--cyan), var(--yellow), var(--violet-deep));
+  background-size: 300% 300%;
+  animation: holoShift 10s ease infinite, modalIn 0.25s ease-out;
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.55);
+  box-sizing: border-box;
+}
+
+.dim-overlay.light .modal-outer,
+.dim-overlay.pikachu .modal-outer {
+  box-shadow: 0 20px 44px rgba(35, 48, 68, 0.20);
+}
+
+.modal-inner {
+  position: relative;
+  background: var(--surface);
+  border-radius: 25px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(88vh - 6px);
+  overflow: hidden;
+  font-family: 'Manrope', sans-serif;
+  color: var(--text-body);
+}
+
+.close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 5;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--overlay-10);
+  color: var(--text-body);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.header-block {
+  padding: 28px 56px 4px 28px;
+}
+
+.kicker {
+  display: block;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 6px;
+}
+
+.title {
+  font-family: 'Bungee', sans-serif;
+  font-size: 20px;
+  color: var(--text-body);
+  margin: 0;
+}
+
+.fallback-note {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.loading-state,
+.empty-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 50px 30px;
+  min-height: 180px;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13.5px;
+}
+
+.pick-grid {
+  flex: 1;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 14px;
+  padding: 20px 28px;
+}
+
+.pick-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border-soft);
+  background: var(--surface-raised);
+  border-radius: 16px;
+  padding: 14px 10px 12px;
+  cursor: pointer;
+  font-family: 'Manrope', sans-serif;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.pick-card:hover {
+  transform: scale(1.03);
+  border-color: var(--cyan);
+}
+
+.pick-sprite {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pick-sprite img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.pick-name {
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--text-body);
+  text-transform: capitalize;
+  text-align: center;
+}
+
+.pick-types {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+}
+
+.type-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px 3px 6px;
+  border-radius: 100px;
+  font-weight: 700;
+  font-size: 9.5px;
+  text-transform: capitalize;
+  color: var(--text-body);
+}
+
+.type-glyph {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.pick-power {
+  font-family: 'Space Mono', monospace;
+  font-size: 10.5px;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.actions-row {
+  padding: 16px 28px 24px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.shuffle-btn {
+  width: 100%;
+  border: none;
+  border-radius: 100px;
+  padding: 13px 16px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 13.5px;
+  cursor: pointer;
+  background: linear-gradient(120deg, var(--violet-deep), var(--cyan));
+  color: #fff;
+}
+
+.shuffle-btn:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+@keyframes holoShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes modalIn {
+  0% { transform: translateY(14px) scale(0.98); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@media (max-width: 640px) {
+  .header-block {
+    padding: 24px 48px 4px 20px;
+  }
+
+  .pick-grid {
+    padding: 16px 20px;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+
+  .actions-row {
+    padding: 14px 20px 20px;
+  }
+}
