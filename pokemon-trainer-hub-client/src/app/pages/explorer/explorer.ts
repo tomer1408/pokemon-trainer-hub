@@ -4,7 +4,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { debounceTime, map, switchMap } from 'rxjs';
-import { PokemonService, PokemonListResponse, PokemonSummary } from '../../core/pokemon';
+import { PokemonService, PokemonListResponse, PokemonSummary, TypeChart } from '../../core/pokemon';
 import { TeamService, DreamTeamMember } from '../../core/team';
 import { FavoritesService, FavoritePokemon } from '../../core/favorites';
 import { ProfileService } from '../../core/profile';
@@ -65,6 +65,12 @@ export class Explorer {
 
   protected readonly potd = toSignal(this.pokemonService.getById(dayOfYearPokemonId()), {
     initialValue: null,
+  });
+
+  // Only used by Surprise My Team's analysis/comparison — same real
+  // PokeAPI chart My Team's Battle Readiness card already fetches.
+  protected readonly typeChart = toSignal(this.pokemonService.getTypeChart(), {
+    initialValue: {} as TypeChart,
   });
 
   protected readonly searchInput = signal('');
@@ -439,6 +445,13 @@ export class Explorer {
   closeSurpriseTeam(): void {
     this.showSurpriseTeam.set(false);
     this.surpriseTeamPicks.set([]);
+  }
+
+  // The team was already saved server-side by the time this fires (see
+  // SurpriseTeamModal.confirmReplaceTeam()) — just refresh the signal every
+  // other real team change already uses (sidebar, Team Power, etc.).
+  onTeamReplaced(): void {
+    this.teamRefresh.update((n) => n + 1);
   }
 
   // Deliberately not a bulk apply — this just opens the same Detail Modal a

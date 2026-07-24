@@ -47,7 +47,7 @@ describe('Explorer', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        { provide: PokemonService, useValue: { search, getById } },
+        { provide: PokemonService, useValue: { search, getById, getTypeChart: () => of({}) } },
         { provide: TeamService, useValue: { getTeam, addToTeam, removeFromTeam } },
         { provide: FavoritesService, useValue: { getFavorites, addFavorite, removeFavorite } },
         { provide: ProfileService, useValue: { getProfile: () => of(null) } },
@@ -257,7 +257,7 @@ describe('Explorer', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        { provide: PokemonService, useValue: { search: () => of({ results: [], page: 1, pageSize: 4, total: 0 }), getById, getSurprise } },
+        { provide: PokemonService, useValue: { search: () => of({ results: [], page: 1, pageSize: 4, total: 0 }), getById, getSurprise, getTypeChart: () => of({}) } },
         { provide: TeamService, useValue: { getTeam: () => of([member(1), member(2)]) } },
         { provide: FavoritesService, useValue: { getFavorites: () => of([favorite(3)]) } },
         { provide: ProfileService, useValue: { getProfile: () => of({ favoriteType: 'water' } as any) } },
@@ -280,7 +280,7 @@ describe('Explorer', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        { provide: PokemonService, useValue: { search: () => of({ results: [], page: 1, pageSize: 4, total: 0 }), getById, getSurprise } },
+        { provide: PokemonService, useValue: { search: () => of({ results: [], page: 1, pageSize: 4, total: 0 }), getById, getSurprise, getTypeChart: () => of({}) } },
         { provide: TeamService, useValue: { getTeam: () => of([]) } },
         { provide: FavoritesService, useValue: { getFavorites: () => of([]) } },
         { provide: ProfileService, useValue: { getProfile: () => of({ favoriteType: 'water' } as any) } },
@@ -300,7 +300,7 @@ describe('Explorer', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        { provide: PokemonService, useValue: { search: () => of({ results: [], page: 1, pageSize: 4, total: 0 }), getById: vi.fn(() => of(null)), getSurprise } },
+        { provide: PokemonService, useValue: { search: () => of({ results: [], page: 1, pageSize: 4, total: 0 }), getById: vi.fn(() => of(null)), getSurprise, getTypeChart: () => of({}) } },
         { provide: TeamService, useValue: { getTeam: () => of([]) } },
         { provide: FavoritesService, useValue: { getFavorites: () => of([]) } },
         { provide: ProfileService, useValue: { getProfile: () => of(null) } },
@@ -322,7 +322,7 @@ describe('Explorer', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        { provide: PokemonService, useValue: { search: () => of({ results: [], page: 1, pageSize: 4, total: 0 }), getById: vi.fn(() => of(null)), getSurprise, getByIds } },
+        { provide: PokemonService, useValue: { search: () => of({ results: [], page: 1, pageSize: 4, total: 0 }), getById: vi.fn(() => of(null)), getSurprise, getByIds, getTypeChart: () => of({}) } },
         { provide: TeamService, useValue: { getTeam: () => of([member(1)]) } },
         { provide: FavoritesService, useValue: { getFavorites: () => of([favorite(2)]) } },
         { provide: ProfileService, useValue: { getProfile: () => of({ favoriteType: 'fire' } as any) } },

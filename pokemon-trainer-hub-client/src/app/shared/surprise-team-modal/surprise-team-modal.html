@@ -40,11 +40,126 @@
         </div>
       }
 
+      @if (!isLoading && picks.length > 0) {
+        <div class="analysis-block">
+          <div class="analysis-header">
+            <span class="analysis-title">Team Analysis</span>
+            <span class="analysis-power">PWR {{ pickedPower() }}</span>
+          </div>
+
+          <div class="mix-row">
+            @for (seg of pickedTypeSegments(); track seg.type) {
+              <span class="type-pill" [style.background]="typeColor(seg.type) + '33'">
+                <span class="type-glyph" [style.background]="typeColor(seg.type)"></span>{{ seg.type }} {{ seg.pct }}%
+              </span>
+            }
+          </div>
+
+          @if (pickedMatchup().strongAgainst.length > 0) {
+            <p class="analysis-line strength">
+              <strong>Strength:</strong> hits hard against {{ pickedMatchup().strongAgainst.slice(0, 3).join(', ') }}
+            </p>
+          }
+          @if (pickedMatchup().vulnerableTo.length > 0) {
+            <p class="analysis-line weakness">
+              <strong>Weakness:</strong> exposed to {{ pickedMatchup().vulnerableTo[0].type }}
+              ({{ pickedMatchup().vulnerableTo[0].count }}/{{ picks.length }} members)
+            </p>
+          }
+
+          <button type="button" class="compare-toggle-btn" (click)="toggleComparison()">
+            {{ showComparison() ? 'Hide comparison' : '⇄ Compare with My Team' }}
+          </button>
+
+          @if (showComparison()) {
+            <div class="comparison-grid">
+              <div class="comparison-col">
+                <span class="comparison-label">This Roster</span>
+                <span class="comparison-power">PWR {{ pickedPower() }}</span>
+                <span class="comparison-sub">Covers {{ pickedMatchup().strongAgainst.length }} types</span>
+                <span class="comparison-sub">Vulnerable to {{ pickedMatchup().vulnerableTo.length }} types</span>
+              </div>
+              <div class="comparison-col">
+                <span class="comparison-label">My Team</span>
+                @if (myTeam.length > 0) {
+                  <span class="comparison-power">PWR {{ myTeamPower() }}</span>
+                  <span class="comparison-sub">Covers {{ myTeamMatchup().strongAgainst.length }} types</span>
+                  <span class="comparison-sub">Vulnerable to {{ myTeamMatchup().vulnerableTo.length }} types</span>
+
+                  <div class="teammate-list">
+                    @for (member of myTeam; track member.pokemonId) {
+                      <div class="teammate-row">
+                        <span class="teammate-name">{{ member.pokemonName }}</span>
+                        <button
+                          type="button"
+                          class="teammate-compare-btn"
+                          title="Head-to-head against these picks"
+                          (click)="openTeammateCompare(member.pokemonId)"
+                        >
+                          &#8644; Compare
+                        </button>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <span class="comparison-sub">Your team is empty</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+
       <div class="actions-row">
         <button type="button" class="shuffle-btn" [disabled]="isLoading" (click)="shuffle.emit()">
           {{ isLoading ? 'Rolling…' : '⟳ Shuffle Again' }}
         </button>
+        @if (picks.length > 0) {
+          <button type="button" class="replace-btn" (click)="requestReplaceTeam()">
+            Replace My Team with These {{ picks.length }}
+          </button>
+        }
       </div>
     </div>
   </div>
+
+  @if (confirmingReplace()) {
+    <div class="confirm-overlay" (click)="cancelReplaceTeam(); $event.stopPropagation()">
+      <div class="confirm-card" (click)="$event.stopPropagation()">
+        <h2 class="confirm-title">Replace your Dream Team with these {{ picks.length }}?</h2>
+        <p class="confirm-body">
+          Any current teammate not in this list will be removed. Your Favorites aren&rsquo;t affected.
+        </p>
+        @if (replaceError(); as err) {
+          <p class="confirm-error">{{ err }}</p>
+        }
+        <div class="confirm-actions">
+          <button type="button" class="confirm-cancel" [disabled]="isReplacing()" (click)="cancelReplaceTeam()">
+            Cancel
+          </button>
+          <button type="button" class="confirm-remove" [disabled]="isReplacing()" (click)="confirmReplaceTeam()">
+            {{ isReplacing() ? 'Replacing…' : 'Replace Team' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Head-to-head: a current teammate (anchor) vs. this roll's 5 picks
+       (candidates) — same TeamSwapModal Manage My Team uses for its own
+       "⇄ Compare", just with these picks standing in for Favorites. Real,
+       immediate save (persistImmediately defaults to true), matching every
+       other swap/compare flow in Explorer. Rendered after our own
+       dim-overlay so it paints on top at the same z-index. -->
+  @if (compareAnchorId(); as anchorId) {
+    <app-team-swap-modal
+      [selectedPokemonId]="anchorId"
+      [comparisonCandidates]="pickCandidates()"
+      mode="team-vs-favorites"
+      [isLight]="isLight"
+      [isPikachu]="isPikachu"
+      (closed)="closeTeammateCompare()"
+      (swapped)="onTeammateSwapped()"
+    />
+  }
 </div>

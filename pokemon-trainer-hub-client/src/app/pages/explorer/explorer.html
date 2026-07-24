@@ -256,6 +256,27 @@
     </div>
   }
 
+  <!-- Surprise My Team — a curated 5-pick grid; tapping a card opens it in
+       the Pokémon Detail Modal below, so add/favorite/compare reuses that
+       existing one-at-a-time flow instead of a new bulk UI. Rendered
+       BEFORE the Detail Modal so the Detail Modal (same z-index) always
+       paints on top of this grid when both are open at once. -->
+  @if (showSurpriseTeam()) {
+    <app-surprise-team-modal
+      [picks]="surpriseTeamPicks()"
+      [isLoading]="isSurpriseTeamLoading()"
+      [usedFallback]="surpriseTeamUsedFallback()"
+      [typeChart]="typeChart()"
+      [myTeam]="team()"
+      [isLight]="theme.isLight()"
+      [isPikachu]="theme.isPikachu()"
+      (closed)="closeSurpriseTeam()"
+      (shuffle)="rollSurpriseTeam()"
+      (pickSelected)="onSurpriseTeamPick($event)"
+      (teamChanged)="onTeamReplaced()"
+    />
+  }
+
   <!-- Pokémon Detail Modal -->
   @if (selectedPokemon(); as sp) {
     <app-pokemon-detail-modal
@@ -272,22 +293,6 @@
       (addToTeam)="onAction(sp)"
       (compare)="onCompareWithTeam(sp)"
       (removeFromTeam)="removeFromTeamModal(sp.id)"
-    />
-  }
-
-  <!-- Surprise My Team — a curated 5-pick grid; tapping a card opens it in
-       the same Pokémon Detail Modal above, so add/favorite/compare reuses
-       that existing one-at-a-time flow instead of a new bulk UI. -->
-  @if (showSurpriseTeam()) {
-    <app-surprise-team-modal
-      [picks]="surpriseTeamPicks()"
-      [isLoading]="isSurpriseTeamLoading()"
-      [usedFallback]="surpriseTeamUsedFallback()"
-      [isLight]="theme.isLight()"
-      [isPikachu]="theme.isPikachu()"
-      (closed)="closeSurpriseTeam()"
-      (shuffle)="rollSurpriseTeam()"
-      (pickSelected)="onSurpriseTeamPick($event)"
     />
   }
 

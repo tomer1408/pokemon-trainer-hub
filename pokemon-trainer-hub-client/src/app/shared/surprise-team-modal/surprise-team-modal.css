@@ -15,6 +15,7 @@
   --overlay-06: var(--overlay-06-night);
   --overlay-08: var(--overlay-08-night);
   --overlay-10: var(--overlay-10-night);
+  --danger: var(--error-night);
 
   display: block;
 }
@@ -33,6 +34,7 @@
   --overlay-06: var(--overlay-06);
   --overlay-08: var(--overlay-08);
   --overlay-10: var(--overlay-10);
+  --danger: var(--error);
 }
 
 .dim-overlay.pikachu {
@@ -49,6 +51,7 @@
   --overlay-06: var(--overlay-06-pikachu);
   --overlay-08: var(--overlay-08-pikachu);
   --overlay-10: var(--overlay-10-pikachu);
+  --danger: var(--error-pikachu);
 }
 
 .dim-overlay {
@@ -238,13 +241,158 @@
   font-weight: 700;
 }
 
+.analysis-block {
+  flex-shrink: 0;
+  margin: 0 28px;
+  padding: 16px 18px;
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  background: var(--overlay-05);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.analysis-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.analysis-title {
+  font-family: 'Bungee', sans-serif;
+  font-size: 13px;
+  color: var(--text-body);
+}
+
+.analysis-power {
+  font-family: 'Space Mono', monospace;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--cyan);
+}
+
+.mix-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.analysis-line {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.analysis-line strong {
+  color: var(--text-body);
+}
+
+.analysis-line.strength strong {
+  color: var(--cyan);
+}
+
+.analysis-line.weakness strong {
+  color: var(--yellow);
+}
+
+.compare-toggle-btn {
+  align-self: flex-start;
+  border: none;
+  background: transparent;
+  color: var(--cyan);
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.comparison-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-soft);
+}
+
+.comparison-label {
+  font-family: 'Bungee', sans-serif;
+  font-size: 11px;
+  color: var(--text-body);
+}
+
+.comparison-power {
+  font-family: 'Space Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cyan);
+}
+
+.comparison-sub {
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.teammate-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.teammate-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.teammate-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-body);
+  text-transform: capitalize;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teammate-compare-btn {
+  flex-shrink: 0;
+  border: 1px solid var(--border-soft);
+  background: transparent;
+  color: var(--cyan);
+  border-radius: 100px;
+  padding: 3px 9px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 10px;
+  cursor: pointer;
+}
+
 .actions-row {
+  display: flex;
+  gap: 12px;
   padding: 16px 28px 24px;
   border-top: 1px solid var(--border-soft);
 }
 
-.shuffle-btn {
-  width: 100%;
+.shuffle-btn,
+.replace-btn {
+  flex: 1;
   border: none;
   border-radius: 100px;
   padding: 13px 16px;
@@ -252,11 +400,111 @@
   font-weight: 800;
   font-size: 13.5px;
   cursor: pointer;
+}
+
+.shuffle-btn {
   background: linear-gradient(120deg, var(--violet-deep), var(--cyan));
   color: #fff;
 }
 
-.shuffle-btn:disabled {
+.replace-btn {
+  background: transparent;
+  border: 1.5px solid var(--yellow);
+  color: var(--yellow);
+}
+
+.shuffle-btn:disabled,
+.replace-btn:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+/* ---- Replace-team confirm — nested INSIDE this modal's own dim-overlay
+   (already dark), so it needs a z-index above this modal's 100 (same
+   pattern as Pokémon Detail Modal's own nested note/remove confirms). */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(5, 3, 15, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.confirm-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  padding: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
+}
+
+.confirm-title {
+  font-family: 'Bungee', sans-serif;
+  font-size: 16px;
+  color: var(--text-body);
+  margin: 0;
+  text-align: center;
+}
+
+.confirm-body {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.confirm-error {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--danger);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.confirm-cancel {
+  flex: 1;
+  border: 1px solid var(--border-soft);
+  background: transparent;
+  color: var(--text-body);
+  border-radius: 100px;
+  padding: 11px 14px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.confirm-remove {
+  flex: 1;
+  border: none;
+  background: var(--danger);
+  color: #fff;
+  border-radius: 100px;
+  padding: 11px 14px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.confirm-cancel:disabled,
+.confirm-remove:disabled {
   opacity: 0.65;
   cursor: default;
 }
@@ -282,7 +530,16 @@
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   }
 
+  .analysis-block {
+    margin: 0 20px;
+  }
+
+  .comparison-grid {
+    grid-template-columns: 1fr;
+  }
+
   .actions-row {
     padding: 14px 20px 20px;
+    flex-direction: column;
   }
 }
