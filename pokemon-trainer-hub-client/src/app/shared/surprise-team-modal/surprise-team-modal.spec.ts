@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { PokemonSummary, PokemonService, TypeChart } from '../../core/pokemon';
 import { TeamService } from '../../core/team';
@@ -57,6 +58,7 @@ describe('SurpriseTeamModal', () => {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
+        provideRouter([]),
         { provide: TeamService, useValue: { saveTeam, swapTeamMember: vi.fn(() => of({ ok: true })) } },
         { provide: PokemonService, useValue: { getById: vi.fn(() => of(anchorDetail())) } },
       ],
@@ -280,5 +282,20 @@ describe('SurpriseTeamModal', () => {
 
     expect(inst.compareAnchorId()).toBeNull();
     expect(changed).toBe(true);
+  });
+
+  it('surpriseQueryParams() joins exactly this roll\'s pick ids for the "Open in Team Builder" link', () => {
+    const picks = [mon({ id: 1 }), mon({ id: 4 }), mon({ id: 7 })];
+    const fixture = setup(picks);
+
+    expect((fixture.componentInstance as any).surpriseQueryParams()).toEqual({ surprise: '1,4,7' });
+  });
+
+  it('renders the "Open in Team Builder" link only when there are picks', () => {
+    const withPicks = setup([mon({ id: 1 })]);
+    expect(withPicks.nativeElement.querySelector('.builder-link-btn')).toBeTruthy();
+
+    const withoutPicks = setup([]);
+    expect(withoutPicks.nativeElement.querySelector('.builder-link-btn')).toBeNull();
   });
 });

@@ -1,8 +1,9 @@
 import { AfterViewInit, Component, ElementRef, HostListener, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, forkJoin, map, of } from 'rxjs';
 import { TeamService } from '../../core/team';
 import { FavoritesService } from '../../core/favorites';
+import { PokemonService } from '../../core/pokemon';
 import { TYPE_COLORS, PokemonTypeName } from '../../shared/pokemon-types';
 import { getTeamPower, getTypeSegments } from '../../shared/team-power';
 import { ThemeService } from '../../shared/theme';
@@ -56,8 +57,17 @@ interface DragState {
 export class ManageTeam implements AfterViewInit {
   private readonly teamService = inject(TeamService);
   private readonly favoritesService = inject(FavoritesService);
+  private readonly pokemonService = inject(PokemonService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly elementRef = inject(ElementRef<HTMLElement>);
+
+  // Entered via Explorer's Surprise My Team ("Open in Team Builder") with
+  // ?surprise=id1,id2,... — in this mode the pool below shows that roll's
+  // picks instead of the trainer's real Favorites. These were never real
+  // favorites, so Save Changes here commits ONLY the team; favorite state
+  // is never read from or written to the backend in this mode.
+  protected readonly surpriseMode = signal(false);
 
   // The page must never scroll — only the Favorites/Bench lists do, if their
   // content overflows. Rather than guessing the navbar's height in CSS, this
@@ -131,11 +141,44 @@ export class ManageTeam implements AfterViewInit {
     this.reloadFromServer();
   }
 
+  // ?surprise=id1,id2,... — real, distinct ids only (mirrors the same
+  // parsing GET /api/pokemon/surprise's own query param uses server-side).
+  private surpriseIdsFromRoute(): number[] {
+    const raw = this.route.snapshot.queryParamMap.get('surprise');
+    if (!raw) return [];
+    return Array.from(
+      new Set(
+        raw
+          .split(',')
+          .map((s) => parseInt(s.trim(), 10))
+          .filter((n) => !Number.isNaN(n)),
+      ),
+    );
+  }
+
   private reloadFromServer(): void {
     this.isLoading.set(true);
+    const surpriseIds = this.surpriseIdsFromRoute();
+    this.surpriseMode.set(surpriseIds.length > 0);
+
+    const pool$ = surpriseIds.length > 0
+      ? this.pokemonService.getByIds(surpriseIds).pipe(
+          map((summaries): ComparablePokemon[] =>
+            summaries.map((p) => ({
+              pokemonId: p.id,
+              pokemonName: p.name,
+              spriteUrl: p.spriteUrl,
+              types: p.types,
+              baseExperience: p.baseExperience,
+              stats: p.stats,
+            })),
+          ),
+        )
+      : this.favoritesService.getFavorites();
+
     forkJoin({
       team: this.teamService.getTeamStrict(),
-      favorites: this.favoritesService.getFavorites(),
+      favorites: pool$,
     }).subscribe(({ team, favorites }) => {
       this.savedTeam.set(team);
       this.teamDraft.set(team);
@@ -178,7 +221,10 @@ export class ManageTeam implements AfterViewInit {
 
   // Favorites have no meaningful order, so this is a plain set comparison —
   // unlike the team, an add and a remove are symmetric, not a sequence.
+  // Always false in surprise mode — the pool holds that roll's picks, not
+  // real Favorites, so dragging one around never counts as "unsaved."
   private hasFavoriteChanges(): boolean {
+    if (this.surpriseMode()) return false;
     const draftIds = new Set(this.allFavorites().map((f) => f.pokemonId));
     const savedIds = new Set(this.savedFavorites().map((f) => f.pokemonId));
     if (draftIds.size !== savedIds.size) return true;
@@ -199,7 +245,10 @@ export class ManageTeam implements AfterViewInit {
     return TYPE_COLORS[type as PokemonTypeName] ?? TYPE_COLORS['normal'];
   }
 
+  // Always false in surprise mode — the pool there is that roll's picks,
+  // not real Favorites, so nothing should ever show as favorited.
   isFavorite(pokemonId: number): boolean {
+    if (this.surpriseMode()) return false;
     return this.allFavorites().some((f) => f.pokemonId === pokemonId);
   }
 
@@ -411,8 +460,11 @@ export class ManageTeam implements AfterViewInit {
   }
 
   // Draft-only, same as every other change on this page — committed to the
-  // backend only when Save Changes runs.
+  // backend only when Save Changes runs. A no-op in surprise mode: the pool
+  // there is that roll's picks, not real Favorites, so there's no real
+  // favorite state to toggle.
   toggleFavoriteFromModal(pokemonId: number): void {
+    if (this.surpriseMode()) return;
     if (this.isFavorite(pokemonId)) {
       this.allFavorites.update((list) => list.filter((f) => f.pokemonId !== pokemonId));
       return;
@@ -455,22 +507,27 @@ export class ManageTeam implements AfterViewInit {
 
     // Favorites diff: only entries that differ from the last saved snapshot
     // need a real API call — everything else on the page was already true
-    // as of the last save.
-    const savedFavIds = new Set(this.savedFavorites().map((f) => f.pokemonId));
-    const draftFavorites = this.allFavorites();
-    const draftFavIds = new Set(draftFavorites.map((f) => f.pokemonId));
-    const toAdd = draftFavorites.filter((f) => !savedFavIds.has(f.pokemonId));
-    const toRemove = this.savedFavorites().filter((f) => !draftFavIds.has(f.pokemonId));
-
+    // as of the last save. Skipped entirely in surprise mode — the pool
+    // holds that roll's picks, never real Favorites, so nothing here should
+    // ever be added/removed as a favorite.
     type FavoriteResult = { pokemon: ComparablePokemon; ok: boolean; kind: 'add' | 'remove' };
-    const favoriteCalls: Observable<FavoriteResult>[] = [
-      ...toAdd.map((f) =>
-        this.favoritesService.addFavorite(f.pokemonId).pipe(map((ok) => ({ pokemon: f, ok, kind: 'add' as const }))),
-      ),
-      ...toRemove.map((f) =>
-        this.favoritesService.removeFavorite(f.pokemonId).pipe(map((ok) => ({ pokemon: f, ok, kind: 'remove' as const }))),
-      ),
-    ];
+    const favoriteCalls: Observable<FavoriteResult>[] = this.surpriseMode()
+      ? []
+      : (() => {
+          const savedFavIds = new Set(this.savedFavorites().map((f) => f.pokemonId));
+          const draftFavorites = this.allFavorites();
+          const draftFavIds = new Set(draftFavorites.map((f) => f.pokemonId));
+          const toAdd = draftFavorites.filter((f) => !savedFavIds.has(f.pokemonId));
+          const toRemove = this.savedFavorites().filter((f) => !draftFavIds.has(f.pokemonId));
+          return [
+            ...toAdd.map((f) =>
+              this.favoritesService.addFavorite(f.pokemonId).pipe(map((ok) => ({ pokemon: f, ok, kind: 'add' as const }))),
+            ),
+            ...toRemove.map((f) =>
+              this.favoritesService.removeFavorite(f.pokemonId).pipe(map((ok) => ({ pokemon: f, ok, kind: 'remove' as const }))),
+            ),
+          ];
+        })();
 
     this.isSaving.set(true);
     this.saveError.set(null);

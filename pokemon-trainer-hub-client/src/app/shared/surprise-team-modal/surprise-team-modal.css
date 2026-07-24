@@ -391,7 +391,8 @@
 }
 
 .shuffle-btn,
-.replace-btn {
+.replace-btn,
+.builder-link-btn {
   flex: 1;
   border: none;
   border-radius: 100px;
@@ -400,6 +401,9 @@
   font-weight: 800;
   font-size: 13.5px;
   cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  box-sizing: border-box;
 }
 
 .shuffle-btn {
@@ -411,6 +415,23 @@
   background: transparent;
   border: 1.5px solid var(--yellow);
   color: var(--yellow);
+}
+
+.builder-link-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  border: 1.5px solid var(--cyan);
+  color: var(--cyan);
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.builder-link-btn:hover {
+  background: var(--cyan);
+  color: #061014;
+  transform: translateY(-1px);
 }
 
 .shuffle-btn:disabled,

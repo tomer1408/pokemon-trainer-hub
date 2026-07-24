@@ -1,8 +1,9 @@
 import { TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { TeamService } from '../../core/team';
 import { FavoritesService } from '../../core/favorites';
+import { PokemonService, PokemonSummary } from '../../core/pokemon';
 import { ComparablePokemon } from '../../shared/team-swap-modal/team-swap-modal';
 import { ManageTeam } from './manage-team';
 
@@ -12,6 +13,7 @@ describe('ManageTeam', () => {
   let getFavorites: ReturnType<typeof vi.fn>;
   let addFavorite: ReturnType<typeof vi.fn>;
   let removeFavorite: ReturnType<typeof vi.fn>;
+  let getByIds: ReturnType<typeof vi.fn>;
   let navigateByUrl: ReturnType<typeof vi.fn>;
 
   function mon(id: number, overrides: Partial<ComparablePokemon> = {}): ComparablePokemon {
@@ -26,23 +28,35 @@ describe('ManageTeam', () => {
     };
   }
 
+  function summary(id: number, overrides: Partial<PokemonSummary> = {}): PokemonSummary {
+    return { id, name: `mon-${id}`, baseExperience: 100, types: ['fire'], spriteUrl: 's', stats: [], ...overrides };
+  }
+
   function setup(options: {
     team?: ComparablePokemon[];
     favorites?: ComparablePokemon[];
     saveTeamResult?: any;
+    surpriseQueryParam?: string;
+    surprisePicks?: PokemonSummary[];
   } = {}) {
     getTeamStrict = vi.fn(() => of(options.team ?? [mon(1), mon(2)]));
     saveTeam = vi.fn(() => of(options.saveTeamResult ?? { ok: true, team: options.team ?? [mon(1), mon(2)] }));
     getFavorites = vi.fn(() => of(options.favorites ?? []));
     addFavorite = vi.fn(() => of(true));
     removeFavorite = vi.fn(() => of(true));
+    getByIds = vi.fn(() => of(options.surprisePicks ?? []));
     navigateByUrl = vi.fn();
 
     TestBed.configureTestingModule({
       providers: [
         { provide: TeamService, useValue: { getTeamStrict, saveTeam } },
         { provide: FavoritesService, useValue: { getFavorites, addFavorite, removeFavorite } },
+        { provide: PokemonService, useValue: { getByIds } },
         { provide: Router, useValue: { navigateByUrl } },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { queryParamMap: { get: (key: string) => (key === 'surprise' ? options.surpriseQueryParam ?? null : null) } } },
+        },
       ],
     });
     const fixture = TestBed.createComponent(ManageTeam);
@@ -332,7 +346,9 @@ describe('ManageTeam', () => {
       providers: [
         { provide: TeamService, useValue: { getTeamStrict: () => of([mon(1)]), saveTeam: () => of({ ok: true, team: [mon(1)] }) } },
         { provide: FavoritesService, useValue: { getFavorites: () => of([mon(2)]), addFavorite: vi.fn(() => of(true)), removeFavorite } },
+        { provide: PokemonService, useValue: { getByIds: vi.fn(() => of([])) } },
         { provide: Router, useValue: { navigateByUrl: vi.fn() } },
+        { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
       ],
     });
     const fixture = TestBed.createComponent(ManageTeam);
@@ -469,5 +485,58 @@ describe('ManageTeam', () => {
 
     fixture.componentInstance.clearScout(0);
     expect(inst.scoutA()).toBeNull();
+  });
+
+  // ---- Surprise mode (?surprise=id1,id2,...) ----
+
+  it('loads the ?surprise= picks (via getByIds) into the pool instead of real Favorites', () => {
+    const fixture = setup({
+      surpriseQueryParam: '7,8',
+      surprisePicks: [summary(7, { name: 'squirtle' }), summary(8, { name: 'wartortle' })],
+    });
+    const inst = fixture.componentInstance as any;
+
+    expect(inst.surpriseMode()).toBe(true);
+    expect(getByIds).toHaveBeenCalledWith([7, 8]);
+    expect(getFavorites).not.toHaveBeenCalled();
+    expect(inst.allFavorites().map((m: any) => m.pokemonId)).toEqual([7, 8]);
+  });
+
+  it('is not surprise mode when the query param is absent', () => {
+    const fixture = setup();
+    expect((fixture.componentInstance as any).surpriseMode()).toBe(false);
+  });
+
+  it('surprise mode: hasUnsavedChanges() ignores pool changes, only real team changes count', () => {
+    const fixture = setup({ team: [mon(1)], surpriseQueryParam: '7', surprisePicks: [summary(7)] });
+    const inst = fixture.componentInstance as any;
+
+    inst.allFavorites.set([]); // dragged the surprise pick elsewhere
+    expect(inst.hasUnsavedChanges()).toBe(false);
+
+    inst.teamDraft.set([mon(2)]);
+    expect(inst.hasUnsavedChanges()).toBe(true);
+  });
+
+  it('surprise mode: isFavorite() is always false and toggleFavoriteFromModal() is a no-op', () => {
+    const fixture = setup({ surpriseQueryParam: '7', surprisePicks: [summary(7)] });
+    const inst = fixture.componentInstance as any;
+
+    expect(fixture.componentInstance.isFavorite(7)).toBe(false);
+
+    fixture.componentInstance.toggleFavoriteFromModal(7);
+    expect(inst.allFavorites().map((m: any) => m.pokemonId)).toEqual([7]); // unchanged
+  });
+
+  it('surprise mode: confirmSave() saves only the team, never calls addFavorite/removeFavorite', () => {
+    const fixture = setup({ team: [mon(1)], surpriseQueryParam: '7', surprisePicks: [summary(7)] });
+    const inst = fixture.componentInstance as any;
+    inst.teamDraft.set([mon(1), mon(7)]);
+
+    fixture.componentInstance.confirmSave();
+
+    expect(saveTeam).toHaveBeenCalledWith([1, 7]);
+    expect(addFavorite).not.toHaveBeenCalled();
+    expect(removeFavorite).not.toHaveBeenCalled();
   });
 });

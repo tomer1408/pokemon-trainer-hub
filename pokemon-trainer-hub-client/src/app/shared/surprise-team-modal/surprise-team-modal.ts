@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { PokemonSummary, TypeChart } from '../../core/pokemon';
 import { TeamService } from '../../core/team';
 import { TYPE_COLORS, PokemonTypeName } from '../pokemon-types';
@@ -20,7 +21,7 @@ import { ComparablePokemon, TeamSwapModal } from '../team-swap-modal/team-swap-m
 // rather than routed back through the host.
 @Component({
   selector: 'app-surprise-team-modal',
-  imports: [LoadingScreen, TeamSwapModal],
+  imports: [LoadingScreen, TeamSwapModal, RouterLink],
   templateUrl: './surprise-team-modal.html',
   styleUrl: './surprise-team-modal.css',
 })
@@ -106,6 +107,13 @@ export class SurpriseTeamModal {
       baseExperience: p.baseExperience,
       stats: p.stats,
     }));
+  }
+
+  // Feeds Manage My Team's own ?surprise= query param (see manage-team.ts's
+  // surpriseMode) — opens that exact page, with this roll's picks standing
+  // in for the trainer's real Favorites pool instead of a new page.
+  protected surpriseQueryParams(): { surprise: string } {
+    return { surprise: this.picks.map((p) => p.id).join(',') };
   }
 
   openTeammateCompare(pokemonId: number): void {

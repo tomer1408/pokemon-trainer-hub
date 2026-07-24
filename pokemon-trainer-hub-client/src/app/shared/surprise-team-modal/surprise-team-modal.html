@@ -118,6 +118,14 @@
           <button type="button" class="replace-btn" (click)="requestReplaceTeam()">
             Replace My Team with These {{ picks.length }}
           </button>
+          <a
+            class="builder-link-btn"
+            routerLink="/manage-team"
+            [queryParams]="surpriseQueryParams()"
+            (click)="onCancel()"
+          >
+            Open in Team Builder &#8594;
+          </a>
         }
       </div>
     </div>

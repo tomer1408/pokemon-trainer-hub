@@ -6,9 +6,16 @@
       <div class="header-row">
         <div class="header-block">
           <h1 class="page-title">Manage My Team</h1>
-          <p class="page-subtitle">
-            Drag Pok&eacute;mon to build your line-up &mdash; reorder your team or pull favorites in and out.
-          </p>
+          @if (surpriseMode()) {
+            <p class="page-subtitle">
+              Playing with your Surprise Me roll &mdash; drag picks in and out to try them on your team.
+              Save Changes updates your Dream Team only; it never touches your real Favorites.
+            </p>
+          } @else {
+            <p class="page-subtitle">
+              Drag Pok&eacute;mon to build your line-up &mdash; reorder your team or pull favorites in and out.
+            </p>
+          }
         </div>
 
         <!-- Scouting Bench — drag any two cards here for a non-destructive
@@ -199,7 +206,7 @@
       <div class="bottom-row">
         <div class="pool-section">
           <div class="section-head-row">
-            <span class="section-title">Favorites</span>
+            <span class="section-title">{{ surpriseMode() ? 'Surprise Picks' : 'Favorites' }}</span>
           </div>
           <div
             class="pool-grid"
@@ -216,7 +223,9 @@
                 (dragend)="endDrag()"
                 (click)="openDetail(card.pokemonId)"
               >
-                <div class="heart-badge pool-heart-badge">&hearts;</div>
+                @if (!surpriseMode()) {
+                  <div class="heart-badge pool-heart-badge">&hearts;</div>
+                }
                 <div class="grip">&#8942;&#8942;</div>
                 <div class="pool-art" [style.background]="typeColor(card.types[0]) + '22'">
                   @if (card.spriteUrl) {
@@ -247,7 +256,11 @@
               </div>
             }
             @if (favPool().length === 0) {
-              <div class="pool-empty">All your favorites are on the team. Drag one back here to bench it.</div>
+              <div class="pool-empty">
+                {{ surpriseMode()
+                  ? 'All 5 surprise picks are on the team. Drag one back here to bench it.'
+                  : 'All your favorites are on the team. Drag one back here to bench it.' }}
+              </div>
             }
           </div>
         </div>
