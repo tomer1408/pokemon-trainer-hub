@@ -49,6 +49,7 @@ describe('SurpriseTeamModal', () => {
     options: {
       isLoading?: boolean;
       usedFallback?: boolean;
+      loadError?: boolean;
       typeChart?: TypeChart;
       myTeam?: ComparablePokemon[];
       saveTeamResult?: any;
@@ -67,6 +68,7 @@ describe('SurpriseTeamModal', () => {
     fixture.componentInstance.picks = picks;
     fixture.componentInstance.isLoading = options.isLoading ?? false;
     fixture.componentInstance.usedFallback = options.usedFallback ?? false;
+    fixture.componentInstance.loadError = options.loadError ?? false;
     fixture.componentInstance.typeChart = options.typeChart ?? chart;
     fixture.componentInstance.myTeam = options.myTeam ?? [];
     fixture.detectChanges();
@@ -105,6 +107,13 @@ describe('SurpriseTeamModal', () => {
     const fixture = setup([]);
     expect(fixture.nativeElement.querySelector('.pick-card')).toBeNull();
     expect(fixture.nativeElement.textContent).toContain("you've caught them all");
+  });
+
+  it('shows a real error message instead of "caught them all" when loadError is true', () => {
+    const fixture = setup([], { loadError: true });
+    expect(fixture.nativeElement.querySelector('.pick-card')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('reach the Pokédex');
+    expect(fixture.nativeElement.textContent).not.toContain("you've caught them all");
   });
 
   it('shows the loading state instead of the grid while isLoading is true', () => {

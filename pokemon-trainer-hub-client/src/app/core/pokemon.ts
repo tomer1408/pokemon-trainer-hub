@@ -73,6 +73,11 @@ export interface SurpriseResult {
   // server fell back to the full dex instead — lets the caller show the
   // right reason ("because you love X" vs "something new for you").
   usedFallback: boolean;
+  // True only on a genuine request failure (network/PokeAPI/server error) —
+  // lets callers tell "the pool is legitimately exhausted" (empty picks,
+  // error false) apart from "the request itself failed" (empty picks,
+  // error true), which need different copy/retry treatment.
+  error: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -123,8 +128,11 @@ export class PokemonService {
     if (type) params['type'] = type;
 
     return this.http
-      .get<SurpriseResult>(`${API_BASE}/pokemon/surprise`, { params })
-      .pipe(catchError(() => of({ picks: [], usedFallback: false })));
+      .get<Omit<SurpriseResult, 'error'>>(`${API_BASE}/pokemon/surprise`, { params })
+      .pipe(
+        map((res): SurpriseResult => ({ ...res, error: false })),
+        catchError(() => of({ picks: [], usedFallback: false, error: true })),
+      );
   }
 
   // Used by the avatar icon picker (Onboarding + Profile) — a single request

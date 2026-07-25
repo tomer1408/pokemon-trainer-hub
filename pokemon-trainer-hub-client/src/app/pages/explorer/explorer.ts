@@ -68,10 +68,17 @@ export class Explorer {
   });
 
   // Only used by Surprise My Team's analysis/comparison — same real
-  // PokeAPI chart My Team's Battle Readiness card already fetches.
-  protected readonly typeChart = toSignal(this.pokemonService.getTypeChart(), {
-    initialValue: {} as TypeChart,
-  });
+  // PokeAPI chart My Team's Battle Readiness card already fetches. Fetched
+  // lazily (see ensureTypeChart(), called from onSurpriseMyTeam()) rather
+  // than on every Explorer visit, since most visits never open that modal.
+  protected readonly typeChart = signal<TypeChart>({});
+  private typeChartRequested = false;
+
+  private ensureTypeChart(): void {
+    if (this.typeChartRequested) return;
+    this.typeChartRequested = true;
+    this.pokemonService.getTypeChart().subscribe((chart) => this.typeChart.set(chart));
+  }
 
   protected readonly searchInput = signal('');
   private readonly debouncedSearch = toSignal(
@@ -84,6 +91,9 @@ export class Explorer {
   protected readonly favoritesOnly = signal(false);
   protected readonly page = signal(1);
   protected readonly isSurpriseLoading = signal(false);
+  // Set only on a genuine request failure (not a legitimately exhausted
+  // pool) — cleared at the start of every new attempt.
+  protected readonly surpriseError = signal<string | null>(null);
   // Only set right before Surprise Me opens the Detail Modal — cleared on
   // every normal "click a card" open, so the reason pill never leaks into
   // an unrelated detail view.
@@ -94,6 +104,10 @@ export class Explorer {
   protected readonly surpriseTeamPicks = signal<PokemonSummary[]>([]);
   protected readonly isSurpriseTeamLoading = signal(false);
   protected readonly surpriseTeamUsedFallback = signal(false);
+  // Set only on a genuine request failure — distinguishes "the pool is
+  // legitimately exhausted" (empty picks) from "the request itself failed"
+  // in the modal's empty-state copy.
+  protected readonly surpriseTeamLoadError = signal(false);
   protected readonly mobileDrawerOpen = signal(false);
   protected readonly pendingRemove = signal<{ id: number; name: string } | null>(null);
   protected readonly swapNotice = signal<string | null>(null);
@@ -394,6 +408,7 @@ export class Explorer {
   onSurpriseMe(): void {
     if (this.isSurpriseLoading()) return;
     this.isSurpriseLoading.set(true);
+    this.surpriseError.set(null);
 
     const exclude = [...this.team().map((m) => m.pokemonId), ...this.favorites().map((f) => f.pokemonId)];
     const favoriteType = this.profile()?.favoriteType;
@@ -402,6 +417,7 @@ export class Explorer {
       const pick = result.picks[0];
       if (!pick) {
         this.isSurpriseLoading.set(false);
+        if (result.error) this.surpriseError.set("Couldn't reach the Pokédex. Please try again.");
         return;
       }
 
@@ -422,17 +438,26 @@ export class Explorer {
   // the avatar icon picker).
   onSurpriseMyTeam(): void {
     this.showSurpriseTeam.set(true);
+    this.ensureTypeChart();
     this.rollSurpriseTeam();
   }
 
   rollSurpriseTeam(): void {
     if (this.isSurpriseTeamLoading()) return;
     this.isSurpriseTeamLoading.set(true);
+    this.surpriseTeamLoadError.set(false);
 
     const exclude = [...this.team().map((m) => m.pokemonId), ...this.favorites().map((f) => f.pokemonId)];
     const favoriteType = this.profile()?.favoriteType;
 
     this.pokemonService.getSurprise(exclude, 5, favoriteType || undefined).subscribe((result) => {
+      if (result.error) {
+        this.isSurpriseTeamLoading.set(false);
+        this.surpriseTeamLoadError.set(true);
+        this.surpriseTeamPicks.set([]);
+        return;
+      }
+
       const ids = result.picks.map((p) => p.id);
       this.pokemonService.getByIds(ids).subscribe((summaries) => {
         this.isSurpriseTeamLoading.set(false);

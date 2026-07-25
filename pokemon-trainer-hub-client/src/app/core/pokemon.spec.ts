@@ -140,21 +140,21 @@ describe('PokemonService', () => {
     req.flush({ picks: [], usedFallback: false });
   });
 
-  it('getSurprise() resolves the real picks and usedFallback flag', () => {
+  it('getSurprise() resolves the real picks and usedFallback flag, with error: false', () => {
     let result: SurpriseResult | undefined;
     service.getSurprise([], 1).subscribe((r) => (result = r));
 
     httpMock.expectOne((r) => r.url === `${API_BASE}/pokemon/surprise`).flush({ picks: [{ id: 6, name: 'charizard' }], usedFallback: true });
 
-    expect(result).toEqual({ picks: [{ id: 6, name: 'charizard' }], usedFallback: true });
+    expect(result).toEqual({ picks: [{ id: 6, name: 'charizard' }], usedFallback: true, error: false });
   });
 
-  it('getSurprise() falls back to an empty, non-fallback result on error, never throws', () => {
+  it('getSurprise() falls back to an empty, non-fallback result on error, flagged error: true, never throws', () => {
     let result: SurpriseResult | undefined;
     service.getSurprise([], 1).subscribe((r) => (result = r));
 
     httpMock.expectOne((r) => r.url === `${API_BASE}/pokemon/surprise`).flush('error', { status: 500, statusText: 'Server Error' });
 
-    expect(result).toEqual({ picks: [], usedFallback: false });
+    expect(result).toEqual({ picks: [], usedFallback: false, error: true });
   });
 });

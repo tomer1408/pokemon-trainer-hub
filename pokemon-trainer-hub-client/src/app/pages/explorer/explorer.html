@@ -39,6 +39,10 @@
     </button>
   </div>
 
+  @if (surpriseError(); as err) {
+    <p class="surprise-error">{{ err }}</p>
+  }
+
   <!-- Type chip row -->
   <div class="type-chip-row">
     <button type="button" class="chip all-chip" [class.active]="typeFilter() === 'all'" (click)="typeFilter.set('all')">
@@ -266,6 +270,7 @@
       [picks]="surpriseTeamPicks()"
       [isLoading]="isSurpriseTeamLoading()"
       [usedFallback]="surpriseTeamUsedFallback()"
+      [loadError]="surpriseTeamLoadError()"
       [typeChart]="typeChart()"
       [myTeam]="team()"
       [isLight]="theme.isLight()"

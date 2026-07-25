@@ -32,6 +32,10 @@ export class SurpriseTeamModal {
   // fall back to the full dex for this batch — mirrors the single Surprise
   // Me's usedFallback framing, just described for a set instead of one pick.
   @Input() usedFallback = false;
+  // True only on a genuine request failure — distinguishes that from a
+  // legitimately exhausted pool (both leave picks empty) so the empty
+  // state shows the right copy instead of "you've caught them all".
+  @Input() loadError = false;
   @Input() isLight = false;
   @Input() isPikachu = false;
   // Real PokeAPI type-effectiveness chart — same one My Team's Battle

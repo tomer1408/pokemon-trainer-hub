@@ -15,6 +15,8 @@
         <div class="loading-state">
           <app-loading-screen [isLight]="isLight" [isPikachu]="isPikachu" size="sm" />
         </div>
+      } @else if (loadError) {
+        <div class="empty-state">Couldn&rsquo;t reach the Pok&eacute;dex. Please try Shuffle Again in a moment.</div>
       } @else if (picks.length === 0) {
         <div class="empty-state">No new Pok&eacute;mon left to surprise you with &mdash; you've caught them all!</div>
       } @else {

@@ -295,8 +295,8 @@ describe('Explorer', () => {
     expect(inst.surpriseReasonText()).toBe('Something new for you');
   });
 
-  it('onSurpriseMe() toggles isSurpriseLoading and does nothing on an empty pool', () => {
-    const getSurprise = vi.fn(() => of({ picks: [], usedFallback: false }));
+  it('onSurpriseMe() toggles isSurpriseLoading and does nothing on an empty (non-error) pool', () => {
+    const getSurprise = vi.fn(() => of({ picks: [], usedFallback: false, error: false }));
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
@@ -314,15 +314,37 @@ describe('Explorer', () => {
 
     expect(inst.isSurpriseLoading()).toBe(false);
     expect(inst.selectedPokemon()).toBeNull();
+    expect(inst.surpriseError()).toBeNull();
   });
 
-  it('onSurpriseMyTeam() excludes Dream Team + Favorites, resolves full summaries via getByIds, and tracks fallback', () => {
-    const getSurprise = vi.fn(() => of({ picks: [{ id: 1, name: 'bulbasaur' }, { id: 4, name: 'charmander' }], usedFallback: true }));
-    const getByIds = vi.fn(() => of([summary(1, { name: 'bulbasaur' }), summary(4, { name: 'charmander' })]));
+  it('onSurpriseMe() surfaces a real error message when the request itself failed', () => {
+    const getSurprise = vi.fn(() => of({ picks: [], usedFallback: false, error: true }));
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        { provide: PokemonService, useValue: { search: () => of({ results: [], page: 1, pageSize: 4, total: 0 }), getById: vi.fn(() => of(null)), getSurprise, getByIds, getTypeChart: () => of({}) } },
+        { provide: PokemonService, useValue: { search: () => of({ results: [], page: 1, pageSize: 4, total: 0 }), getById: vi.fn(() => of(null)), getSurprise, getTypeChart: () => of({}) } },
+        { provide: TeamService, useValue: { getTeam: () => of([]) } },
+        { provide: FavoritesService, useValue: { getFavorites: () => of([]) } },
+        { provide: ProfileService, useValue: { getProfile: () => of(null) } },
+      ],
+    });
+    const fixture = TestBed.createComponent(Explorer);
+    fixture.detectChanges();
+    const inst = fixture.componentInstance as any;
+
+    fixture.componentInstance.onSurpriseMe();
+
+    expect(inst.surpriseError()).toBe("Couldn't reach the Pokédex. Please try again.");
+  });
+
+  it('onSurpriseMyTeam() excludes Dream Team + Favorites, resolves full summaries via getByIds, tracks fallback, and lazily fetches the type chart', () => {
+    const getSurprise = vi.fn(() => of({ picks: [{ id: 1, name: 'bulbasaur' }, { id: 4, name: 'charmander' }], usedFallback: true, error: false }));
+    const getByIds = vi.fn(() => of([summary(1, { name: 'bulbasaur' }), summary(4, { name: 'charmander' })]));
+    const getTypeChart = vi.fn(() => of({}));
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: PokemonService, useValue: { search: () => of({ results: [], page: 1, pageSize: 4, total: 0 }), getById: vi.fn(() => of(null)), getSurprise, getByIds, getTypeChart } },
         { provide: TeamService, useValue: { getTeam: () => of([member(1)]) } },
         { provide: FavoritesService, useValue: { getFavorites: () => of([favorite(2)]) } },
         { provide: ProfileService, useValue: { getProfile: () => of({ favoriteType: 'fire' } as any) } },
@@ -332,13 +354,42 @@ describe('Explorer', () => {
     fixture.detectChanges();
     const inst = fixture.componentInstance as any;
 
+    expect(getTypeChart).not.toHaveBeenCalled(); // not fetched just from loading Explorer
+
     fixture.componentInstance.onSurpriseMyTeam();
 
+    expect(getTypeChart).toHaveBeenCalledTimes(1);
     expect(getSurprise).toHaveBeenCalledWith(expect.arrayContaining([1, 2]), 5, 'fire');
     expect(inst.showSurpriseTeam()).toBe(true);
     expect(inst.isSurpriseTeamLoading()).toBe(false);
     expect(inst.surpriseTeamUsedFallback()).toBe(true);
     expect(inst.surpriseTeamPicks().map((p: PokemonSummary) => p.id)).toEqual([1, 4]);
+
+    fixture.componentInstance.onSurpriseMyTeam();
+    expect(getTypeChart).toHaveBeenCalledTimes(1); // only fetched once, ever
+  });
+
+  it('rollSurpriseTeam() surfaces a real error and clears picks when the request itself failed', () => {
+    const getSurprise = vi.fn(() => of({ picks: [], usedFallback: false, error: true }));
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: PokemonService, useValue: { search: () => of({ results: [], page: 1, pageSize: 4, total: 0 }), getById: vi.fn(() => of(null)), getSurprise, getByIds: vi.fn(() => of([])), getTypeChart: () => of({}) } },
+        { provide: TeamService, useValue: { getTeam: () => of([]) } },
+        { provide: FavoritesService, useValue: { getFavorites: () => of([]) } },
+        { provide: ProfileService, useValue: { getProfile: () => of(null) } },
+      ],
+    });
+    const fixture = TestBed.createComponent(Explorer);
+    fixture.detectChanges();
+    const inst = fixture.componentInstance as any;
+    inst.surpriseTeamPicks.set([summary(1)]);
+
+    fixture.componentInstance.onSurpriseMyTeam();
+
+    expect(inst.isSurpriseTeamLoading()).toBe(false);
+    expect(inst.surpriseTeamLoadError()).toBe(true);
+    expect(inst.surpriseTeamPicks()).toEqual([]);
   });
 
   it('closeSurpriseTeam() hides the grid and clears the picks', () => {
