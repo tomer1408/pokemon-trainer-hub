@@ -389,7 +389,12 @@ export class ManageTeam implements AfterViewInit {
     this.benchDraft.update((list) => list.filter((m) => m.pokemonId !== drag.item.pokemonId));
     this.endDrag();
 
-    if (!this.isFavorite(drag.item.pokemonId)) {
+    // Checked against allFavorites() directly, not isFavorite() — that's
+    // hardcoded false in surprise mode (nothing there is a real favorite),
+    // which would otherwise let a pick dragged team→pool get appended a
+    // second time and duplicate its pokemonId in the pool.
+    const alreadyInPool = this.allFavorites().some((f) => f.pokemonId === drag.item.pokemonId);
+    if (!alreadyInPool) {
       this.allFavorites.update((list) => [...list, drag.item]);
     }
   }

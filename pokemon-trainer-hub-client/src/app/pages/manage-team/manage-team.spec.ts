@@ -539,4 +539,24 @@ describe('ManageTeam', () => {
     expect(addFavorite).not.toHaveBeenCalled();
     expect(removeFavorite).not.toHaveBeenCalled();
   });
+
+  it('surprise mode: moveToFav() never duplicates a pick already sitting in the pool', () => {
+    // Regression: moveToFav()'s "already there?" guard used to call
+    // isFavorite(), which is hardcoded false in surprise mode — so dragging
+    // a pick team→pool re-appended it, duplicating its pokemonId in
+    // allFavorites() and crashing favPool()'s @for (NG0955, duplicate track
+    // key). Drag it out to the team and back to the pool twice to prove no
+    // duplicate ever lands.
+    const fixture = setup({ team: [], surpriseQueryParam: '7', surprisePicks: [summary(7)] });
+    const inst = fixture.componentInstance as any;
+
+    inst.startDrag(mon(7), 'fav');
+    fixture.componentInstance.moveToTeam(0); // pool -> team
+    inst.startDrag(mon(7), 'team');
+    fixture.componentInstance.moveToFav(); // team -> pool
+
+    const poolIds = inst.allFavorites().map((f: any) => f.pokemonId);
+    expect(poolIds).toEqual([7]);
+    expect(poolIds.length).toBe(new Set(poolIds).size); // no duplicate id
+  });
 });
