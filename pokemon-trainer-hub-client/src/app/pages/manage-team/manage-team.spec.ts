@@ -144,6 +144,89 @@ describe('ManageTeam', () => {
     expect(inst.overBench()).toBe(false);
   });
 
+  // ---- Tap-to-move (touch drag-and-drop fallback) ----
+
+  it('toggleHold() starts a hold when nothing is held, and cancels it when tapping the same card\'s grip again', () => {
+    const fixture = setup({ team: [mon(1)] });
+    const inst = fixture.componentInstance as any;
+
+    fixture.componentInstance.toggleHold(mon(1), 'team');
+    expect(inst.drag()).toEqual({ item: mon(1), from: 'team' });
+
+    fixture.componentInstance.toggleHold(mon(1), 'team');
+    expect(inst.drag()).toBeNull();
+  });
+
+  it('toggleHold() re-targets the hold to a different card instead of stacking', () => {
+    const fixture = setup({ team: [mon(1), mon(2)] });
+    const inst = fixture.componentInstance as any;
+
+    fixture.componentInstance.toggleHold(mon(1), 'team');
+    fixture.componentInstance.toggleHold(mon(2), 'team');
+
+    expect(inst.drag()).toEqual({ item: mon(2), from: 'team' });
+  });
+
+  it('onCardTap() opens the detail modal when nothing is held', () => {
+    const fixture = setup();
+    const inst = fixture.componentInstance as any;
+
+    fixture.componentInstance.onCardTap(1);
+
+    expect(inst.selectedPokemonId()).toBe(1);
+  });
+
+  it('onCardTap() does nothing (no detail modal) while a hold is active — avoids opening a modal mid-move', () => {
+    const fixture = setup({ team: [mon(1)] });
+    const inst = fixture.componentInstance as any;
+    inst.startDrag(mon(1), 'team');
+
+    fixture.componentInstance.onCardTap(9);
+
+    expect(inst.selectedPokemonId()).toBeNull();
+  });
+
+  it('onTeamSlotTap() moves the held card to that slot instead of opening detail', () => {
+    const fixture = setup({ team: [mon(1), mon(2)] });
+    const inst = fixture.componentInstance as any;
+    inst.benchDraft.set([mon(9)]);
+    inst.startDrag(mon(9), 'bench');
+
+    fixture.componentInstance.onTeamSlotTap(0, mon(1));
+
+    expect(inst.teamDraft().map((m: any) => m.pokemonId)).toEqual([9, 1, 2]);
+    expect(inst.selectedPokemonId()).toBeNull();
+  });
+
+  it('onTeamSlotTap() places the held card into an empty slot (member is null)', () => {
+    const fixture = setup({ team: [mon(1)] });
+    const inst = fixture.componentInstance as any;
+    inst.benchDraft.set([mon(9)]);
+    inst.startDrag(mon(9), 'bench');
+
+    fixture.componentInstance.onTeamSlotTap(1, null);
+
+    expect(inst.teamDraft().map((m: any) => m.pokemonId)).toEqual([1, 9]);
+  });
+
+  it('onTeamSlotTap() opens detail for a filled slot when nothing is held', () => {
+    const fixture = setup({ team: [mon(1)] });
+    const inst = fixture.componentInstance as any;
+
+    fixture.componentInstance.onTeamSlotTap(0, mon(1));
+
+    expect(inst.selectedPokemonId()).toBe(1);
+  });
+
+  it('onTeamSlotTap() is a no-op for an empty slot when nothing is held', () => {
+    const fixture = setup({ team: [] });
+    const inst = fixture.componentInstance as any;
+
+    fixture.componentInstance.onTeamSlotTap(0, null);
+
+    expect(inst.selectedPokemonId()).toBeNull();
+  });
+
   it('moveToTeam() inserts the dragged item at the drop index', () => {
     const fixture = setup({ team: [mon(1), mon(2)] });
     const inst = fixture.componentInstance as any;

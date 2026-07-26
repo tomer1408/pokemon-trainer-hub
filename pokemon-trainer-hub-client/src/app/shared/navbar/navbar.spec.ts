@@ -70,6 +70,22 @@ describe('Navbar', () => {
     expect((fixture.componentInstance as any).trainerEmail()).toBe('');
   });
 
+  it('toggleMobileMenu()/closeMobileMenu() control the mobile nav dropdown', () => {
+    const fixture = setup();
+    const inst = fixture.componentInstance as any;
+    expect(inst.mobileMenuOpen()).toBe(false);
+
+    fixture.componentInstance.toggleMobileMenu();
+    expect(inst.mobileMenuOpen()).toBe(true);
+
+    fixture.componentInstance.toggleMobileMenu();
+    expect(inst.mobileMenuOpen()).toBe(false);
+
+    fixture.componentInstance.toggleMobileMenu();
+    fixture.componentInstance.closeMobileMenu();
+    expect(inst.mobileMenuOpen()).toBe(false);
+  });
+
   it('setDark()/setLight()/setPikachu() delegate to the shared ThemeService', () => {
     const fixture = setup();
     const theme = TestBed.inject(ThemeService);

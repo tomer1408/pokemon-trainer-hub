@@ -299,6 +299,12 @@
   color: var(--bad);
 }
 
+.rec-draw {
+  font-family: 'Bungee', sans-serif;
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
 .rec-total {
   font-size: 12px;
   color: var(--text-muted);
@@ -326,6 +332,7 @@
 
 .kpi-tile.accent-win { border-left-color: var(--good); }
 .kpi-tile.accent-loss { border-left-color: var(--bad); }
+.kpi-tile.accent-draw { border-left-color: var(--text-muted); }
 .kpi-tile.accent-violet { border-left-color: var(--violet); }
 .kpi-tile.accent-cyan { border-left-color: var(--cyan); }
 .kpi-tile.accent-yellow { border-left-color: var(--yellow); }
@@ -394,6 +401,7 @@
 
 .form-pip.win { background: var(--good); }
 .form-pip.loss { background: var(--bad); }
+.form-pip.draw { background: var(--overlay-08); color: var(--text-body); }
 
 /* ---- Insights ---- */
 .insights-row {
@@ -616,6 +624,10 @@
   border-left-color: var(--bad);
 }
 
+.match-row.draw {
+  border-left-color: var(--text-muted);
+}
+
 .result-mark {
   flex-shrink: 0;
   width: 30px;
@@ -633,6 +645,11 @@
 
 .match-row.loss .result-mark {
   background: var(--bad);
+}
+
+.match-row.draw .result-mark {
+  background: var(--overlay-08);
+  color: var(--text-body);
 }
 
 .matchup {
@@ -773,6 +790,10 @@
 
 .match-modal-score.loss {
   color: var(--bad);
+}
+
+.match-modal-score.draw {
+  color: var(--text-muted);
 }
 
 .match-modal-close {
@@ -956,5 +977,81 @@
 
   .overview-card {
     justify-content: center;
+    padding: 18px 16px;
+    gap: 20px;
+  }
+
+  /* Desktop card padding (22-24px) is fine at tablet width but wastes
+     space once we're down near phone width; the 480px block below
+     tightens it further. */
+  .card {
+    padding: 18px 16px;
+  }
+
+  .empty-card {
+    padding: 32px 20px;
+  }
+
+  /* Tab pills and the modal close button were both under the ~40px
+     touch-target guideline (tab-btn ~26px tall, close button ~26x26). */
+  .tab-btn {
+    padding: 9px 16px;
+  }
+
+  .match-modal-close {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .match-modal-overlay {
+    padding: 12px;
+  }
+
+  .match-modal-header {
+    padding: 18px 18px 14px;
+  }
+
+  .match-modal-body {
+    padding: 16px 18px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Stat tiles were a fixed 2-column grid regardless of width; at phone
+     width each tile got too narrow for its value/label/sub-label. */
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* The match-log row packs a result mark, opponent/score/pill/decided-by
+     text, a team sprite strip, and a date into one horizontal flex line.
+     It already wraps instead of overflowing, but the wrap order is
+     unpredictable (team-strip/date could land next to the result mark).
+     Force a clean two-line stack: result + matchup on top, sprites + date
+     below. */
+  .match-row {
+    gap: 8px 12px;
+  }
+
+  .result-mark {
+    order: 1;
+  }
+
+  .matchup {
+    order: 2;
+    flex-basis: 100%;
+  }
+
+  .team-strip {
+    order: 3;
+  }
+
+  .date {
+    order: 4;
+    margin-left: 0;
   }
 }

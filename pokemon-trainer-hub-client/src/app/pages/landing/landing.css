@@ -607,3 +607,39 @@
     text-align: center;
   }
 }
+
+@media (max-width: 480px) {
+  .hero {
+    padding: 24px 16px 16px;
+    gap: 18px;
+  }
+
+  .logo {
+    font-size: 16px;
+    margin-bottom: 16px;
+  }
+
+  .subhead {
+    font-size: 15.5px;
+    margin-bottom: 26px;
+  }
+
+  .cta {
+    width: 100%;
+    justify-content: center;
+    padding: 15px 24px;
+  }
+
+  /* Gap of 20/30 between stat cells was tuned for the wide hero column —
+     at phone widths it leaves only room for one cell per row with a lot
+     of dead space; tighten it so 2 cells sit comfortably side by side. */
+  .stat-strip {
+    gap: 16px 22px;
+    margin-top: 30px;
+  }
+
+  .site-footer {
+    padding: 12px 16px 16px;
+    font-size: 0.7rem;
+  }
+}

@@ -38,6 +38,8 @@
   justify-content: center;
   background: var(--bg);
   font-family: 'Manrope', sans-serif;
+  padding: 40px 24px;
+  box-sizing: border-box;
 }
 
 .card {
@@ -95,4 +97,14 @@
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@media (max-width: 480px) {
+  .callback {
+    padding: 24px 16px;
+  }
+
+  .card {
+    padding: 1.75rem 1.5rem;
+  }
 }

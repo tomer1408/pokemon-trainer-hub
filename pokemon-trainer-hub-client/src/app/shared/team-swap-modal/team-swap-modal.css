@@ -773,6 +773,20 @@
   .vs-badge {
     margin: 0 auto;
   }
+
+  /* suggestion-btn has flex-shrink: 0 (it must never truncate its own
+     label), so on a narrow phone the fixed icon + non-shrinking button eat
+     most of the row width and squeeze suggestion-text-wrap down to a sliver
+     — every word in the reasoning copy wraps onto its own line. Wrapping the
+     banner to two rows (icon + text on top, full-width button below) gives
+     the text a real column again instead of a near-zero one. */
+  .suggestion-banner {
+    flex-wrap: wrap;
+  }
+
+  .suggestion-btn {
+    flex: 1 1 100%;
+  }
 }
 
 /* ---- Confirm swap (same look as every other confirm dialog site-wide,

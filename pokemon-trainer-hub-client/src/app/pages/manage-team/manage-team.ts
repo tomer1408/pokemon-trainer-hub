@@ -276,6 +276,42 @@ export class ManageTeam implements AfterViewInit {
     this.overTrash.set(false);
   }
 
+  // ---- Tap-to-move (touch fallback) ----
+  // Native HTML5 drag-and-drop (draggable/dragstart/drop above) doesn't fire
+  // at all on touch devices, so this page needs a real tap-based equivalent,
+  // not just responsive CSS. It reuses the exact same `drag` signal and
+  // moveToX()/endDrag() methods drag-and-drop already uses — a "hold" is
+  // just drag() being non-null, regardless of how it got set. Each card's
+  // grip icon is the tap target that starts/cancels a hold (mirrors the
+  // grip's existing role as the drag handle); while holding, tapping a
+  // destination (a team slot, or the Favorites/Bench zone background —
+  // exactly the same drop targets drag-and-drop already supports, nothing
+  // new) completes the move the same way a drop would.
+  toggleHold(item: ComparablePokemon, from: DragSource): void {
+    const current = this.drag();
+    if (current && current.item.pokemonId === item.pokemonId) {
+      this.endDrag();
+    } else {
+      this.startDrag(item, from);
+    }
+  }
+
+  // While a hold is active, tapping a card's body is "drop here" territory,
+  // not "open detail" — opening the modal mid-move would be confusing and
+  // there'd be no obvious way back to finish the move.
+  onCardTap(pokemonId: number): void {
+    if (this.drag()) return;
+    this.openDetail(pokemonId);
+  }
+
+  onTeamSlotTap(index: number, member: ComparablePokemon | null): void {
+    if (this.drag()) {
+      this.moveToTeam(index);
+      return;
+    }
+    if (member) this.openDetail(member.pokemonId);
+  }
+
   onTeamSlotDragOver(index: number): void {
     if (this.overTeamIndex() !== index) {
       this.overTeamIndex.set(index);

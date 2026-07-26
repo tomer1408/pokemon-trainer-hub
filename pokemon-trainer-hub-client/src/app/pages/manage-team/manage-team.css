@@ -163,6 +163,35 @@
   gap: 16px;
 }
 
+/* ---- Tap-to-move hold banner (touch drag-and-drop fallback) ---- */
+.hold-banner {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  border-radius: 100px;
+  background: linear-gradient(120deg, var(--violet-deep), var(--cyan));
+  color: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+}
+
+.hold-cancel-btn {
+  flex-shrink: 0;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  background: transparent;
+  color: #fff;
+  border-radius: 100px;
+  padding: 5px 14px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+
 /* ---- Scouting Bench ---- */
 .scout-card {
   flex: 1;
@@ -601,6 +630,14 @@
   color: var(--text-muted);
   font-size: 11px;
   line-height: 1;
+  /* Real <button> now (tap target for the touch move flow — see
+     toggleHold() in manage-team.ts) — reset to look exactly like the plain
+     glyph it was before. */
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
 }
 
 .art {
@@ -1136,5 +1173,51 @@
   .bottom-row {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr 1fr auto;
+  }
+
+  /* minmax(210px, 1fr) on two columns needs 420px+ — genuinely overflows a
+     phone/small-tablet viewport, not just cramped. */
+  .scout-slots-row {
+    grid-template-columns: 1fr;
+  }
+
+  .page-title {
+    font-size: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .content {
+    padding: 16px 14px 96px;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+  }
+
+  /* 5 fixed columns get too tight to hold a sprite + name + type pill +
+     Compare button below ~480px — 3-across (matching the same fix already
+     applied to the analogous 5-slot preview on Home/My Team) keeps every
+     slot big enough to actually read and tap. */
+  .team-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .compare-btn {
+    font-size: 10.5px;
+    padding: 5px 8px;
+  }
+
+  .unsaved-actions {
+    justify-content: center;
+  }
+
+  .hold-banner {
+    justify-content: center;
+    text-align: center;
   }
 }

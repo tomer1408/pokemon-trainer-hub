@@ -25,10 +25,37 @@
 
     <div class="navbar-right">
       <div class="theme-switch">
-        <button type="button" class="theme-btn" [class.active]="theme.mode() === 'dark'" (click)="setDark()">☾ Dark</button>
-        <button type="button" class="theme-btn" [class.active]="theme.isLight()" (click)="setLight()">☀ Light</button>
-        <button type="button" class="theme-btn" [class.active]="theme.isPikachu()" (click)="setPikachu()">⚡ Pikachu</button>
+        <button type="button" class="theme-btn" [class.active]="theme.mode() === 'dark'" (click)="setDark()">
+          ☾<span class="theme-btn-label"> Dark</span>
+        </button>
+        <button type="button" class="theme-btn" [class.active]="theme.isLight()" (click)="setLight()">
+          ☀<span class="theme-btn-label"> Light</span>
+        </button>
+        <button type="button" class="theme-btn" [class.active]="theme.isPikachu()" (click)="setPikachu()">
+          ⚡<span class="theme-btn-label"> Pikachu</span>
+        </button>
       </div>
+
+      <button
+        type="button"
+        class="hamburger-btn"
+        [class.open]="mobileMenuOpen()"
+        [attr.aria-expanded]="mobileMenuOpen()"
+        aria-label="Toggle navigation menu"
+        (click)="toggleMobileMenu()"
+      >
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </div>
+
+  @if (mobileMenuOpen()) {
+    <div class="mobile-nav-scrim" (click)="closeMobileMenu()"></div>
+    <nav class="mobile-nav-panel">
+      <a routerLink="/home" routerLinkActive="active" class="mobile-nav-link" (click)="closeMobileMenu()">Home</a>
+      <a routerLink="/explorer" routerLinkActive="active" class="mobile-nav-link" (click)="closeMobileMenu()">Explorer</a>
+      <a routerLink="/my-team" routerLinkActive="active" class="mobile-nav-link" (click)="closeMobileMenu()">My Team</a>
+      <a routerLink="/profile" routerLinkActive="active" class="mobile-nav-link" (click)="closeMobileMenu()">My Profile</a>
+    </nav>
+  }
 </header>

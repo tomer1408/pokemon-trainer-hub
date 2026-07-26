@@ -1233,4 +1233,106 @@
   .preview-vs-badge {
     justify-self: center;
   }
+
+  /* 'Bungee' display heading is sized for desktop; too large/wide next to
+     the eyebrow + subtitle at phone/tablet widths. */
+  .page-title {
+    font-size: 30px;
+  }
+
+  .error-state {
+    padding: 56px 20px;
+  }
+
+  .how-it-works-card {
+    padding: 18px 20px;
+  }
+
+  /* Desktop-scale card/button padding (30-40px) wastes precious width on a
+     375-430px screen; tighten it down without changing the layout itself. */
+  .settings-card {
+    padding: 20px;
+    gap: 20px;
+  }
+
+  .match-result-card {
+    padding: 24px 20px;
+  }
+
+  .primary-btn {
+    padding: 16px 26px;
+    font-size: 15px;
+  }
+
+  .secondary-btn {
+    padding: 14px 22px;
+    font-size: 15px;
+  }
+
+  .result-badge {
+    font-size: 28px;
+    padding: 12px 22px;
+  }
+
+  .faceoff-card {
+    padding: 22px 16px;
+  }
+
+  /* This panel is intentionally a FIXED height on desktop so the "no
+     selection" prompt and the full stat readout never resize the layout
+     around each other. At narrow widths the same content wraps onto more
+     lines and the fixed 92px height clips it under overflow:hidden — let
+     it grow instead so nothing gets cut off. */
+  .detail-panel {
+    height: auto;
+    min-height: 92px;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 480px) {
+  .content {
+    padding: 14px 16px 0;
+  }
+
+  .page-title {
+    font-size: 26px;
+  }
+
+  .score-num {
+    font-size: 26px;
+  }
+
+  .settings-card {
+    padding: 16px;
+  }
+
+  .match-result-card {
+    padding: 20px 16px;
+  }
+
+  /* Two-per-row difficulty cards get too cramped for their helper text at
+     phone widths — stack them so each one keeps its full-width copy. */
+  .difficulty-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Toggle's track was 36px tall (under the ~40px touch-target guideline);
+     grow it and re-center the knob without touching the horizontal
+     geometry (width / knob size / "on" offset stay the same). */
+  .settings-switch {
+    height: 40px;
+  }
+
+  .settings-switch-knob {
+    top: 5px;
+  }
+
+  .enter-count {
+    font-size: 64px;
+  }
+
+  .enter-go {
+    font-size: 34px;
+  }
 }

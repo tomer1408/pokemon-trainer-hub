@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '@auth0/auth0-angular';
@@ -29,6 +29,18 @@ export class Navbar {
     () => this.profile()?.trainerName ?? this.authUser()?.name ?? 'Trainer',
   );
   protected readonly trainerEmail = computed(() => this.authUser()?.email ?? '');
+
+  // Primary nav links collapse into a hamburger-triggered dropdown below
+  // ~768px (see navbar.css) — this signal only matters at that width.
+  protected readonly mobileMenuOpen = signal(false);
+
+  toggleMobileMenu(): void {
+    this.mobileMenuOpen.update((v) => !v);
+  }
+
+  closeMobileMenu(): void {
+    this.mobileMenuOpen.set(false);
+  }
 
   setDark(): void {
     this.theme.setDark();

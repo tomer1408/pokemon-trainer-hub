@@ -3,6 +3,13 @@
     <app-loading-screen [isLight]="theme.isLight()" [isPikachu]="theme.isPikachu()" [fullScreen]="true" size="lg" [messages]="loadingTips" />
   } @else {
     <div class="content">
+      @if (drag(); as held) {
+        <div class="hold-banner">
+          <span>Moving <strong>{{ held.item.pokemonName }}</strong> &mdash; tap a team slot, Favorites, or Bench to place it</span>
+          <button type="button" class="hold-cancel-btn" (click)="endDrag()">Cancel</button>
+        </div>
+      }
+
       <div class="header-row">
         <div class="header-block">
           <h1 class="page-title">Manage My Team</h1>
@@ -133,7 +140,7 @@
                 (dragend)="endDrag()"
                 (dragover)="$event.preventDefault(); onTeamSlotDragOver($index)"
                 (drop)="$event.preventDefault(); $event.stopPropagation(); moveToTeam($index)"
-                (click)="openDetail(member.pokemonId)"
+                (click)="onTeamSlotTap($index, member)"
               >
                 @if (isFavorite(member.pokemonId)) {
                   <div class="heart-badge">&hearts;</div>
@@ -147,7 +154,12 @@
                   />
                 </div>
                 <div class="slot-inner">
-                  <div class="grip">&#8942;&#8942;</div>
+                  <button
+                    type="button"
+                    class="grip"
+                    [attr.aria-label]="drag()?.item?.pokemonId === member.pokemonId ? 'Cancel move' : 'Move ' + member.pokemonName"
+                    (click)="$event.stopPropagation(); toggleHold(member, 'team')"
+                  >&#8942;&#8942;</button>
                   <div class="art" [style.background]="typeColor(member.types[0]) + '22'">
                     @if (member.spriteUrl) {
                       <img [src]="member.spriteUrl" alt="{{ member.pokemonName }}" />
@@ -182,9 +194,10 @@
                 [class.drag-over]="overTeamIndex() === $index"
                 (dragover)="$event.preventDefault(); onTeamSlotDragOver($index)"
                 (drop)="$event.preventDefault(); $event.stopPropagation(); moveToTeam($index)"
+                (click)="onTeamSlotTap($index, null)"
               >
                 <div class="plus">+</div>
-                <div class="empty-label">Drop here</div>
+                <div class="empty-label">{{ drag() ? 'Tap to place here' : 'Drop here' }}</div>
               </div>
             }
           }
@@ -196,6 +209,7 @@
           [class.drag-over]="overTrash()"
           (dragover)="$event.preventDefault(); onTrashDragOver()"
           (drop)="$event.preventDefault(); moveToTrash()"
+          (click)="drag() && moveToTrash()"
         >
           <span class="trash-icon">&#128465;&#65039;</span>
           <span class="trash-text">{{ overTrash() ? 'Drop here to remove' : 'Drag Pokémon here to remove' }}</span>
@@ -213,6 +227,7 @@
             [class.drag-over]="overFav()"
             (dragover)="$event.preventDefault(); onFavDragOver()"
             (drop)="$event.preventDefault(); moveToFav()"
+            (click)="drag() && moveToFav()"
           >
             @for (card of favPool(); track card.pokemonId) {
               <div
@@ -221,12 +236,17 @@
                 draggable="true"
                 (dragstart)="startDrag(card, 'fav')"
                 (dragend)="endDrag()"
-                (click)="openDetail(card.pokemonId)"
+                (click)="$event.stopPropagation(); onCardTap(card.pokemonId)"
               >
                 @if (!surpriseMode()) {
                   <div class="heart-badge pool-heart-badge">&hearts;</div>
                 }
-                <div class="grip">&#8942;&#8942;</div>
+                <button
+                  type="button"
+                  class="grip"
+                  [attr.aria-label]="drag()?.item?.pokemonId === card.pokemonId ? 'Cancel move' : 'Move ' + card.pokemonName"
+                  (click)="$event.stopPropagation(); toggleHold(card, 'fav')"
+                >&#8942;&#8942;</button>
                 <div class="pool-art" [style.background]="typeColor(card.types[0]) + '22'">
                   @if (card.spriteUrl) {
                     <img [src]="card.spriteUrl" alt="{{ card.pokemonName }}" />
@@ -274,6 +294,7 @@
             [class.drag-over]="overBench()"
             (dragover)="$event.preventDefault(); onBenchDragOver()"
             (drop)="$event.preventDefault(); moveToBench()"
+            (click)="drag() && moveToBench()"
           >
             @for (card of benchDraft(); track card.pokemonId) {
               <div
@@ -282,12 +303,17 @@
                 draggable="true"
                 (dragstart)="startDrag(card, 'bench')"
                 (dragend)="endDrag()"
-                (click)="openDetail(card.pokemonId)"
+                (click)="$event.stopPropagation(); onCardTap(card.pokemonId)"
               >
                 @if (isFavorite(card.pokemonId)) {
                   <div class="heart-badge pool-heart-badge">&hearts;</div>
                 }
-                <div class="grip">&#8942;&#8942;</div>
+                <button
+                  type="button"
+                  class="grip"
+                  [attr.aria-label]="drag()?.item?.pokemonId === card.pokemonId ? 'Cancel move' : 'Move ' + card.pokemonName"
+                  (click)="$event.stopPropagation(); toggleHold(card, 'bench')"
+                >&#8942;&#8942;</button>
                 <div class="pool-art" [style.background]="typeColor(card.types[0]) + '22'">
                   @if (card.spriteUrl) {
                     <img [src]="card.spriteUrl" alt="{{ card.pokemonName }}" />

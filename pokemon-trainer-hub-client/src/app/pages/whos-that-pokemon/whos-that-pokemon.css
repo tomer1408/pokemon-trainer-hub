@@ -495,3 +495,25 @@
   0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
   30% { transform: translateY(-4px); opacity: 1; }
 }
+
+@media (max-width: 480px) {
+  .content {
+    padding: 18px 14px 0;
+  }
+
+  .page-title {
+    font-size: 22px;
+  }
+
+  .quiz-card {
+    padding: 18px 16px 20px;
+  }
+
+  .stage {
+    height: 180px;
+  }
+
+  .options-grid {
+    grid-template-columns: 1fr;
+  }
+}

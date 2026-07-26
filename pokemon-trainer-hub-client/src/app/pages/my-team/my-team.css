@@ -885,6 +885,18 @@
     padding: 20px 20px 0;
   }
 
+  .page-title {
+    font-size: 32px;
+    overflow-wrap: anywhere;
+  }
+
+  .stats-card,
+  .readiness-card,
+  .matchup-card,
+  .milestone-card {
+    padding: 18px 16px;
+  }
+
   /* Stays 5-across (shrinking each column) rather than wrapping to more rows. */
   .slots-row {
     gap: 8px;
@@ -892,5 +904,75 @@
 
   .matchup-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Phone: at ~375-430px the 5-across team-slot grid (still intentionally
+   kept 5-across per above, not wrapped) shrinks each column below the
+   fixed 50px slot-art + its padding, so the artwork overflows into the
+   neighboring slot. Shrink the slot's internal sizing instead of the
+   column count. Also trim the still-desktop-sized card paddings and the
+   44px team-name heading, and stack the 4 fixed-width header-action pills
+   full-width instead of leaving them as isolated 220px islands. */
+@media (max-width: 480px) {
+  .content {
+    padding: 14px 14px 0;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+
+  .tool-btn {
+    width: 100%;
+  }
+
+  .slots-row {
+    gap: 6px;
+  }
+
+  .slot-inner {
+    padding: 8px 6px;
+  }
+
+  .slot-art {
+    width: 38px;
+    height: 38px;
+  }
+
+  .slot-art img {
+    width: 32px;
+    height: 32px;
+  }
+
+  .slot-name {
+    font-size: 11px;
+  }
+
+  .hex-badge {
+    font-size: 7px;
+    min-width: 24px;
+    height: 22px;
+  }
+
+  .stats-card,
+  .readiness-card,
+  .matchup-card,
+  .milestone-card {
+    padding: 14px 14px;
+  }
+
+  .gauge-ring {
+    width: 80px;
+    height: 80px;
+  }
+
+  .gauge-inner {
+    width: 60px;
+    height: 60px;
+  }
+
+  .gauge-score {
+    font-size: 20px;
   }
 }

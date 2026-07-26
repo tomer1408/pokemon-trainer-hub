@@ -657,4 +657,32 @@
   .options-grid {
     grid-template-columns: 1fr;
   }
+
+  .quiz-page {
+    padding: 24px 16px 40px;
+  }
+
+  .quiz-card {
+    padding: 20px 18px 22px;
+  }
+
+  .back-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .intro-title {
+    font-size: 26px;
+  }
+
+  .rec-card-outer {
+    width: 100%;
+    max-width: 280px;
+  }
+
+  .results-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
 }

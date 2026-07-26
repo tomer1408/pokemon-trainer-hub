@@ -610,4 +610,41 @@
   .content {
     padding: 20px 20px 0;
   }
+
+  /* 22/24px of card padding was sized for the desktop-width column — on a
+     phone-width viewport it eats a big share of the already-narrow card. */
+  .card {
+    padding: 16px;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .save-bar {
+    justify-content: stretch;
+  }
+
+  .save-hint,
+  .error-banner {
+    margin-right: 0;
+    width: 100%;
+  }
+
+  .save-btn {
+    width: 100%;
+  }
+
+  /* Toggle's track was 30px tall (under the ~40px touch-target guideline);
+     grow it and re-center the knob without touching the horizontal
+     geometry (width / knob size / "on" offset stay the same). */
+  .switch {
+    height: 40px;
+  }
+
+  .switch-knob {
+    top: 8px;
+  }
 }

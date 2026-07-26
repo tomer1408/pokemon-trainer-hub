@@ -1298,9 +1298,39 @@
   }
 }
 
+/* Tablet: the two dashboard-style 2-up rows (Recommended/Daily Quiz and
+   Pokémon of the Day/Battle promo) are a fixed 2-column grid with no
+   collapse rule anywhere below this — at ~768px each card is squeezed to
+   ~330px, cramming icon + text + CTA. Stack them at tablet width. */
+@media (max-width: 768px) {
+  .feature-row,
+  .next-steps-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 720px) {
   .content {
     padding: 24px 20px 0;
+  }
+
+  .hero-inner {
+    padding: 20px 20px;
+  }
+
+  .progress-card,
+  .team-card,
+  .how-band {
+    padding: 18px 18px;
+  }
+
+  .quiz-nudge {
+    flex-wrap: wrap;
+  }
+
+  .quiz-nudge-cta {
+    width: 100%;
+    justify-content: center;
   }
 
   .footer-body {
@@ -1316,5 +1346,50 @@
   .fine-print {
     padding-left: 20px;
     padding-right: 20px;
+  }
+}
+
+/* Phone: the desktop paddings above are still too roomy at 375-430px, and
+   the Bungee headings (hero name, dream-team name, progress number) are
+   sized for desktop. The Dream Team preview also stayed a fixed 5-column
+   grid — its 56px slot-art can't fit a ~57px column without overflowing
+   into the neighboring slot, so drop it to 3 columns (wraps to 3 + 2). */
+@media (max-width: 480px) {
+  .content {
+    padding: 16px 14px 0;
+  }
+
+  .hero-inner {
+    padding: 18px 16px;
+  }
+
+  .hero-name {
+    font-size: 26px;
+  }
+
+  .hero-tagline {
+    font-size: 17px;
+  }
+
+  .progress-card,
+  .team-card,
+  .how-band {
+    padding: 16px 14px;
+  }
+
+  .team-name-title {
+    font-size: 26px;
+  }
+
+  .progress-big {
+    font-size: 34px;
+  }
+
+  .team-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .rec-card {
+    padding: 16px 18px;
   }
 }

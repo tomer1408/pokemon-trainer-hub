@@ -138,3 +138,51 @@
 .page.light .send-btn { background: var(--violet); }
 .page.pikachu .send-btn { background: var(--cyan); }
 .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+@media (max-width: 640px) {
+  .content {
+    padding: 18px 16px 0;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+
+  .tab-row {
+    flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    flex: 1 1 140px;
+    text-align: center;
+  }
+
+  .stat-banner {
+    padding: 14px 12px;
+  }
+
+  .stat-divider {
+    margin: 0 10px;
+  }
+
+  .assistant-bubble,
+  .user-bubble {
+    max-width: 100%;
+  }
+
+  .rec-row {
+    flex-wrap: wrap;
+  }
+
+  .input-row {
+    flex-wrap: wrap;
+  }
+
+  .query-input {
+    flex: 1 1 100%;
+  }
+
+  .send-btn {
+    flex: 1 1 100%;
+  }
+}

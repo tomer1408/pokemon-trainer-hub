@@ -1123,4 +1123,90 @@ select:focus {
   .edit-btn {
     margin-left: 0;
   }
+
+  /* 32/28px of card padding was sized for the desktop-width ID card —
+     on a phone-width column it eats a big share of the usable width. */
+  .card-body {
+    padding: 0 18px 22px;
+  }
+
+  .achievements-card,
+  .details-card {
+    padding: 18px 18px;
+  }
+
+  .trainer-name {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Overlay/dialog padding of 24px was tuned for desktop breathing room —
+     at phone widths it eats into the already-narrow modal, so shrink it
+     to give the modal card's own content more room to work with. */
+  .modal-overlay,
+  .confirm-overlay {
+    padding: 12px;
+  }
+
+  .modal-card {
+    max-height: 86vh;
+  }
+
+  .modal-header {
+    padding: 16px 16px 12px;
+  }
+
+  .modal-body {
+    padding: 16px;
+    gap: 18px;
+  }
+
+  .modal-footer {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+  }
+
+  .cancel-btn,
+  .save-btn {
+    flex: 1;
+  }
+
+  .confirm-card {
+    padding: 18px;
+  }
+
+  /* The avatar picker's edit-row put the avatar block and name field side
+     by side, assuming a wide-enough modal — stack them so neither is
+     squeezed under the modal's phone-width cap. */
+  .edit-row {
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .edit-avatar-block,
+  .edit-name-block {
+    width: 100%;
+  }
+
+  /* avatar-category-row was `flex-wrap: nowrap` and avatar-picker-grid was
+     a fixed `repeat(5, 76px)` grid (~420px minimum) — both assumed the
+     480px-max-width desktop layout and genuinely overflow the modal once
+     it's capped to a ~350px phone width, clipping the picker instead of
+     just looking cramped. Let both reflow to the modal's real width. */
+  .avatar-category-row {
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+
+  .avatar-picker-grid {
+    grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+    max-width: 100%;
+  }
+
+  .avatar-opt-btn {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
 }

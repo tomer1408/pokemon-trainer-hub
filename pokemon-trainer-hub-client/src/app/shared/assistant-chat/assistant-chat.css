@@ -370,11 +370,15 @@
 @media (max-width: 480px) {
   .chat-panel {
     right: 12px;
-    bottom: 88px;
+    /* Cleared to sit above pages with their own fixed bottom bar (Explorer's
+       mobile team bar, Manage My Team's always-on unsaved-changes bar) —
+       this widget is mounted globally and has no way to know a given page
+       reserves that space, so it always assumes the tallest one does. */
+    bottom: 160px;
   }
 
   .chat-fab {
     right: 16px;
-    bottom: 16px;
+    bottom: 88px;
   }
 }
