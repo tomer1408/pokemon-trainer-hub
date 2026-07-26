@@ -35,7 +35,7 @@ export interface BattleMatchRecord {
   roundsPlayed: number;
   opponentType: string;
   luckFactor: string;
-  result: 'win' | 'loss';
+  result: 'win' | 'loss' | 'draw';
   yourWins: number;
   oppWins: number;
   roundDetails: BattleRoundDetail[];
@@ -50,7 +50,7 @@ export interface RecordMatchPayload {
   roundsPlayed: number;
   opponentType: string;
   luckFactor: string;
-  result: 'win' | 'loss';
+  result: 'win' | 'loss' | 'draw';
   yourWins: number;
   oppWins: number;
   roundDetails: BattleRoundDetail[];

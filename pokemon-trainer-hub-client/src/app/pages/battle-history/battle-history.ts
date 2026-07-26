@@ -32,7 +32,7 @@ interface TypeEdgeRow {
 
 interface MatchLogRow {
   id: number;
-  win: boolean;
+  result: 'win' | 'loss' | 'draw';
   opponentName: string;
   score: string;
   difficulty: string;
@@ -78,22 +78,27 @@ export class BattleHistory {
 
   protected readonly total = computed(() => this.history().length);
   protected readonly wins = computed(() => this.history().filter((m) => m.result === 'win').length);
-  protected readonly losses = computed(() => this.total() - this.wins());
+  protected readonly losses = computed(() => this.history().filter((m) => m.result === 'loss').length);
+  // A draw is real and reachable — an even number of playable rounds (team
+  // size can cap Best of 3/5 down to 2 or 4 rounds) can end tied. Counted in
+  // winRate's denominator like a real outcome, just not in the numerator.
+  protected readonly draws = computed(() => this.history().filter((m) => m.result === 'draw').length);
   protected readonly winRate = computed(() => (this.total() === 0 ? 0 : Math.round((this.wins() / this.total()) * 100)));
 
   // history() is newest-first (server orders by createdAt desc) — a
   // streak is just how many matches in a row, starting from the most
-  // recent, share the same result.
+  // recent, share the exact same result (a draw breaks both a win streak
+  // and a loss streak, it's its own outcome).
   protected readonly currentStreak = computed(() => {
     const h = this.history();
-    if (h.length === 0) return { length: 0, isWin: true };
-    const isWin = h[0].result === 'win';
+    if (h.length === 0) return { length: 0, result: 'win' as const };
+    const result = h[0].result;
     let len = 0;
     for (const m of h) {
-      if ((m.result === 'win') !== isWin) break;
+      if (m.result !== result) break;
       len++;
     }
-    return { length: len, isWin };
+    return { length: len, result };
   });
 
   protected readonly bestWinStreak = computed(() => {
@@ -140,7 +145,10 @@ export class BattleHistory {
     this.history()
       .slice(0, 12)
       .reverse()
-      .map((m) => ({ win: m.result === 'win', title: `${m.opponentName} — ${m.result === 'win' ? 'Win' : 'Loss'}` })),
+      .map((m) => ({
+        result: m.result,
+        title: `${m.opponentName} — ${m.result === 'win' ? 'Win' : m.result === 'loss' ? 'Loss' : 'Draw'}`,
+      })),
   );
 
   protected readonly champions = computed<ChampionRow[]>(() => {
@@ -195,7 +203,7 @@ export class BattleHistory {
         const reasons = Array.from(new Set(m.roundDetails.map((r) => r.reason)));
         return {
           id: m.id,
-          win: m.result === 'win',
+          result: m.result,
           opponentName: m.opponentName,
           score: `${m.yourWins}-${m.oppWins}`,
           difficulty: m.difficulty,

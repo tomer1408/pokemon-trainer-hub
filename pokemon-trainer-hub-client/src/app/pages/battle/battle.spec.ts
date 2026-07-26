@@ -269,6 +269,31 @@ describe('Battle', () => {
     expect(recordMatch).toHaveBeenCalledTimes(1);
   });
 
+  // Regression: a 2-Pokémon team caps totalRounds() to 2 even when rounds
+  // (Best of 3) is odd, so a genuine 1-1 tie is reachable — recordMatch()
+  // used to collapse that into a fake 'win' instead of the real 'draw'.
+  it('continueAfterReveal() records a real draw as "draw", never collapsing it into "win"', () => {
+    const fixture = setup({ team: [member(1), member(2)] }); // team of 2
+    const inst = fixture.componentInstance as any;
+    inst.settings.update((s: any) => ({ ...s, rounds: 3 })); // Best of 3, capped to 2 playable rounds
+    inst.roundHistory.set([
+      { round: 1, yourMon: { pokemonId: 1, name: 'mon-1', types: ['fire'] }, oppMon: { pokemonId: 9, name: 'opp-9', types: ['water'] }, winner: 'you', reason: 'Type advantage', explanation: 'won' },
+      { round: 2, yourMon: { pokemonId: 2, name: 'mon-2', types: ['fire'] }, oppMon: { pokemonId: 10, name: 'opp-10', types: ['water'] }, winner: 'opp', reason: 'Power advantage', explanation: 'lost' },
+    ]);
+    inst.phase.set('revealed');
+
+    expect(inst.totalRounds()).toBe(2);
+    expect(inst.matchResult()).toBe('draw'); // 1-1, a real tie
+
+    fixture.componentInstance.continueAfterReveal();
+
+    expect(inst.phase()).toBe('matchOver');
+    const payload = recordMatch.mock.calls[0][0];
+    expect(payload.result).toBe('draw');
+    expect(payload.yourWins).toBe(1);
+    expect(payload.oppWins).toBe(1);
+  });
+
   it('battleAgain() resets round state back to a fresh preview, keeping the chosen settings', () => {
     const fixture = setup({ team: [member(1)] });
     const inst = fixture.componentInstance as any;

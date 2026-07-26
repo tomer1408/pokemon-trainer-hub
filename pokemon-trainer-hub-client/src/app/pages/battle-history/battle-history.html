@@ -32,15 +32,27 @@
             </div>
             <div class="record-line">
               <span class="rec-win">{{ wins() }}W</span><span class="rec-dash">&mdash;</span><span class="rec-loss">{{ losses() }}L</span>
+              @if (draws() > 0) {
+                <span class="rec-dash">&mdash;</span><span class="rec-draw">{{ draws() }}D</span>
+              }
               <span class="rec-total">over {{ total() }} battles</span>
             </div>
           </div>
 
           <div class="kpi-grid">
-            <div class="kpi-tile" [class.accent-win]="currentStreak().isWin" [class.accent-loss]="!currentStreak().isWin">
-              <div class="kpi-value">{{ currentStreak().length }}{{ currentStreak().isWin ? 'W' : 'L' }}</div>
+            <div
+              class="kpi-tile"
+              [class.accent-win]="currentStreak().result === 'win'"
+              [class.accent-loss]="currentStreak().result === 'loss'"
+              [class.accent-draw]="currentStreak().result === 'draw'"
+            >
+              <div class="kpi-value">
+                {{ currentStreak().length }}{{ currentStreak().result === 'win' ? 'W' : currentStreak().result === 'loss' ? 'L' : 'D' }}
+              </div>
               <div class="kpi-label">Current streak</div>
-              <div class="kpi-sub">{{ currentStreak().isWin ? 'on a roll' : 'shake it off' }}</div>
+              <div class="kpi-sub">
+                {{ currentStreak().result === 'win' ? 'on a roll' : currentStreak().result === 'loss' ? 'shake it off' : 'stalemate' }}
+              </div>
             </div>
             <div class="kpi-tile accent-violet">
               <div class="kpi-value">{{ bestWinStreak() }}</div>
@@ -67,7 +79,13 @@
           <div class="form-head"><span class="card-title">Recent form</span><span class="form-hint">oldest &rarr; latest</span></div>
           <div class="form-strip">
             @for (f of recentForm(); track $index) {
-              <div class="form-pip" [class.win]="f.win" [class.loss]="!f.win" [title]="f.title">{{ f.win ? 'W' : 'L' }}</div>
+              <div
+                class="form-pip"
+                [class.win]="f.result === 'win'"
+                [class.loss]="f.result === 'loss'"
+                [class.draw]="f.result === 'draw'"
+                [title]="f.title"
+              >{{ f.result === 'win' ? 'W' : f.result === 'loss' ? 'L' : 'D' }}</div>
             }
           </div>
         </div>
@@ -144,11 +162,12 @@
               <button
                 type="button"
                 class="match-row"
-                [class.win]="m.win"
-                [class.loss]="!m.win"
+                [class.win]="m.result === 'win'"
+                [class.loss]="m.result === 'loss'"
+                [class.draw]="m.result === 'draw'"
                 (click)="openMatch(m.id)"
               >
-                <div class="result-mark">{{ m.win ? 'W' : 'L' }}</div>
+                <div class="result-mark">{{ m.result === 'win' ? 'W' : m.result === 'loss' ? 'L' : 'D' }}</div>
                 <div class="matchup">
                   <span class="opp-name">vs {{ m.opponentName }}</span>
                   <span class="score">{{ m.score }}</span>
@@ -186,7 +205,12 @@
               {{ capitalize(sm.difficulty) }} &middot; {{ capitalize(sm.opponentType) }} opponent &middot; {{ capitalize(sm.luckFactor) }} luck
             </div>
           </div>
-          <div class="match-modal-score" [class.win]="sm.result === 'win'" [class.loss]="sm.result === 'loss'">
+          <div
+            class="match-modal-score"
+            [class.win]="sm.result === 'win'"
+            [class.loss]="sm.result === 'loss'"
+            [class.draw]="sm.result === 'draw'"
+          >
             {{ sm.yourWins }}&ndash;{{ sm.oppWins }}
           </div>
           <button type="button" class="match-modal-close" (click)="closeMatch()" aria-label="Close">&times;</button>

@@ -624,11 +624,13 @@ export class Battle implements OnDestroy {
     this.matchRecorded.set(true);
 
     const settings = this.settings();
-    // Rounds are always odd (1/3/5), so a real tie in total wins is
-    // mathematically impossible once the match is decided — matchResult's
-    // 'draw' case is unreachable here, this just keeps the payload's type
-    // honest about what the server actually accepts.
-    const result: 'win' | 'loss' = this.matchResult() === 'loss' ? 'loss' : 'win';
+    // matchResult() really can be 'draw' — settings.rounds (1/3/5) is always
+    // odd, but totalRounds() caps it to the team size (line 308 above),
+    // which can be even (a 2- or 4-Pokémon team), making a genuine tied
+    // score reachable. The match-over screen already renders that draw
+    // correctly (see battle.html's "DRAW" badge) — this used to collapse it
+    // into a fake 'win' here, corrupting Battle History's real stats.
+    const result = this.matchResult();
 
     const payload: RecordMatchPayload = {
       opponentName: this.opponentName(),

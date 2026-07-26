@@ -47,13 +47,19 @@ describe('BattleHistory', () => {
     expect(inst.hasData()).toBe(true);
   });
 
-  it('total/wins/losses/winRate are derived from the real results', () => {
-    const fixture = setup([match({ id: 1, result: 'win' }), match({ id: 2, result: 'loss' }), match({ id: 3, result: 'win' })]);
+  it('total/wins/losses/draws/winRate are derived from the real results', () => {
+    const fixture = setup([
+      match({ id: 1, result: 'win' }),
+      match({ id: 2, result: 'loss' }),
+      match({ id: 3, result: 'win' }),
+      match({ id: 4, result: 'draw' }),
+    ]);
     const inst = fixture.componentInstance as any;
-    expect(inst.total()).toBe(3);
+    expect(inst.total()).toBe(4);
     expect(inst.wins()).toBe(2);
     expect(inst.losses()).toBe(1);
-    expect(inst.winRate()).toBe(67);
+    expect(inst.draws()).toBe(1);
+    expect(inst.winRate()).toBe(50); // 2 wins / 4 total — a draw counts in the denominator, not the numerator
   });
 
   it('winRate() is 0 (not NaN) for an empty history', () => {
@@ -64,7 +70,12 @@ describe('BattleHistory', () => {
   it('currentStreak() counts consecutive same-result matches from the most recent', () => {
     // Server order is newest-first.
     const fixture = setup([match({ id: 3, result: 'win' }), match({ id: 2, result: 'win' }), match({ id: 1, result: 'loss' })]);
-    expect((fixture.componentInstance as any).currentStreak()).toEqual({ length: 2, isWin: true });
+    expect((fixture.componentInstance as any).currentStreak()).toEqual({ length: 2, result: 'win' });
+  });
+
+  it('currentStreak() treats a draw as its own outcome, breaking a real win/loss streak', () => {
+    const fixture = setup([match({ id: 3, result: 'draw' }), match({ id: 2, result: 'win' }), match({ id: 1, result: 'win' })]);
+    expect((fixture.componentInstance as any).currentStreak()).toEqual({ length: 1, result: 'draw' });
   });
 
   it('bestWinStreak() finds the longest chronological run of wins', () => {
@@ -128,6 +139,26 @@ describe('BattleHistory', () => {
     inst.setFilter('win');
     expect(inst.matchLog().length).toBe(1);
     expect(inst.matchLog()[0].decidedBy).toBe('Type advantage, Power advantage, Coin flip');
+  });
+
+  it('matchLog() carries the real result through, including draw — never mislabels it win or loss', () => {
+    const fixture = setup([match({ id: 1, result: 'draw' })]);
+    const inst = fixture.componentInstance as any;
+
+    expect(inst.matchLog()[0].result).toBe('draw');
+    // A draw isn't 'win' or 'loss', so it's absent from either filter tab —
+    // only 'all' should surface it.
+    inst.setFilter('win');
+    expect(inst.matchLog().length).toBe(0);
+    inst.setFilter('loss');
+    expect(inst.matchLog().length).toBe(0);
+  });
+
+  it('recentForm() carries the real result and a real "Draw" title', () => {
+    const fixture = setup([match({ id: 1, opponentName: 'Team Rocket', result: 'draw' })]);
+    const inst = fixture.componentInstance as any;
+
+    expect(inst.recentForm()).toEqual([{ result: 'draw', title: 'Team Rocket — Draw' }]);
   });
 
   it('noMatches() reflects the filtered match log, not the raw history', () => {

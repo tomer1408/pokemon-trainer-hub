@@ -102,11 +102,22 @@ describe('routes/battleHistory', () => {
       assert.equal(prisma.battleMatch.create.mock.calls.length, 0);
     });
 
-    test('rejects a result value outside win/loss', async () => {
-      const res = await request.post('/api/battle-history').send({ ...validMatchBody, result: 'draw' });
+    test('rejects a result value outside win/loss/draw', async () => {
+      const res = await request.post('/api/battle-history').send({ ...validMatchBody, result: 'tie' });
 
       assert.equal(res.status, 400);
       assert.equal(prisma.battleMatch.create.mock.calls.length, 0);
+    });
+
+    // A draw is real and reachable: an even number of playable rounds (e.g.
+    // Best of 3/5 capped down to the trainer's team size of 2 or 4) can end
+    // tied. This was rejected as invalid before — see battle.ts's
+    // recordMatch() for the matching client-side fix.
+    test('accepts and stores a draw result', async () => {
+      const res = await request.post('/api/battle-history').send({ ...validMatchBody, result: 'draw', yourWins: 1, oppWins: 1 });
+
+      assert.equal(res.status, 201);
+      assert.equal(prisma.battleMatch.create.mock.calls[0].arguments[0].data.result, 'draw');
     });
 
     test('rejects non-array roundDetails/teamSnapshot', async () => {

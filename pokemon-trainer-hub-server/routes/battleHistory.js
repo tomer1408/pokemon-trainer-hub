@@ -5,7 +5,7 @@ const { logEventSafe } = require('../services/analyticsEventService');
 
 const router = express.Router();
 
-const VALID_RESULTS = new Set(['win', 'loss']);
+const VALID_RESULTS = new Set(['win', 'loss', 'draw']);
 
 // GET /api/battle-history — every completed match for the current user,
 // most recent first. roundsJson/teamSnapshotJson are stored as plain JSON
