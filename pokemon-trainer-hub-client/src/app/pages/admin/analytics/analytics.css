@@ -167,6 +167,12 @@
   }
 }
 
+@media (max-width: 480px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 /* ---- Sections ---- */
 .section {
   margin-bottom: 6px;

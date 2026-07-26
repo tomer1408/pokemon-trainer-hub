@@ -365,3 +365,33 @@
     display: flex;
   }
 }
+
+@media (max-width: 768px) {
+  .admin-header {
+    padding: 14px 18px;
+  }
+
+  .admin-scroll-body {
+    padding: 18px 18px 48px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-header {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .admin-scroll-body {
+    padding: 14px 14px 40px;
+  }
+
+  .page-title {
+    font-size: 17px;
+  }
+
+  .theme-btn {
+    padding: 6px 9px;
+    font-size: 11px;
+  }
+}
