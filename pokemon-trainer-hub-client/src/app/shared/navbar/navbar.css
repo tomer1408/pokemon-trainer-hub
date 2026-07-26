@@ -235,10 +235,39 @@
   }
 
   .theme-btn {
-    padding: 6px 9px;
+    padding: 6px 8px;
   }
 
   .logo {
     font-size: 14px;
+  }
+
+  /* Below ~480px, avatar + full "Pokemon Trainer Hub" wordmark + the theme
+     switch + hamburger genuinely don't fit on one line — they were wrapping
+     into a half-empty second row (navbar-right's margin-left:auto stranding
+     it against the right edge, with a big gap to its left) instead of a
+     clean single bar. Dropping the wordmark down to just the icon reclaims
+     enough width that everything fits on one row; nowrap makes that
+     guarantee explicit instead of leaving it to chance per device width. */
+  .navbar-inner {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .navbar-left {
+    gap: 8px;
+  }
+
+  .navbar-right {
+    gap: 6px;
+  }
+
+  .logo-text {
+    display: none;
+  }
+
+  .theme-switch {
+    padding: 3px;
+    gap: 3px;
   }
 }

@@ -73,8 +73,17 @@ export class ManageTeam implements AfterViewInit {
   // content overflows. Rather than guessing the navbar's height in CSS, this
   // measures exactly how much viewport space is actually left below it (the
   // navbar's real height varies with font sizes / wrapping at narrow
-  // widths), and pins the page to precisely that.
+  // widths), and pins the page to precisely that. That "everything fits in
+  // one screen, side by side" premise only holds at desktop widths — below
+  // MOBILE_STACK_BREAKPOINT the bottom row's 3 columns (Favorites/Bench/
+  // Live Stats) stack vertically instead, which genuinely needs more
+  // height than one screen, so this deliberately leaves pageHeightPx null
+  // there: the [style.height.px] binding then sets no inline height at
+  // all, letting the mobile CSS's height:auto + normal page scroll apply
+  // instead of the (higher-specificity, unoverridable-by-media-query)
+  // fixed pixel height this same signal provides on desktop.
   protected readonly pageHeightPx = signal<number | null>(null);
+  private static readonly MOBILE_STACK_BREAKPOINT = 900;
 
   ngAfterViewInit(): void {
     this.measurePageHeight();
@@ -82,6 +91,10 @@ export class ManageTeam implements AfterViewInit {
 
   @HostListener('window:resize')
   protected measurePageHeight(): void {
+    if (window.innerWidth <= ManageTeam.MOBILE_STACK_BREAKPOINT) {
+      this.pageHeightPx.set(null);
+      return;
+    }
     const top = this.elementRef.nativeElement.getBoundingClientRect().top;
     this.pageHeightPx.set(window.innerHeight - top);
   }

@@ -1166,13 +1166,51 @@
 }
 
 @media (max-width: 900px) {
+  /* This page is deliberately fixed-height + non-scrolling on desktop
+     (pageHeightPx() in manage-team.ts measures exact remaining viewport
+     space, applied as an inline style) so Favorites/Bench/Live Stats can
+     sit side by side, each scrolling internally within its own column.
+     Below this same 900px breakpoint, manage-team.ts stops setting that
+     inline height at all (see MOBILE_STACK_BREAKPOINT there) — an inline
+     style would otherwise out-rank anything set here. With no inline
+     height, .manage-team's height:100% naturally falls back to auto
+     against an unconstrained ancestor (same as every other page), but the
+     flex:1/min-height:0/overflow chain below still assumes a fixed
+     budget to divide up, so it's overridden explicitly here too: once
+     Favorites/Bench/Live Stats stack into one column instead of three,
+     they need real height for their own content, not a three-way split
+     of a screen's worth of space, and the page needs to scroll normally
+     to reach it all. */
+  :host,
+  .manage-team,
   .content {
+    height: auto;
+    overflow: visible;
+  }
+
+  .content {
+    flex: none;
     padding: 20px 20px 96px;
+  }
+
+  .bottom-row,
+  .pool-section,
+  .pool-grid,
+  .stats-panel-card {
+    flex: none;
+    min-height: 0;
   }
 
   .bottom-row {
     grid-template-columns: 1fr;
-    grid-template-rows: 1fr 1fr auto;
+  }
+
+  /* No nested scroll box on mobile — every other list in the app (My
+     Team, Explorer, Battle History) is just part of the page's own
+     scroll, not a scroll-within-a-scroll, so Favorites/Bench match that
+     here too instead of being capped to an internally-scrolling box. */
+  .pool-grid {
+    overflow-y: visible;
   }
 
   /* minmax(210px, 1fr) on two columns needs 420px+ — genuinely overflows a

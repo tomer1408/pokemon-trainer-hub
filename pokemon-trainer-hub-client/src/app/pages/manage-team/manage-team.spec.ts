@@ -642,4 +642,33 @@ describe('ManageTeam', () => {
     expect(poolIds).toEqual([7]);
     expect(poolIds.length).toBe(new Set(poolIds).size); // no duplicate id
   });
+
+  // ---- Mobile height measurement ----
+  // This page is fixed-height + non-scrolling by design on desktop (see the
+  // comment on pageHeightPx() in manage-team.ts), so Favorites/Bench/Live
+  // Stats can sit side by side. Below MOBILE_STACK_BREAKPOINT those three
+  // stack into one column instead, which needs real page scroll — an
+  // inline pixel height would out-rank any CSS media query trying to
+  // override it, so measurePageHeight() must not set one there at all.
+
+  it('measurePageHeight() sets a real pixel height at desktop widths', () => {
+    const fixture = setup();
+    const inst = fixture.componentInstance as any;
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(1280);
+
+    inst.measurePageHeight();
+
+    expect(inst.pageHeightPx()).not.toBeNull();
+    expect(typeof inst.pageHeightPx()).toBe('number');
+  });
+
+  it('measurePageHeight() sets null below the mobile stack breakpoint, so no inline height is applied', () => {
+    const fixture = setup();
+    const inst = fixture.componentInstance as any;
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(600);
+
+    inst.measurePageHeight();
+
+    expect(inst.pageHeightPx()).toBeNull();
+  });
 });
