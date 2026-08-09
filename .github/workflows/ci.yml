@@ -1,10 +1,10 @@
 name: CI
 
+# Disabled from running automatically (was emailing on every push to main) —
+# kept as a manual-only workflow instead of deleted, so it's easy to turn
+# back on later: just restore the push/pull_request triggers below.
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch: {}
 
 jobs:
   server-tests:
