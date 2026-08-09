@@ -12,9 +12,13 @@ name: Render keep-alive
 # changes to the app itself. It only takes effect once this file is on the
 # default branch: GitHub only fires `schedule` triggers for workflows that
 # exist on the repository's default branch.
+#
+# Schedule trigger disabled — every run was failing (see the "Render
+# keep-alive: All jobs have failed" emails) and emailing on each one every
+# 10 minutes. Kept as manual-only (workflow_dispatch) instead of deleted,
+# so it's easy to re-enable once the underlying failure is diagnosed: just
+# restore the `schedule:` block below.
 on:
-  schedule:
-    - cron: '*/10 * * * *'
   workflow_dispatch: {}
 
 jobs:
